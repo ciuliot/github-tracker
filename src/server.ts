@@ -130,6 +130,8 @@ export class Server {
 
                 throw err;
             }
+
+            locomotive.use(locomotive.router);
         });
     }
 }

@@ -76,7 +76,6 @@ function initialize() {
     this.use(express.static(publicDir));
     this.use(express.bodyParser());
     this.use(express.methodOverride());
-    this.use(this.router);
 }
 
 export = initialize;

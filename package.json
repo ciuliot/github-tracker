@@ -36,12 +36,13 @@
     "mongoose": "*",
     "async": "*",
     "underscore": "*",
-    "restify": "*",
     "connect-mongodb": "*",
     "passport": "*",
     "passport-local": "*",
     "bootable": "0.2.x",
     "bootable-environment": "0.2.x",
-    "passport-github": "*"
+    "passport-github": "*",
+    "connect-ensure-login": "*",
+    "github": "*"
   }
 }

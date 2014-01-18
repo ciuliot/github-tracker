@@ -5,7 +5,7 @@ import express = require("express");
 import mongoose = require('mongoose');
 import log4js = require('log4js');
 import configuration = require('../configuration');
-import utils = require('utils');
+import util = require('util');
 
 var mongoStore = require('connect-mongodb')
     , passport = require('passport')
@@ -18,9 +18,11 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
     passport.use(new GitHubStrategy({
         clientID: "39796dadb4d9d2a45354",
         clientSecret: "69e659d98975cbdf854e9403ae2ffbee60911194",
-        callbackURL: utils.format("http://%s:%d/auth/callback", configuration.http_address, configuration.http_port)
+        scope: ["user", "repo"],
+        callbackURL: util.format("http://%s:%d/auth/callback", configuration.http_address, configuration.http_port)
       },
       function(accessToken: string, refreshToken: string, profile: any, done: Function) {
+        profile.accessToken = accessToken;
         process.nextTick(function () {
       
           // To keep the example simple, the user's GitHub profile is returned to
@@ -33,7 +35,8 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
     ));
 
     passport.serializeUser(function(user: any, done: Function) {
-      done(null, user);
+        logger.debug(user);
+        done(null, user);
     });
 
     passport.deserializeUser(function(obj: any, done: Function) {

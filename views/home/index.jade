@@ -1,4 +1,9 @@
 extend ../layouts/page_layout
 
 block head
-	title = "Intel NGDC frontend"
+	title GitHub tracker
+
+block body
+	p #{indexData.userName}
+	p Projects: 
+	a(href="/logout") Logout

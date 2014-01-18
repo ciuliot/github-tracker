@@ -13,11 +13,11 @@ class Configuration {
     static startupDirectory: string = process.cwd();
     /** 
      * Defines HTTPS address of server, uses environment value `HTTPS_ADDRESS` if available.
-     * @default 0.0.0.0 
+     * @default 127.0.0.1 
      * @property https_address
      * @type {String}
      */
-    static http_address: string = process.env.HTTPS_ADDRESS || "0.0.0.0";
+    static http_address: string = process.env.HTTPS_ADDRESS || "127.0.0.1";
     /** 
     * Defines HTTPS port of server, uses environment value `HTTPS_PORT` if available.
     * @default 3110
@@ -31,27 +31,20 @@ class Configuration {
     * @property environment
     * @type {String}
     */
-    static environment: string = process.env.NODE_ENV || 'production';
+    static environment: string = process.env.NODE_ENV || 'development';
     /** 
     * Defines MongoDb database name for persistence storage. 
     * @default mongodb://localhost/_mongo-ui 
     * @property databaseName
     * @type {String}
     */
-    static databaseName: string = "mongodb://localhost/_mongo-ui";
+    static databaseName: string = "mongodb://localhost/github-tracker";
     /** 
      * Defines root-level logger. 
      * @property logger
      * @type {log4j.Logger}
      */
     static logger: Logger;
-    /** 
-     * Defines administrator password.
-     * @property adminPassword
-     * @default nbusr-123
-     * @type {String}
-     */
-    static adminPassword: string = "nbusr-123";
 }
 
 export = Configuration;

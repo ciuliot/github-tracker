@@ -6,6 +6,8 @@ declare module "locomotive" {
 	//export function boot(environment: string, callback: (err: any) => void): void;
 	export function _controller(name: string, controller: any): void;
     export function phase(phase: Function): void;
+    export function use(callback: Function): void;
+    export function router(): void;
     export var boot: any;
 
 	export class Controller {

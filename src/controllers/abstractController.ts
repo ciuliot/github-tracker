@@ -9,7 +9,7 @@ import locomotive = require("locomotive");
 import log4js = require("log4js");
 import util = require("util");
 
-var restify = require("restify");
+var GitHubApi = require("github");
 
 /**
  * Provides common functionality for all server controllers like unified logging and utility functions.
@@ -33,7 +33,7 @@ class AbstractController extends locomotive.Controller {
         super();
 
         this.logger = log4js.getLogger(name);
-        this.logger.info("Starting controller %s", name)
+        this.logger.info("Starting controller %s", name);
     }
 
     /**
@@ -44,6 +44,23 @@ class AbstractController extends locomotive.Controller {
      */
     jsonResponse(err: any, result?: any): void {
         this.res.json({ error: err, result: result });
+    }
+
+    getGitHubClient(): any {
+        var github = new GitHubApi({
+            // required
+            version: "3.0.0",
+            // optional
+            debug: true,
+            protocol: "https",
+            host: "api.github.com",
+            timeout: 5000
+        });
+
+        this.logger.debug("Access token:" + this.req.user.accessToken);
+
+        github.authenticate({ type: "oauth", token: this.req.user.accessToken });
+        return github;
     }
 
     /**
