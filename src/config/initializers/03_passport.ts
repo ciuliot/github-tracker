@@ -4,33 +4,41 @@
 import express = require("express");
 import mongoose = require('mongoose');
 import log4js = require('log4js');
-import configuration = require('../configuration')
+import configuration = require('../configuration');
+import utils = require('utils');
 
 var mongoStore = require('connect-mongodb')
     , passport = require('passport')
-    , LocalStrategy = require('passport-local').Strategy;
+    , GitHubStrategy = require('passport-github').Strategy;
 
 function initializeDatabase(app: express.Application, done: (result?: any) => void) {
     var logger = log4js.getLogger("Passport");
     logger.info("Setting up authentication");
 
-    passport.serializeUser(function(user: string, done: any) {
-        done(null, 1);
+    passport.use(new GitHubStrategy({
+        clientID: "39796dadb4d9d2a45354",
+        clientSecret: "69e659d98975cbdf854e9403ae2ffbee60911194",
+        callbackURL: utils.format("http://%s:%d/auth/callback", configuration.http_address, configuration.http_port)
+      },
+      function(accessToken: string, refreshToken: string, profile: any, done: Function) {
+        process.nextTick(function () {
+      
+          // To keep the example simple, the user's GitHub profile is returned to
+          // represent the logged-in user.  In a typical application, you would want
+          // to associate the GitHub account with a user record in your database,
+          // and return that user instead.
+          return done(null, profile);
+        });
+      }
+    ));
+
+    passport.serializeUser(function(user: any, done: Function) {
+      done(null, user);
     });
 
-    passport.deserializeUser(function(id: string, done: any) {
-        done(null, { id: 1, name: "admin" });
+    passport.deserializeUser(function(obj: any, done: Function) {
+      done(null, obj);
     });
-
-    passport.use(new LocalStrategy(
-        (username: string, password: string, done: (id: string, state?: any, result?: any) => void) => {
-            if (username == "admin" && password == configuration.adminPassword) {
-                return done(null, { name: "admin" });
-            } else {
-                return done(null, false, { message: 'Invalid username or password.' });
-            }
-        }
-        ));
 
     app.use(express["session"]({
         secret: 'secret',

@@ -41,6 +41,7 @@
     "passport": "*",
     "passport-local": "*",
     "bootable": "0.2.x",
-    "bootable-environment": "0.2.x"
+    "bootable-environment": "0.2.x",
+    "passport-github": "*"
   }
 }
