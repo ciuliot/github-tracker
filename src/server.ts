@@ -63,7 +63,7 @@ export class Server {
                         if (typeof (type[i]) === 'function') {
                             self.logger.debug("Found initialize function %s", i);
 
-                            var tempObject: abstractController.AbstractController = new type[i](i);
+                            var tempObject: abstractController = new type[i](i);
 
                             if (tempObject.__beforeFilters && tempObject.__afterFilters) {
                                 className = i;
