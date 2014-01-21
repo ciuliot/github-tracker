@@ -1,4 +1,4 @@
-/// <reference path='../../interfaces/locomotive.d.ts'/>
+/// <reference path='../../../interfaces/locomotive/locomotive.d.ts'/>
 
 import abstractController = require("./abstractController");
 

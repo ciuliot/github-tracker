@@ -1,5 +1,4 @@
-/// <reference path='../../interfaces/locomotive.d.ts'/>
-/// <reference path='../../interfaces/async.d.ts'/>
+/// <reference path='../../../interfaces/async/async.d.ts'/>
 
 import abstractController = require("./abstractController");
 import async = require("async");

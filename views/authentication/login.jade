@@ -1,7 +1,10 @@
 extend ../layouts/page_layout
 
 block head
-	title = "Login"
+	title Login
+	script(type='text/javascript').
+		var MainModule = "viewmodels/login_view_model";
+	script(data-main='js/config', src='js/libs/require.js')
 
 block body
 	a(href="/auth") Login with GitHub

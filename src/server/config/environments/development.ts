@@ -1,4 +1,4 @@
-/// <reference path='../../../interfaces/express.d.ts'/>
+/// <reference path='../../../../interfaces/express/express.d.ts'/>
 
 import express = require("express");
 

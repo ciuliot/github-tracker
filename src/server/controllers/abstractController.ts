@@ -1,5 +1,5 @@
-/// <reference path='../../interfaces/locomotive.d.ts'/>
-/// <reference path='../../interfaces/log4js.d.ts'/>
+/// <reference path='../../../interfaces/locomotive/locomotive.d.ts'/>
+/// <reference path='../../../interfaces/log4js/log4js.d.ts'/>
 
 /**
  * @namespace Server
@@ -23,7 +23,7 @@ class AbstractController extends locomotive.Controller {
      * @property logger
      * @type log4js.Logger
      */
-    logger: Logger;
+    logger: log4js.Logger;
 
     /**
      * @method constructor

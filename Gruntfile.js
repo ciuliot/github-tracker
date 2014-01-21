@@ -6,13 +6,23 @@ module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         typescript: {
-            base: {
-                src: ['src/config/**/*.ts', 'src/controllers/**/*.ts', 'src/initializers/**/*.ts', 'src/models/**/*.ts', 'src/*.ts'],
+            server: {
+                src: ['src/server/**/*.ts'],
                 dest: './dist/',
                 options: {
                     module: 'commonjs', //or commonjs
                     target: 'es5', //or es3
-                    base_path: 'src',
+                    base_path: 'src/server',
+                    noImplicitAny: true
+                }
+            },
+            webapp: {
+                src: ['src/webapp/**/*.ts'],
+                dest: './dist/public/js',
+                options: {
+                    module: 'amd', //or commonjs
+                    target: 'es5', //or es3
+                    base_path: 'src/webapp',
                     noImplicitAny: true
                 }
             }
@@ -38,7 +48,7 @@ module.exports = function (grunt) {
         copy: {
             dist: {
                 files: {
-                    "dist/": ["public/**"]
+                    "dist/public/js/": ["libs/**"]
                 }
             },
             build: {

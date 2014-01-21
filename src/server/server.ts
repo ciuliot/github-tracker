@@ -1,7 +1,6 @@
-/// <reference path='../interfaces/express.d.ts'/>
-/// <reference path='../interfaces/node.d.ts'/>
-/// <reference path='../interfaces/locomotive.d.ts'/>
-/// <reference path='../interfaces/log4js.d.ts'/>
+/// <reference path='../../interfaces/node/node.d.ts'/>
+/// <reference path='../../interfaces/locomotive/locomotive.d.ts'/>
+/// <reference path='../../interfaces/log4js/log4js.d.ts'/>
 
 /**
  * @namespace Server
@@ -21,7 +20,7 @@ var bootable = require('bootable');
 var bootable_enviromnent = require('bootable-environment');
 
 export class Server {
-    private logger: Logger;
+    private logger: log4js.Logger;
 
     /** 
     * @method constructor

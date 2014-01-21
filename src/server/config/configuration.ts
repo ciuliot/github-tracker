@@ -1,5 +1,4 @@
-/// <reference path='../../interfaces/node.d.ts'/>
-/// <reference path='../../interfaces/log4js.d.ts'/>
+/// <reference path='../../../interfaces/log4js/log4js.d.ts'/>
 
 import log4js = require("log4js");
 
@@ -44,7 +43,7 @@ class Configuration {
      * @property logger
      * @type {log4j.Logger}
      */
-    static logger: Logger;
+    static logger: log4js.Logger;
 }
 
 export = Configuration;

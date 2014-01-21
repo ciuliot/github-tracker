@@ -1,5 +1,5 @@
-/// <reference path='../../../interfaces/mongoose.d.ts'/>
-/// <reference path='../../../interfaces/log4js.d.ts'/>
+/// <reference path='../../../../interfaces/mongoose/mongoose.d.ts'/>
+/// <reference path='../../../../interfaces/log4js/log4js.d.ts'/>
 
 import express = require("express");
 import mongoose = require('mongoose');

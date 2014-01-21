@@ -2,7 +2,7 @@ extend ../layouts/page_layout
 
 block head
 	title GitHub tracker
-	script(src="../external/knockout.js")
+	script(data-main='js/config', src='js/libs/require.js')
 
 block body
 	p #{indexData.userName}
