@@ -2,9 +2,41 @@ extend ../layouts/page_layout
 
 block head
 	title GitHub tracker
+	script(type='text/javascript').
+		var MainModule = "viewmodels/home_view_model";
 	script(data-main='js/config', src='js/libs/require.js')
 
 block body
-	p #{indexData.userName}
-	p Projects: 
-	a(href="/logout") Logout
+	nav.navbar.navbar-default(role="navigation")
+		.navbar-header
+			button.navbar-toggle(type="button", data-toggle="collapse" data-target="#home-navbar-collapse")
+				span.sr-only Toggle navigation
+				span.icon-bar
+				span.icon-bar
+				span.icon-bar
+			a.navbar-brand(href="#") Tracker
+		.collapse.navbar-collapse#home-navbar-collapse
+			ul.nav.navbar-nav				
+				li.dropdown
+					a.dropdown-toggle(href="#", data-toggle="dropdown") Organizations
+						b.caret
+					ul.dropdown-menu
+						<!-- ko foreach: organizations -->
+						li: a(href="#" data-bind="text: $data, click: $root.selectOrganization.bind($root, $data)") 
+						<!-- /ko -->
+				li.dropdown
+					a.dropdown-toggle(href="#", data-toggle="dropdown") Repositories
+						b.caret
+					ul.dropdown-menu
+						<!-- ko foreach: projects -->
+						li: a(href="#" data-bind="text: $data") 
+						<!-- /ko -->
+			ul.nav.navbar-nav.navbar-right
+				li.dropdown
+					a.dropdown-toggle(href="#", data-toggle="dropdown") #{indexData.userName}
+						b.caret
+					ul.dropdown-menu
+						li: a(href="/refresh-repositories") Refresh repositories
+						li.divider
+						li: a(href="/logout") Logout
+	

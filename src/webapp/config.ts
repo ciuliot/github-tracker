@@ -8,7 +8,9 @@ requirejs.config({
     "underscore": "libs/underscore",
     "async": "libs/async",
     "knockout": "libs/knockout",
-    "moment": "libs/moment.min"
+    "knockout.mapping": "libs/knockout.mapping",
+    "moment": "libs/moment.min",
+    "bootstrap": "libs/bootstrap.min"
   },
   shim: {
     jquery: {

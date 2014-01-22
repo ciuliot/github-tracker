@@ -10,6 +10,7 @@ import log4js = require("log4js");
 import util = require("util");
 
 var GitHubApi = require("github");
+var connectEnsureLogin = require('connect-ensure-login');
 
 /**
  * Provides common functionality for all server controllers like unified logging and utility functions.
@@ -63,30 +64,9 @@ class AbstractController extends locomotive.Controller {
         return github;
     }
 
-    /**
-     * Provides authentication filter for calls that needs to be protected by password. In case that user was not authenticated request is redirected to 
-     * {{#crossLink "Server.HomeController/login:method"}}{{/crossLink}} request.
-     * @method authenticationFilter
-     * @static
-     * @param next {Callback} Next callback in chain.
-     */
-    /*authenticationFilter(next) {
-        if (!this.req.isAuthenticated())
-            return this.res.redirect(this.urlFor({ action: 'login', controller: 'home' }));
-
-        next();
-    }*/
-
-    /**
-     * Attaches {{#crossLink "Server.AbstractController/authenticationFilter:method"}}{{/crossLink}} to all requests specified by parameter.
-     * @method enforceAuthenticationFor
-     * @param methodNames {String[]} Array of method names in this controller that requires authenticated user before executing. 
-     */
-    /*enforceAuthenticationFor(methodNames: string[]) {
-        for (var i = 0; i < methodNames.length; i++) {
-            this.before(methodNames[i], AbstractController.authenticationFilter);
-        }
-    }*/
+    ensureLogin(path: string): void {
+        this.before(path, connectEnsureLogin.ensureLoggedIn("/login"));
+    }
 }
 
 export = AbstractController;

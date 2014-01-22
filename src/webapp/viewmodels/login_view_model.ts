@@ -1,9 +1,9 @@
 /// <reference path='../../../interfaces/knockout/knockout.d.ts'/>
 /// <reference path='../../../interfaces/jquery/jquery.d.ts'/>
+/// <reference path='../../../interfaces/bootstrap/bootstrap.d.ts'/>
 
 import ko = require("knockout");
 import $ = require("jquery");
-
 import utilities = require("../utilities");
 
 class LoginViewModel {
@@ -13,5 +13,7 @@ class LoginViewModel {
 }
 
 $(() => {
-	new LoginViewModel();
+	require(["bootstrap"], (bootstrap: any) => {
+		new LoginViewModel();
+	});
 });

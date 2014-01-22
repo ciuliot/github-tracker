@@ -5,6 +5,8 @@
     this.match("logout", "authentication#logout");
     this.match("auth", "authentication#authenticate");
     this.match("auth/callback", "authentication#callback");
+
+    this.resources("repositories", { only: "index" })
 }
 
 export = initialize;

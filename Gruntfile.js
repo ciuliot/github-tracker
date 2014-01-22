@@ -27,6 +27,17 @@ module.exports = function (grunt) {
                 }
             }
         },
+        stylus: {
+            compile: {
+                files: [{
+                    expand: true,
+                    flatten: true,
+                    ext: ".css",
+                    src: ['styles/*.styl'],
+                    dest: 'dist/public/css/'
+                }]
+            }
+        },
         compress: {
             build: {
                 options: {
@@ -47,9 +58,10 @@ module.exports = function (grunt) {
         },
         copy: {
             dist: {
-                files: {
-                    "dist/public/js/": ["libs/**"]
-                }
+                files: [
+                    { src: "libs/**", dest: "dist/public/js/",  },
+                    { src: "**/*.css", dest: "dist/public/css/", cwd: "styles/", expand: true }
+                ]
             },
             build: {
                 files: {
@@ -83,6 +95,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-bumpup');
     grunt.loadNpmTasks('grunt-contrib-yuidoc');
+    grunt.loadNpmTasks('grunt-contrib-stylus');
 
     grunt.registerTask('get-revision', 'Get revision.', function () {
         var done = this.async();
@@ -102,7 +115,7 @@ module.exports = function (grunt) {
     });
 
     // Default task(s).
-    grunt.registerTask('default', ['typescript', 'copy:dist']);
+    grunt.registerTask('default', ['typescript', 'copy:dist', 'stylus']);
     grunt.registerTask('build', ['clean', 'get-revision', 'bumpup', 'default', 'copy:build', 'compress:build']);
     grunt.registerTask('docs', ['yuidoc', 'copy:docs', 'compress:docs']);
 };

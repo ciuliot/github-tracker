@@ -43,6 +43,7 @@
     "bootable-environment": "0.2.x",
     "passport-github": "*",
     "connect-ensure-login": "*",
-    "github": "*"
+    "github": "*",
+    "grunt-contrib-stylus": "*"
   }
 }
