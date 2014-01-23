@@ -18,20 +18,37 @@ block body
 		.collapse.navbar-collapse#home-navbar-collapse
 			ul.nav.navbar-nav				
 				li.dropdown
-					a.dropdown-toggle(href="#", data-toggle="dropdown") Organizations
+					a.dropdown-toggle(href="#", data-toggle="dropdown")
+						span(data-bind="text: selectedUser() === null ? 'Users' : selectedUser()")
 						b.caret
 					ul.dropdown-menu
-						<!-- ko foreach: organizations -->
-						li: a(href="#" data-bind="text: $data, click: $root.selectOrganization.bind($root, $data)") 
+						<!-- ko foreach: users -->
+						li(data-bind="css: { active: $root.selectedUser() === $data }")
+							a(href="#" data-bind="text: $data, click: $root.selectUser.bind($root, $data)") 
 						<!-- /ko -->
 				li.dropdown
-					a.dropdown-toggle(href="#", data-toggle="dropdown") Repositories
+					a.dropdown-toggle(href="#", data-toggle="dropdown")
+						span(data-bind="text: selectedRepository() === null ? 'Repositories' : selectedRepository()")
 						b.caret
 					ul.dropdown-menu
-						<!-- ko foreach: projects -->
-						li: a(href="#" data-bind="text: $data") 
+						<!-- ko foreach: userRepositories -->
+						li(data-bind="css: { active: $root.selectedRepository() === $data.name }")
+							a(href="#" data-bind="text: name, click: $root.selectRepository.bind($root, $data)") 
+						<!-- /ko -->
+				li.dropdown
+					a.dropdown-toggle(href="#", data-toggle="dropdown")
+						span(data-bind="text: selectedMilestone() === null ? 'No milestone' : selectedMilestone().title")
+						b.caret
+					ul.dropdown-menu
+						li.disabled: a(href="#") Add new milestone
+						li.divider
+						<!-- ko foreach: milestones -->
+						li: a(href="#")
+							span.badge.pull-right(data-bind="text: id === -1 ? '' : open_issues")
+							span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data)") 
 						<!-- /ko -->
 			ul.nav.navbar-nav.navbar-right
+				li: p.loading-indicator.navbar-text(data-bind="css: { hide: loadingCount() == 0 }")
 				li.dropdown
 					a.dropdown-toggle(href="#", data-toggle="dropdown") #{indexData.userName}
 						b.caret
@@ -40,3 +57,9 @@ block body
 						li.divider
 						li: a(href="/logout") Logout
 	
+	table.table
+		tr
+			<!-- ko foreach: phases -->
+			th(data-bind="text: name")
+			<!-- /ko -->
+
