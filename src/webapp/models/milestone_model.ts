@@ -1,5 +1,5 @@
 interface MilestoneModel {
-	id: number;
+	id: string;
 	number?: number;
 	state?: string;
 	title: string;

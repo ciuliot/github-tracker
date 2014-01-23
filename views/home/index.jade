@@ -37,15 +37,16 @@ block body
 						<!-- /ko -->
 				li.dropdown
 					a.dropdown-toggle(href="#", data-toggle="dropdown")
-						span(data-bind="text: selectedMilestone() === null ? 'No milestone' : selectedMilestone().title")
+						span(data-bind="text: selectedMilestoneTitle()")
 						b.caret
 					ul.dropdown-menu
 						li.disabled: a(href="#") Add new milestone
 						li.divider
 						<!-- ko foreach: milestones -->
-						li: a(href="#")
-							span.badge.pull-right(data-bind="text: id === -1 ? '' : open_issues")
-							span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data)") 
+						li(data-bind="css: { active: $root.selectedMilestone() === $data.id }")
+							a(href="#")
+								span.badge.pull-right(data-bind="text: (id === '*' || id === 'none') ? '' : open_issues")
+								span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data)") 
 						<!-- /ko -->
 			ul.nav.navbar-nav.navbar-right
 				li: p.loading-indicator.navbar-text(data-bind="css: { hide: loadingCount() == 0 }")
@@ -53,13 +54,31 @@ block body
 					a.dropdown-toggle(href="#", data-toggle="dropdown") #{indexData.userName}
 						b.caret
 					ul.dropdown-menu
-						li: a(href="/refresh-repositories") Refresh repositories
+						li: a(href="#", data-bind="click: $root.reloadRepositories.bind($root)") Refresh repositories
 						li.divider
 						li: a(href="/logout") Logout
+
+	table.table
+		tr
+			<!-- ko foreach: phases -->
+			th(data-bind="text: name")
+			<!-- /ko -->
+
+	nav.navbar.navbar-default(role="navigation")
+		.navbar-header
+			a.navbar-brand(href="#") Tracker
+
+	<!-- ko foreach: issues -->
+	.panel.panel-default
+		.panel-heading(data-bind="text: component")
+	<!-- /ko -->
+
 	
 	table.table
 		tr
 			<!-- ko foreach: phases -->
 			th(data-bind="text: name")
 			<!-- /ko -->
+
+
 

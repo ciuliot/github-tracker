@@ -9,6 +9,7 @@
     this.resources("repositories", { only: "index" });
     this.resources("labels", { only: "index" });
     this.resources("milestones", { only: "index" });
+    this.resources("issues", { only: "index" });
 }
 
 export = initialize;

@@ -12,26 +12,31 @@ import log4js = require("log4js");
 import repositoryModel = require("../models/repository_model");
 import phaseModel = require("../models/phase_model");
 import milestoneModel = require("../models/milestone_model");
+import issueModel = require("../models/issue_model");
 
 class HomeViewModel {
 	repositories: KnockoutObservableArray<repositoryModel>;
 	labels: KnockoutObservableArray<repositoryModel>;
 	milestones: KnockoutObservableArray<milestoneModel>;
+	issues: KnockoutObservableArray<issueModel>;
 
 	users: KnockoutComputed<string[]>;
 	userRepositories: KnockoutComputed<repositoryModel[]>;
 
 	phases: KnockoutComputed<phaseModel[]>;
-	issues: KnockoutComputed<phaseModel[]>;
 	
 	selectedUser: KnockoutObservable<string> = ko.observable(null);
 	selectedRepository: KnockoutObservable<string> = ko.observable(null);
-	selectedMilestone: KnockoutObservable<milestoneModel> = ko.observable(null);
+
+	allMilestonesItem: milestoneModel = { id: "*", title: "All milestones" };
+	selectedMilestone: KnockoutObservable<string> = ko.observable("*");
+	selectedMilestoneTitle: KnockoutComputed<string>;
 	
 	loadingCount: KnockoutObservable<number> = ko.observable(0);
 	logger: log4js.Logger = utilities.getLogger("HomeViewModel");
 
-	constructor() { }
+	constructor() { 
+	}
 
 	start() {
 		var self = this;
@@ -40,7 +45,7 @@ class HomeViewModel {
 				url: "/repositories", 
 				loadingCount: self.loadingCount,
 				indexDone: () => {
-					if (self.users().length > 0) {
+					if (self.users().length > 0 && self.selectedUser() === null) {
 						self.selectedUser(self.users()[0]);
 					}
 				}
@@ -61,15 +66,30 @@ class HomeViewModel {
 				loadingCount: self.loadingCount,
 				loadOnStart: false,
 				indexDone: () => {
-					self.milestones.unshift({
-						id: -1,
-						title: "No milestone"
-					});
+					self.milestones.unshift({ id: "none", title: "No milestone" });
+					self.milestones.unshift(self.allMilestonesItem);
+
 					if (self.selectedMilestone() === null) {
-						self.selectedMilestone(self.milestones()[0]);
+						self.selectedMilestone(self.milestones()[0].id);
 					}
 				}
 			}
+		});
+
+		this.issues = ko.observableArray<issueModel>().extend({ 
+			mapToJsonResource: { 
+				url: "/issues",
+				loadingCount: self.loadingCount,
+				loadOnStart: false
+			}
+		});
+
+		this.selectedMilestoneTitle = ko.computed(() => {
+			var milestone = ko.utils.arrayFirst(self.milestones(), (x: milestoneModel) => {
+				return x.id === self.selectedMilestone();
+			});
+
+			return null === milestone ? self.allMilestonesItem.title : milestone.title;
 		});
 
 		this.users = ko.computed(() => {
@@ -100,16 +120,6 @@ class HomeViewModel {
 			return ko.utils.arrayFilter(map, (x: phaseModel) => { return x.name !== null; });
 		});
 
-		/*this.issues = ko.computed(() => {
-			var map = ko.utils.arrayMap(self.labels(), (x: phaseModel) => { 
-				var model: phaseModel = { id: x.name, name: x.name.indexOf("@") == 0 ? x.name.substring(1) : null }; 
-				return model;
-			});
-
-			var phases = ko.utils.arrayFilter(map, (x: phaseModel) => { return x.name !== null; });
-		});*/
-
-
 		this.logger.info("Started & bound");
 		ko.applyBindings(this);
 	}
@@ -127,9 +137,13 @@ class HomeViewModel {
 	}
 
 	selectMilestone(milestone: milestoneModel) {
-		this.logger.info("Selecting milestone: " + milestone);
-		this.selectedMilestone(milestone);
-		//this.labels.reload({ user: this.selectedUser(), repository: repository.name });
+		this.logger.info("Selecting milestone: " + milestone.id);
+		this.selectedMilestone(milestone.id);
+		this.issues.reload({ user: this.selectedUser(), repository: this.selectedRepository(), milestone: this.selectedMilestone() });
+	}
+
+	reloadRepositories() {
+		this.repositories.reload();
 	}
 }
 

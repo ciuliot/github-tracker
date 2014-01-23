@@ -16,21 +16,64 @@ class IssuesController extends abstractController {
 
 		var user = self.param("user");
 		var repository = self.param("repository");
+		var milestone = self.param("milestone");
 
-		this.logger.info("Loading labels for repository '%s/%s'", user, repository);
+		this.logger.info("Loading issues for repository '%s/%s' @ milestone '%s'", user, repository, milestone);
 
 		async.waterfall([
 			(getAllIssues: Function) => { 
-				self.getGitHubClient().issues.getLabels({
+				self.getGitHubClient().issues.repoIssues({
 					user: user,
-					repo: repository
+					repo: repository,
+					milestone: milestone
 				}, getAllIssues); 
 			}
-			], (err: any, allLabels: any[]) => {
-				self.logger.debug(allLabels);
-				self.jsonResponse(err, allLabels);
+			], (err: any, allIssues: any[]) => {
+				var issues = null;
+				if (err) {
+					self.logger.error("Error occured during issues retrieval", err);	
+				} else {
+					issues = self.transformIssues(allIssues);
+				}
+
+				self.jsonResponse(err, issues);
 			}
 		);
+	}
+
+	transformIssues(issues: any[]): any {
+		var re = /\d\s*-\s*(.+)/;
+		var result: any = {};
+
+		for (var i = 0; i < issues.length; i++) {
+			var issue = issues[i];
+			var category = "unknown";
+			var phase = "unknown";
+
+			for (var j = 0; j < issue.labels.length; j++) {
+				var label = issue.labels[j];
+				var match = re.exec(label.name);
+
+				if (label.name.indexOf("@") === 0) {
+					category = label.name;
+					break;
+				} else if (match !== null) {
+					phase = match[1];
+				}
+			}
+
+			if (result[category] === undefined) {
+				result[category] = {};
+			}
+
+			if (result[category][phase] === undefined) {
+				result[category][phase] = [];
+			}
+
+			result[category][phase].push(issue);
+		}
+
+		return result;
 	}
 }
 
