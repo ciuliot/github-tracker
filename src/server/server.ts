@@ -19,7 +19,7 @@ var http = require('http');
 var bootable = require('bootable');
 var bootable_enviromnent = require('bootable-environment');
 
-export class Server {
+class Server {
     private logger: log4js.Logger;
 
     /** 
@@ -96,9 +96,10 @@ export class Server {
     * @param callback.error? {Any} Error status of starting the server.
     * @async
     */
-    start(callback?: (error?: any) => void) {
+    start(callback?: (error?: any, server?: Server) => void) {
         var self = this;
         configuration.logger = this.logger;
+        callback = callback || function() {};
 
         this.logger.info("Application starting in %s", configuration.startupDirectory);
 
@@ -122,16 +123,13 @@ export class Server {
         locomotive.phase(locomotive.boot.httpServer(configuration.http_port, configuration.http_address));
 
         locomotive.boot(configuration.environment, (err: String) => {
-            if (err) {
-                if (callback) {
-                    callback(err);
-                }
-
-                throw err;
+            if (!err) {
+                locomotive.use(locomotive.router);
             }
 
-            locomotive.use(locomotive.router);
+            callback(err, self);
         });
     }
 }
 
+export = Server;

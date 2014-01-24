@@ -4,7 +4,7 @@
   "description": "Issue tracking",
   "main": "dist/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 0"
+    "test": "grunt tests"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,8 @@
     "grunt-contrib-clean": "*",
     "grunt-contrib-compress": "*",
     "grunt-bumpup": "*",
-    "grunt-contrib-yuidoc": "*"
+    "grunt-contrib-yuidoc": "*",
+    "grunt-vows-runner": "*"
   },
   "dependencies": {
     "moment": "*",
@@ -44,6 +45,7 @@
     "passport-github": "*",
     "connect-ensure-login": "*",
     "github": "*",
-    "grunt-contrib-stylus": "*"
+    "grunt-contrib-stylus": "*",
+    "vows": "~0.7.0"
   }
 }

@@ -1,4 +1,4 @@
 import server = require("./server");
 
-new server.Server().start();
+new server().start();
 

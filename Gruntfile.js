@@ -7,7 +7,7 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON('package.json'),
         typescript: {
             server: {
-                src: ['src/server/**/*.ts'],
+                src: ['src/server/**/*.ts', '!src/server/tests/**'],
                 dest: './dist/',
                 options: {
                     module: 'commonjs', //or commonjs
@@ -23,6 +23,16 @@ module.exports = function (grunt) {
                     module: 'amd', //or commonjs
                     target: 'es5', //or es3
                     base_path: 'src/webapp',
+                    noImplicitAny: true
+                }
+            },
+            server_tests: {
+                src: ['src/server/tests/*.ts'],
+                dest: './dist',
+                options: {
+                    module: 'commonjs', //or commonjs
+                    target: 'es5', //or es3
+                    base_path: 'src/server',
                     noImplicitAny: true
                 }
             }
@@ -86,6 +96,14 @@ module.exports = function (grunt) {
                     return util.format("0.1.%d-%s", theDay, revision); // Bump based on a `type` argument
                 }
             }
+        },
+        vows: {
+            server: {
+                src: "dist/tests/*.js",
+                options : {
+                  reporter : "spec"
+                }
+            }
         }
     });
 
@@ -97,6 +115,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-bumpup');
     grunt.loadNpmTasks('grunt-contrib-yuidoc');
     grunt.loadNpmTasks('grunt-contrib-stylus');
+    grunt.loadNpmTasks('grunt-vows-runner');
 
     grunt.registerTask('get-revision', 'Get revision.', function () {
         var done = this.async();
@@ -116,8 +135,9 @@ module.exports = function (grunt) {
     });
 
     // Default task(s).
-    grunt.registerTask('default', ['typescript', 'copy:dist', 'stylus']);
+    grunt.registerTask('default', ['typescript:server', 'typescript:webapp' , 'copy:dist', 'stylus']);
     grunt.registerTask('build', ['clean', 'get-revision', 'bumpup', 'default', 'copy:build', 'compress:build']);
     grunt.registerTask('docs', ['yuidoc', 'copy:docs', 'compress:docs']);
+    grunt.registerTask('tests', ['default', 'typescript:server_tests', 'vows:server']);
 };
 

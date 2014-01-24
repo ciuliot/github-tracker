@@ -2,3 +2,5 @@ dist/
 logs/
 node_modules/
 package/
+github-tracker.tgz
+.sublime-grunt.cache
