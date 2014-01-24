@@ -6,6 +6,8 @@
 /// <reference path='../../../interfaces/knockout.mapping/knockout.mapping.d.ts'/>
 /// <reference path='../../../interfaces/mapper.d.ts'/>
 
+"use strict";
+
 import ko = require("knockout");
 import $ = require("jquery");
 import utilities = require("../utilities");
@@ -213,11 +215,7 @@ class HomeViewModel {
 		this.logger.info("Selecting milestone: " + milestone);
 		this.selectedMilestone(milestone);
 
-		if (this.selectedRepository() !== null) {
-			this.issues.load({ user: this.selectedUser(), repository: this.selectedRepository(), milestone: this.selectedMilestone() });
-		} else {
-			this.issues.removeAll();
-		}
+		this.reloadIssues();
 
 		if (pushState) {
 			history.pushState(null, null, this.getUrl());
@@ -226,6 +224,15 @@ class HomeViewModel {
 
 	reloadRepositories() {
 		this.repositories.reload();
+	}
+
+	reloadIssues(forceReload: boolean = false) {
+		if (this.selectedRepository() !== null) {
+			var call = forceReload ? this.issues.reload : this.issues.load;
+			call({ user: this.selectedUser(), repository: this.selectedRepository(), milestone: this.selectedMilestone() });
+		} else {
+			this.issues.removeAll();
+		}
 	}
 }
 

@@ -6,6 +6,41 @@ block head
 		var MainModule = "viewmodels/home_view_model";
 	script(data-main='/js/config', src='/js/libs/require.js')
 
+	<!-- Templates -->
+
+	script#user-template(type="text/html")
+		li(data-bind="css: { active: $root.selectedUser() === $data }")
+			a(href="#" data-bind="text: $data, click: $root.selectUser.bind($root, $data)") 
+
+	script#user-repositories-template(type="text/html")
+		li(data-bind="css: { active: $root.selectedRepository() === $data.name() }")
+			a(href="#" data-bind="text: name, click: $root.selectRepository.bind($root, $data.name())") 
+
+	script#milestone-template(type="text/html")
+		li(data-bind="css: { active: $root.selectedMilestone() === $data.id() }")
+			a(href="#")
+				<!-- span.badge.pull-right(data-bind="text: (id === '*' || id === 'none') ? '' : open_issues") -->
+				span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data.id())") 
+
+	script#issue-phase-header-template(type="text/html")
+		th.issue(data-bind="text: name, attr: { width: $root.issuesColumnWidth }")
+
+	script#issue-category-header-template(type="text/html")
+		li: a(data-bind="text: name, attr: { href: '#' + name().substring(1) }")
+
+	script#issue-phase-template(type="text/html")
+		td.issue(data-bind="foreach: issues, attr: { width: $root.issuesColumnWidth }")
+			.panel.panel-default
+				.panel-heading(data-bind="text: title")
+
+	script#issue-category-template(type="text/html")
+		.panel.panel-default(data-bind="attr: {id : name().substring(1) }")
+			.panel-heading(data-bind="text: name")
+
+			table.table
+				tbody
+				tr(data-bind="template: { name: 'issue-phase-template', foreach: phases }")
+
 block body
 	nav.navbar.navbar-default(role="navigation")
 		.navbar-header
@@ -21,16 +56,13 @@ block body
 					a.dropdown-toggle(href="#", data-toggle="dropdown")
 						span(data-bind="text: selectedUser() === null ? 'Users' : selectedUser()")
 						b.caret
-					ul.dropdown-menu(data-bind="foreach: users")
-						li(data-bind="css: { active: $root.selectedUser() === $data }")
-							a(href="#" data-bind="text: $data, click: $root.selectUser.bind($root, $data)") 
+					ul.dropdown-menu(data-bind="template: { name: 'user-template', foreach: users }")
 				li.dropdown
 					a.dropdown-toggle(href="#", data-toggle="dropdown")
 						span(data-bind="text: selectedRepository() === null ? 'Repositories' : selectedRepository()")
 						b.caret
-					ul.dropdown-menu(data-bind="foreach: userRepositories")
-						li(data-bind="css: { active: $root.selectedRepository() === $data.name() }")
-							a(href="#" data-bind="text: name, click: $root.selectRepository.bind($root, $data.name())") 
+					ul.dropdown-menu(data-bind="template: { name: 'user-repositories-template', foreach: userRepositories }")
+						
 				li.dropdown
 					a.dropdown-toggle(href="#", data-toggle="dropdown")
 						span(data-bind="text: selectedMilestoneTitle()")
@@ -38,14 +70,14 @@ block body
 					ul.dropdown-menu
 						li.disabled: a(href="#") Add new milestone
 						li.divider
-						<!-- ko foreach: milestones -->
-						li(data-bind="css: { active: $root.selectedMilestone() === $data.id() }")
-							a(href="#")
-								<!-- span.badge.pull-right(data-bind="text: (id === '*' || id === 'none') ? '' : open_issues") -->
-								span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data.id())") 
+						<!-- ko template { name: 'milestone-template', foreach: milestones } -->			
 						<!-- /ko -->
 			ul.nav.navbar-nav.navbar-right
-				li: p.loading-indicator.navbar-text(data-bind="css: { hide: loadingCount() == 0 }")
+				li: p.loading-indicator.navbar-text(data-bind="css: { invisible: loadingCount() == 0 }")
+				li
+					button.btn.btn-default.navbar-btn(data-bind="css: { disabled: loadingCount() > 0 }, click: $root.reloadIssues.bind($root, true)")
+						span.glyphicon.glyphicon-refresh
+					
 				li.dropdown
 					a.dropdown-toggle(href="#", data-toggle="dropdown") #{indexData.userName}
 						b.caret
@@ -55,23 +87,15 @@ block body
 						li: a(href="/logout") Logout
 
 	table.table
-		tr(data-bind="foreach: issues().length > 0 ? issues()[0].phases: [], attr: { width: issuesColumnWidth }")
-			th(data-bind="text: name")
+		thead
+			tr(data-bind="template: { name: 'issue-phase-header-template', foreach: (issues().length > 0 ? issues()[0].phases: []) }")
 
 	nav.navbar.navbar-default#issues-navbar(role="navigation")
 		.navbar-header
 			a.navbar-brand(href="#") Issues
-		ul.nav.navbar-nav(data-bind="foreach: issues")
-			li: a(data-bind="text: name, attr: { href: '#' + name().substring(1) }")
+		ul.nav.navbar-nav(data-bind="template: { name: 'issue-category-header-template', foreach: issues }")
 	.issues(data-spy="scroll", data-target="#issues-navbar")
-		<!-- ko foreach: issues -->
-		.panel.panel-default(data-bind="attr: {id : name().substring(1) }")
-			.panel-heading(data-bind="text: name")
-
-			table.table
-				tr(data-bind="foreach: phases, attr: { width: $root.issuesColumnWidth }")
-					th(data-bind="text: name")
-
+		<!-- ko template: { name: 'issue-category-template', foreach: issues } -->
 		<!-- /ko -->
 
 

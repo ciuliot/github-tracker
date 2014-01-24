@@ -22,40 +22,73 @@ class IssuesController extends abstractController {
 		this.logger.info("Loading issues for repository '%s/%s' @ milestone '%s'", user, repository, milestone);
 
 		async.waterfall([
-			(getLabels: Function) => {
+			(getLabelsCompleted: Function) => {
 				self.getGitHubClient().issues.getLabels({
 					user: user,
 					repo: repository
-				}, getLabels); 
+				}, getLabelsCompleted); 
 			},
-			(allLabels: any[], getAllIssues: Function) => { 
-				self.getGitHubClient().issues.repoIssues({
-					user: user,
-					repo: repository,
-					milestone: milestone
-				}, (err: any, data: any[]) => { 
-					getAllIssues(err, allLabels, data); 
-				}); 
-			},
-			(allLabels: any[], allIssues: any[], processIssues: Function) => {
+			(allLabels: any[], processLabelsCompleted: Function) => { 
 				var result: any = null;
 				var categories = allLabels.filter((x: any) => { return x.name.indexOf("@") === 0 });
 				var phases = allLabels.filter((x: any) => {
 					return configuration.phaseRegEx.exec(x.name) !== null;
 				});
 
-				result = categories.map((x: any) => { return { color: x.color, name: x.name } });
+				result = categories.map((x: any) => { return { color: "#" + x.color, name: x.name, phases: [] } });
 				result = result || [];
-				result.push({ name: configuration.defaultCategoryName });
+				result.push({ name: configuration.defaultCategoryName, phases: [] });
 
-				for (var i = 0; i < result.length; i++) {
-					var category = result[i];
-					category.phases = phases.map((x: any) => { return { color: x.color, name: x.name }; });
-					category.phases = category.phases || [];
-					category.phases.unshift({ name: configuration.backlogPhaseName });
+				processLabelsCompleted(null, result, phases);
+			},
+			(results: any[], phases: any[], getAllIssuesCompleted: Function) => { 
+				self.getGitHubClient().issues.repoIssues({
+					user: user,
+					repo: repository,
+					milestone: milestone
+				}, (err: any, data: any[]) => { 
+					getAllIssuesCompleted(err, results, phases, data); 
+				}); 
+			},
+			(results: any[], phases: any[], allIssues: any[], assignIssuesCompleted: Function) => {
+				for (var i = 0; i < allIssues.length; i++) {
+					var issue = allIssues[i];
+					var category = configuration.defaultCategoryName;
+					var phase = configuration.backlogPhaseName;
+
+					for (var j = 0; j < issue.labels.length; j++) {
+						var label = issue.labels[j];
+
+						if (label.name.indexOf("@") === 0) {
+							category = label.name;
+							break;
+						}
+					}
+
+					for (var j = 0; j < issue.labels.length; j++) {
+						var label = issue.labels[j];
+						var match = configuration.phaseRegEx.exec(label.name);
+
+						if (match !== null) {
+							phase = label.name;
+							break;
+						}
+					}
+
+					var categorizedIssues = results.filter((x: any) => { return x.name === category; })[0];
+
+					if (categorizedIssues.phases.length === 0) {
+						categorizedIssues.phases = phases.map((x: any) => { return { color: "#" + x.color, name: x.name, issues: [] }; });
+						categorizedIssues.phases = categorizedIssues.phases || [];
+						categorizedIssues.phases.unshift({ name: configuration.backlogPhaseName, issues: [] });
+					}
+
+					var phasedIssue = categorizedIssues.phases.filter((x: any) => { return x.name === phase; })[0];
+
+					phasedIssue.issues.push(issue);
 				}
 
-				processIssues(null, result);
+				assignIssuesCompleted(null, results);
 			}
 			], (err: any, result: any[]) => {
 				if (err) {
