@@ -21,20 +21,16 @@ block body
 					a.dropdown-toggle(href="#", data-toggle="dropdown")
 						span(data-bind="text: selectedUser() === null ? 'Users' : selectedUser()")
 						b.caret
-					ul.dropdown-menu
-						<!-- ko foreach: users -->
+					ul.dropdown-menu(data-bind="foreach: users")
 						li(data-bind="css: { active: $root.selectedUser() === $data }")
 							a(href="#" data-bind="text: $data, click: $root.selectUser.bind($root, $data)") 
-						<!-- /ko -->
 				li.dropdown
 					a.dropdown-toggle(href="#", data-toggle="dropdown")
 						span(data-bind="text: selectedRepository() === null ? 'Repositories' : selectedRepository()")
 						b.caret
-					ul.dropdown-menu
-						<!-- ko foreach: userRepositories -->
+					ul.dropdown-menu(data-bind="foreach: userRepositories")
 						li(data-bind="css: { active: $root.selectedRepository() === $data.name }")
 							a(href="#" data-bind="text: name, click: $root.selectRepository.bind($root, $data)") 
-						<!-- /ko -->
 				li.dropdown
 					a.dropdown-toggle(href="#", data-toggle="dropdown")
 						span(data-bind="text: selectedMilestoneTitle()")
@@ -45,7 +41,7 @@ block body
 						<!-- ko foreach: milestones -->
 						li(data-bind="css: { active: $root.selectedMilestone() === $data.id }")
 							a(href="#")
-								span.badge.pull-right(data-bind="text: (id === '*' || id === 'none') ? '' : open_issues")
+								<!-- span.badge.pull-right(data-bind="text: (id === '*' || id === 'none') ? '' : open_issues") -->
 								span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data)") 
 						<!-- /ko -->
 			ul.nav.navbar-nav.navbar-right
@@ -59,26 +55,25 @@ block body
 						li: a(href="/logout") Logout
 
 	table.table
-		tr
-			<!-- ko foreach: phases -->
+		tr(data-bind="foreach: issues().length > 0 ? issues()[0].phases: [], attr: { width: issuesColumnWidth }")
 			th(data-bind="text: name")
-			<!-- /ko -->
 
-	nav.navbar.navbar-default(role="navigation")
+	nav.navbar.navbar-default#issues-navbar(role="navigation")
 		.navbar-header
-			a.navbar-brand(href="#") Tracker
+			a.navbar-brand(href="#") Issues
+		ul.nav.navbar-nav(data-bind="foreach: issues")
+			li: a(data-bind="text: name, attr: { href: '#' + name().substring(1) }")
+	.issues(data-spy="scroll", data-target="#issues-navbar")
+		<!-- ko foreach: issues -->
+		.panel.panel-default(data-bind="attr: {id : name().substring(1) }")
+			.panel-heading(data-bind="text: name")
 
-	<!-- ko foreach: issues -->
-	.panel.panel-default
-		.panel-heading(data-bind="text: component")
-	<!-- /ko -->
+			table.table
+				tr(data-bind="foreach: phases, attr: { width: $root.issuesColumnWidth }")
+					th(data-bind="text: name")
 
-	
-	table.table
-		tr
-			<!-- ko foreach: phases -->
-			th(data-bind="text: name")
-			<!-- /ko -->
+		<!-- /ko -->
+
 
 
 

@@ -1,0 +1,16 @@
+{
+	"folders":
+	[
+		{
+			"path": "/Users/ciuliot/workspace/github-tracker"
+		}
+	],
+	"settings":
+	{
+		"typescript":
+		[
+			"src/server/app.ts",
+			"src/webapp/config.ts"
+		]
+	}
+}

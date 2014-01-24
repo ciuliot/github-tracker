@@ -1,8 +1,10 @@
+/// <reference path='../../../interfaces/knockout/knockout.d.ts'/>
+
 interface IssueModel {
-	id: string;
-	number?: number;
-	state?: string;
-	title: string;
+	id: KnockoutObservable<string>;
+	number?: KnockoutObservable<number>;
+	state?: KnockoutObservable<string>;
+	title: KnockoutObservable<string>;
 }
 
 export = IssueModel;

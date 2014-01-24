@@ -1,10 +1,12 @@
+/// <reference path='../../../interfaces/knockout/knockout.d.ts'/>
+
 interface MilestoneModel {
-	id: string;
-	number?: number;
-	state?: string;
-	title: string;
-	open_issues?: number;
-	closed_issues?: number;
+	id: KnockoutObservable<string>;
+	number?: KnockoutObservable<number>;
+	state?: KnockoutObservable<string>;
+	title: KnockoutObservable<string>;
+	open_issues?: KnockoutObservable<number>;
+	closed_issues?: KnockoutObservable<number>;
 }
 
 export = MilestoneModel;

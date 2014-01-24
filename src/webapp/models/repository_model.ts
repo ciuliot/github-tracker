@@ -1,6 +1,8 @@
+/// <reference path='../../../interfaces/knockout/knockout.d.ts'/>
+
 interface RepositoryModel {
-	id: number;
-	name: string;
+	id: KnockoutObservable<string>;
+	name: KnockoutObservable<string>;
 }
 
 export = RepositoryModel;

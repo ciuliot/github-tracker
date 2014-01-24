@@ -1,6 +1,8 @@
+/// <reference path='../../../interfaces/knockout/knockout.d.ts'/>
+
 interface PhaseModel {
-	id: string;
-	name: string;
+	id: KnockoutObservable<string>;
+	name: KnockoutObservable<string>;
 }
 
 export = PhaseModel;

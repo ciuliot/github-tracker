@@ -1,4 +1,5 @@
 /// <reference path='../../../interfaces/log4js/log4js.d.ts'/>
+/// <reference path='../../../interfaces/node/node.d.ts'/>
 
 import log4js = require("log4js");
 
@@ -44,6 +45,12 @@ class Configuration {
      * @type {log4j.Logger}
      */
     static logger: log4js.Logger;
+
+    static phaseRegEx = /\d\s*-\s*(.+)/;
+
+    static backlogPhaseName: string = "0 - Backlog";
+
+    static defaultCategoryName: string = "@other";
 }
 
 export = Configuration;

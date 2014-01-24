@@ -4,7 +4,7 @@
 import express = require("express");
 import mongoose = require('mongoose');
 import log4js = require('log4js');
-import configuration = require('../configuration')
+import configuration = require('../configuration');
 
 function initializeDatabase(done: (result?: any) => void) {
     var logger = log4js.getLogger("MongoDb");

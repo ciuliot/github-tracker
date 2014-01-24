@@ -1,8 +1,11 @@
 /// <reference path='../../interfaces/log4js/log4js.d.ts'/>
 /// <reference path='../../interfaces/knockout/knockout.d.ts'/>
+/// <reference path='../../interfaces/knockout.mapping/knockout.mapping.d.ts'/>
+/// <reference path='../../interfaces/jquery/jquery.d.ts'/>
 
 import log4js = require("log4js");
 import ko = require("knockout");
+import knockout_mapping = require("knockout.mapping");
 
 class Utilities {
 	static getLogger(category: string): log4js.Logger {
@@ -31,10 +34,12 @@ ko.extenders["mapToJsonResource"] = (target: any, options: any) => {
 		o.loadingCount(o.loadingCount() + 1);
 
 		$.get(options.url, args, (data:any) => {
-			target.removeAll();
-			for (var i = 0 ; i < data.result.length; i++) {
+			//target.removeAll();
+			knockout_mapping.fromJS(data.result, target);
+			/*for (var i = 0 ; i < data.result.length; i++) {
+
 				target.push(data.result[i]);
-			}
+			}*/
 			o.indexDone(data.error, data.result);
 		}).fail((error: string) => {
 			o.indexDone(error);

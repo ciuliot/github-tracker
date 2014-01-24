@@ -3,6 +3,7 @@
 import abstractController = require("./abstractController");
 import async = require("async");
 import util = require("util");
+import configuration = require('../config/configuration');
 
 class IssuesController extends abstractController {
 	constructor() {
@@ -21,22 +22,49 @@ class IssuesController extends abstractController {
 		this.logger.info("Loading issues for repository '%s/%s' @ milestone '%s'", user, repository, milestone);
 
 		async.waterfall([
-			(getAllIssues: Function) => { 
+			(getLabels: Function) => {
+				self.getGitHubClient().issues.getLabels({
+					user: user,
+					repo: repository
+				}, getLabels); 
+			},
+			(allLabels: any[], getAllIssues: Function) => { 
 				self.getGitHubClient().issues.repoIssues({
 					user: user,
 					repo: repository,
 					milestone: milestone
-				}, getAllIssues); 
+				}, (err: any, data: any[]) => { 
+					getAllIssues(err, allLabels, data); 
+				}); 
+			},
+			(allLabels: any[], allIssues: any[], processIssues: Function) => {
+				var result: any = null;
+				var categories = allLabels.filter((x: any) => { return x.name.indexOf("@") === 0 });
+				var phases = allLabels.filter((x: any) => {
+					return configuration.phaseRegEx.exec(x.name) !== null;
+				});
+
+				result = categories.map((x: any) => { return { color: x.color, name: x.name } });
+				result = result || [];
+				result.push({ name: configuration.defaultCategoryName });
+
+				for (var i = 0; i < result.length; i++) {
+					var category = result[i];
+					category.phases = phases.map((x: any) => { return { color: x.color, name: x.name }; });
+					category.phases = category.phases || [];
+					category.phases.unshift({ name: configuration.backlogPhaseName });
+				}
+
+				processIssues(null, result);
 			}
-			], (err: any, allIssues: any[]) => {
-				var issues = null;
+			], (err: any, result: any[]) => {
 				if (err) {
 					self.logger.error("Error occured during issues retrieval", err);	
 				} else {
-					issues = self.transformIssues(allIssues);
+					
 				}
 
-				self.jsonResponse(err, issues);
+				self.jsonResponse(err, result);
 			}
 		);
 	}
