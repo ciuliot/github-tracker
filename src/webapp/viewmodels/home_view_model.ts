@@ -130,6 +130,7 @@ class HomeViewModel {
 
 		this.logger.info("Started & bound");
 		ko.applyBindings(this);
+		utilities.loadMapper();
 	}
 
 	selectUser(user: string) {
@@ -140,14 +141,14 @@ class HomeViewModel {
 	selectRepository(repository: repositoryModel) {
 		this.selectedRepository(repository.name());
 		this.logger.info("Selecting repository '%s'", repository);
-		this.labels.reload({ user: this.selectedUser(), repository: repository.name });
-		this.milestones.reload({ user: this.selectedUser(), repository: repository.name });
+		this.labels.load({ user: this.selectedUser(), repository: repository.name });
+		this.milestones.load({ user: this.selectedUser(), repository: repository.name });
 	}
 
 	selectMilestone(milestone: milestoneModel) {
 		this.logger.info("Selecting milestone: " + milestone.id());
 		this.selectedMilestone(milestone.id());
-		this.issues.reload({ user: this.selectedUser(), repository: this.selectedRepository(), milestone: this.selectedMilestone() });
+		this.issues.load({ user: this.selectedUser(), repository: this.selectedRepository(), milestone: this.selectedMilestone() });
 	}
 
 	reloadRepositories() {

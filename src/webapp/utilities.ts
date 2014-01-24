@@ -8,6 +8,16 @@ import ko = require("knockout");
 import knockout_mapping = require("knockout.mapping");
 
 class Utilities {
+	static _deferredExtenderLoads: Function[] = [];
+
+	static loadMapper(): void {
+		for (var i = 0; i < Utilities._deferredExtenderLoads.length; i++) {
+			Utilities._deferredExtenderLoads[i]();
+		}
+
+		Utilities._deferredExtenderLoads = [];
+	}
+
 	static getLogger(category: string): log4js.Logger {
 		var logger = log4js.getLogger(category);
 		logger.setLevel(log4js.Level.ALL); 
@@ -29,18 +39,25 @@ ko.extenders["mapToJsonResource"] = (target: any, options: any) => {
 
 	var logger = Utilities.getLogger(options.url + " mapper");
 
+	var loadData = (err: any, data: any) => {
+		knockout_mapping.fromJS(data, target);
+		o.indexDone(err, data);
+	}
+
+	var getStorageKey = (operation: string, args: any) => {
+		return o.url + "/" + operation + "?" + JSON.stringify(args);
+	}
+
 	target.reload = (args?: any) => {
-		logger.debug("Reloading data with args %o", args);
+		logger.debug("Reloading data with args: ", JSON.stringify(args));
 		o.loadingCount(o.loadingCount() + 1);
 
 		$.get(options.url, args, (data:any) => {
-			//target.removeAll();
-			knockout_mapping.fromJS(data.result, target);
-			/*for (var i = 0 ; i < data.result.length; i++) {
+			loadData(data.err, data.result);
 
-				target.push(data.result[i]);
-			}*/
-			o.indexDone(data.error, data.result);
+			var storageKey = getStorageKey("index", args);
+			logger.debug("Storing data as: " + storageKey)
+			sessionStorage.setItem(storageKey, JSON.stringify(data));
 		}).fail((error: string) => {
 			o.indexDone(error);
 			logger.error(error);
@@ -49,8 +66,19 @@ ko.extenders["mapToJsonResource"] = (target: any, options: any) => {
 		});
 	};
 
+	target.load = (args?: any) => {
+		var storageKey = getStorageKey("index", args);
+		if (sessionStorage.getItem(storageKey) !== null) {
+			logger.debug("Loading from session storage " + storageKey);
+			var data = JSON.parse(sessionStorage.getItem(storageKey));
+			loadData(data.err, data.result);
+		} else {
+			target.reload(args);
+		}
+	}
+
 	if (o.loadOnStart) {
-		target.reload();
+		Utilities._deferredExtenderLoads.push(target.load);
 	}
 
 	target.subscribe((newValue:any) => {

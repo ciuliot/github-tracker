@@ -2,4 +2,5 @@
 
 interface KnockoutObservableArray<T> {
 	reload(args?: any): any;
+	load(args?: any): any;
 }
