@@ -30,9 +30,8 @@ class Utilities {
 	}
 }
 
-ko.extenders["mapToJsonResource"] = (target: any, options: any) => {
+ko.extenders["mapToJsonResource"] = (target: any, options: any = {}) => {
 	var o = options;
-	o = o || {};
 	o.indexDone = o.indexDone || function () {};
 	o.loadOnStart = typeof(o.loadOnStart) === "undefined" ? true : o.loadOnStart;
 	o.loadingCount = o.loadingCount || function() {}; 
@@ -48,7 +47,7 @@ ko.extenders["mapToJsonResource"] = (target: any, options: any) => {
 		return o.url + "/" + operation + "?" + JSON.stringify(args);
 	}
 
-	target.reload = (args?: any) => {
+	target.reload = (args?: any, callback: Function = () => {}) => {
 		logger.debug("Reloading data with args: ", JSON.stringify(args));
 		o.loadingCount(o.loadingCount() + 1);
 
@@ -63,17 +62,18 @@ ko.extenders["mapToJsonResource"] = (target: any, options: any) => {
 			logger.error(error);
 		}).always(() => {
 			o.loadingCount(o.loadingCount() - 1);
+			callback();
 		});
 	};
 
-	target.load = (args?: any) => {
+	target.load = (args?: any, callback: Function = () => {}) => {
 		var storageKey = getStorageKey("index", args);
 		if (sessionStorage.getItem(storageKey) !== null) {
 			logger.debug("Loading from session storage " + storageKey);
 			var data = JSON.parse(sessionStorage.getItem(storageKey));
 			loadData(data.err, data.result);
 		} else {
-			target.reload(args);
+			target.reload(args, callback);
 		}
 	}
 

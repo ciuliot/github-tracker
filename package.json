@@ -1,14 +1,14 @@
 {
-  "name": "mongo-admin-ui",
-  "version": "0.1.307-ce9102e",
-  "description": "Administrative UI for MongoDB",
+  "name": "github-tracker",
+  "version": "0.1.314",
+  "description": "Issue tracking",
   "main": "dist/app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ciuliot/mongo-admin-ui"
+    "url": "https://github.com/ciuliot/github-tracker"
   },
   "author": "Ixonos",
   "license": "BSD",

@@ -4,7 +4,7 @@ block head
 	title GitHub tracker
 	script(type='text/javascript').
 		var MainModule = "viewmodels/home_view_model";
-	script(data-main='js/config', src='js/libs/require.js')
+	script(data-main='/js/config', src='/js/libs/require.js')
 
 block body
 	nav.navbar.navbar-default(role="navigation")
@@ -29,8 +29,8 @@ block body
 						span(data-bind="text: selectedRepository() === null ? 'Repositories' : selectedRepository()")
 						b.caret
 					ul.dropdown-menu(data-bind="foreach: userRepositories")
-						li(data-bind="css: { active: $root.selectedRepository() === $data.name }")
-							a(href="#" data-bind="text: name, click: $root.selectRepository.bind($root, $data)") 
+						li(data-bind="css: { active: $root.selectedRepository() === $data.name() }")
+							a(href="#" data-bind="text: name, click: $root.selectRepository.bind($root, $data.name())") 
 				li.dropdown
 					a.dropdown-toggle(href="#", data-toggle="dropdown")
 						span(data-bind="text: selectedMilestoneTitle()")
@@ -39,10 +39,10 @@ block body
 						li.disabled: a(href="#") Add new milestone
 						li.divider
 						<!-- ko foreach: milestones -->
-						li(data-bind="css: { active: $root.selectedMilestone() === $data.id }")
+						li(data-bind="css: { active: $root.selectedMilestone() === $data.id() }")
 							a(href="#")
 								<!-- span.badge.pull-right(data-bind="text: (id === '*' || id === 'none') ? '' : open_issues") -->
-								span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data)") 
+								span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data.id())") 
 						<!-- /ko -->
 			ul.nav.navbar-nav.navbar-right
 				li: p.loading-indicator.navbar-text(data-bind="css: { hide: loadingCount() == 0 }")

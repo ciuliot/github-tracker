@@ -49,9 +49,7 @@ class HomeViewModel {
 				url: "/repositories", 
 				loadingCount: self.loadingCount,
 				indexDone: () => {
-					if (self.users().length > 0 && self.selectedUser() === null) {
-						self.selectedUser(self.users()[0]);
-					}
+					self.setFromUrl();
 				}
 			}
 		});
@@ -72,10 +70,6 @@ class HomeViewModel {
 				indexDone: () => {
 					self.milestones.unshift(knockout_mapping.fromJS ({ id: "none", title: "No milestone" }));
 					self.milestones.unshift(self.allMilestonesItem);
-
-					if (self.selectedMilestone() === null) {
-						self.selectedMilestone(self.milestones()[0].id());
-					}
 				}
 			}
 		});
@@ -114,7 +108,7 @@ class HomeViewModel {
 		});
 
 		this.issuesColumnWidth = ko.computed(() => {
-			return (this.issues().length > 0 ? (100 / this.issues().length) : 100) + "%"; 
+			return (self.issues().length > 0 ? (100 / self.issues().length) : 100) + "%"; 
 		});
 
 		this.phases = ko.computed(() => {
@@ -131,24 +125,103 @@ class HomeViewModel {
 		this.logger.info("Started & bound");
 		ko.applyBindings(this);
 		utilities.loadMapper();
+
+		window.addEventListener("popstate", (e: any) => {
+		    self.setFromUrl(false);
+		});
 	}
 
-	selectUser(user: string) {
+	private getUrlVars(): string[] {
+	    var vars: any[] = [], hash: any;
+	    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+	    for(var i = 0; i < hashes.length; i++)
+	    {
+	        hash = hashes[i].split('=');
+	        vars.push(hash[0]);
+	        vars[hash[0]] = hash[1];
+	    }
+	    return vars;
+	}
+
+	private setFromUrl(pushState: boolean = true): void {
+		var variables = window.location.pathname.split("/") || [];
+		var user = variables.length > 2 ? variables[2] : "";
+		var repository = variables.length > 3 ? variables[3] : null;
+		var milestone = variables.length > 4 ? variables[4] : "*";
+
+
+		if (user.length === 0 && this.users().length > 0) {
+			user = this.users()[0];
+		}
+
+		if (user.length > 0) {
+			this.selectUser(user, pushState);
+		}
+
+		this.selectRepository(repository, pushState);
+		this.selectMilestone(milestone, pushState);
+	}
+
+	private getUrl(): string {
+		var origin = [window.location.protocol, "//", window.location.hostname, ":", window.location.port].join("");
+		var parts = [origin, "index", this.selectedUser()];
+
+		if (this.selectedRepository() !== null) {
+			parts.push(this.selectedRepository());
+
+			if (this.selectedMilestone() !== null) {
+				parts.push(this.selectedMilestone());
+			}
+		}
+
+		return parts.join("/");
+	}
+
+	selectUser(user: string, pushState: boolean = true) {
 		this.logger.info("Selecting user: " + user);
+		if (this.selectedUser() !== user) {
+			this.selectRepository(null, false);
+		}
+
 		this.selectedUser(user);
+
+		if (pushState) {
+			history.pushState(null, null, this.getUrl());
+		}
 	}
 
-	selectRepository(repository: repositoryModel) {
-		this.selectedRepository(repository.name());
+	selectRepository(repository: string, pushState: boolean = true) {
+		this.selectedRepository(repository);
 		this.logger.info("Selecting repository '%s'", repository);
-		this.labels.load({ user: this.selectedUser(), repository: repository.name });
-		this.milestones.load({ user: this.selectedUser(), repository: repository.name });
+		
+		if (repository !== null) {
+			this.labels.load({ user: this.selectedUser(), repository: repository });
+			this.milestones.load({ user: this.selectedUser(), repository: repository });
+		} else {
+			this.labels.removeAll();
+			this.milestones.removeAll();
+		}
+
+		this.selectMilestone("*", false);
+
+		if (pushState) {
+			history.pushState(null, null, this.getUrl());
+		}
 	}
 
-	selectMilestone(milestone: milestoneModel) {
-		this.logger.info("Selecting milestone: " + milestone.id());
-		this.selectedMilestone(milestone.id());
-		this.issues.load({ user: this.selectedUser(), repository: this.selectedRepository(), milestone: this.selectedMilestone() });
+	selectMilestone(milestone: string, pushState: boolean = true) {
+		this.logger.info("Selecting milestone: " + milestone);
+		this.selectedMilestone(milestone);
+
+		if (this.selectedRepository() !== null) {
+			this.issues.load({ user: this.selectedUser(), repository: this.selectedRepository(), milestone: this.selectedMilestone() });
+		} else {
+			this.issues.removeAll();
+		}
+
+		if (pushState) {
+			history.pushState(null, null, this.getUrl());
+		}
 	}
 
 	reloadRepositories() {
