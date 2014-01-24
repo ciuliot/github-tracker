@@ -1,6 +1,8 @@
 github-tracker
 ==============
 
+[Travis CI](https://travis-ci.org/ciuliot/github-tracker): ![Build status](https://travis-ci.org/ciuliot/github-tracker.png)
+
 Bringing issue tracking to new level.
 
 ## Prerequisites
