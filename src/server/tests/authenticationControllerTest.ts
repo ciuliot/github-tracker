@@ -1,17 +1,22 @@
 /// <reference path='../../../interfaces/node/node.d.ts'/>
 /// <reference path='../../../interfaces/locomotive/locomotive.d.ts'/>
+/// <reference path='../../../interfaces/should/should.d.ts'/>
 
 import assert = require("assert");
+import http = require("http");
+import should = require("should");
+
 import server = require("../server");
 import testApi = require("./test_api");
 
+//var expect = require("expect.js");
 var vows = require('vows');
 
 function assertRedirect() {
     return function (err: any, client: http.ClientResponse) {
-        assert.isNull(err);
-		assert.isNotNull(client);
-		assert.equal(client.statusCode, 302);
+    	should.not.exist(err);
+    	should.exist(client);
+    	client.should.have.status(302);
     };
 }
 
@@ -24,7 +29,7 @@ vows.describe("AuthenticationController").addBatch({
 			});
 		},
 		"starts": (err: any) => {
-			assert.isUndefined(err);
+			should.not.exist(err);
 		},
 		"/": {
 			topic: testApi.get("/"),

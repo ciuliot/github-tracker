@@ -22,7 +22,9 @@
     "grunt-contrib-compress": "*",
     "grunt-bumpup": "*",
     "grunt-contrib-yuidoc": "*",
-    "grunt-vows-runner": "*"
+    "grunt-vows-runner": "*",
+    "vows": "*",
+    "should": "*"
   },
   "dependencies": {
     "moment": "*",
@@ -45,7 +47,6 @@
     "passport-github": "*",
     "connect-ensure-login": "*",
     "github": "*",
-    "grunt-contrib-stylus": "*",
-    "vows": "~0.7.0"
+    "grunt-contrib-stylus": "*"
   }
 }
