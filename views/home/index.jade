@@ -40,7 +40,7 @@ block head
 						button.btn.btn-default.dropdown-toggle(type="button", data-bind="attr: { title: assignee.login }", data-toggle="dropdown")
 							img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: assignee.avatar_url || '/images/question_mark.svg'}")
 							span.caret
-						button.btn.btn-default(type="button")
+						button.btn.btn-default(type="button", data-bind="css: { invisible: canStart }")
 							span.glyphicon.glyphicon-play
 						button.btn.btn-default(type="button")
 							span.glyphicon.glyphicon-pause

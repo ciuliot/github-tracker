@@ -79,7 +79,15 @@ class HomeViewModel {
 			}
 		});
 
-		this.issues = knockout_mapping.fromJS([]).extend({ 
+		this.issues = knockout_mapping.fromJS([], {
+			'phases': {
+				create: (options: any) {
+					options.data.canStart = ko.computed(() => {
+						return false;
+					});
+				}
+			}
+		}).extend({ 
 			mapToJsonResource: { 
 				url: "/issues",
 				loadingCount: self.loadingCount,
