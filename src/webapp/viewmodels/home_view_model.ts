@@ -194,7 +194,7 @@ class HomeViewModel {
 
 	selectRepository(repository: string, pushState: boolean = true) {
 		this.selectedRepository(repository);
-		this.logger.info("Selecting repository '%s'", repository);
+		this.logger.info("Selecting repository: ", repository);
 		
 		if (repository !== null) {
 			this.labels.load({ user: this.selectedUser(), repository: repository });

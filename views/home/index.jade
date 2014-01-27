@@ -31,10 +31,19 @@ block head
 	script#issue-phase-template(type="text/html")
 		td.issue(data-bind="foreach: issues, attr: { width: $root.issuesColumnWidth }")
 			.panel.panel-default
-				.panel-heading(data-bind="text: title")
+				.panel-heading
+					b(data-bind="text: ('#' + number() + ' - ')")
+					b(data-bind="text: title")
+				.panel-body
+					span(data-bind="text: body")
+					.btn-group.btn-group-xs.pull-right
+						button.btn.btn-default.dropdown-toggle(type="button", data-bind="attr: { title: assignee.login }", data-toggle="dropdown")
+							img.img-rounded.issue-assignee-avatar(src="images/question-mark.svg", data-bind="attr: { src: assignee.avatar_url || '/images/question_mark.svg'}")
+							span.caret
+
 
 	script#issue-category-template(type="text/html")
-		.panel.panel-default(data-bind="attr: {id : name().substring(1) }")
+		.panel.panel-default(data-bind="attr: { id : name().substring(1) }")
 			.panel-heading(data-bind="text: name")
 
 			table.table
@@ -75,8 +84,11 @@ block body
 			ul.nav.navbar-nav.navbar-right
 				li: p.loading-indicator.navbar-text(data-bind="css: { invisible: loadingCount() == 0 }")
 				li
-					button.btn.btn-default.navbar-btn(data-bind="css: { disabled: loadingCount() > 0 }, click: $root.reloadIssues.bind($root, true)")
-						span.glyphicon.glyphicon-refresh
+					.btn-group
+						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: selectedRepository() === null }")
+							span.glyphicon.glyphicon-plus
+						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: loadingCount() > 0 }, click: $root.reloadIssues.bind($root, true)")
+							span.glyphicon.glyphicon-refresh
 					
 				li.dropdown
 					a.dropdown-toggle(href="#", data-toggle="dropdown") #{indexData.userName}
