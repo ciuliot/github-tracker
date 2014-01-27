@@ -18,18 +18,17 @@ import repositoryModel = require("../models/repository_model");
 import phaseModel = require("../models/phase_model");
 import milestoneModel = require("../models/milestone_model");
 import issueModel = require("../models/issue_model");
+import labelsModel = require("../models/labels_model");
 
 class HomeViewModel {
 	repositories: KnockoutObservableArray<repositoryModel>;
-	labels: KnockoutObservableArray<repositoryModel>;
+	labels: KnockoutObservable<labelsModel.Labels>;
 	milestones: KnockoutObservableArray<milestoneModel>;
 	issues: KnockoutObservableArray<issueModel>;
 
 	users: KnockoutComputed<string[]>;
 	userRepositories: KnockoutComputed<repositoryModel[]>;
 
-	phases: KnockoutComputed<phaseModel[]>;
-	
 	selectedUser: KnockoutObservable<string> = ko.observable(null);
 	selectedRepository: KnockoutObservable<string> = ko.observable(null);
 
@@ -56,7 +55,11 @@ class HomeViewModel {
 			}
 		});
 
-		this.labels = knockout_mapping.fromJS([]).extend({ 
+		this.labels = knockout_mapping.fromJS(null, {
+			create: (options: any) => {
+				return ko.observable(knockout_mapping.fromJS({ phases: [], categories: [] }));
+			}
+		}).extend({ 
 			mapToJsonResource: { 
 				url: "/labels",
 				loadingCount: self.loadingCount,
@@ -110,18 +113,8 @@ class HomeViewModel {
 		});
 
 		this.issuesColumnWidth = ko.computed(() => {
-			return (self.issues().length > 0 ? (100 / self.issues().length) : 100) + "%"; 
-		});
-
-		this.phases = ko.computed(() => {
-			var re = /\d\s*-\s*(.+)/;
-			var map = ko.utils.arrayMap(self.labels(), (x: phaseModel) => { 
-				var m = re.exec(x.name());
-				var model: phaseModel = knockout_mapping.fromJS({ id: x.name(), name: m === null ? null : m[1] }); 
-				return model;
-			});
-
-			return ko.utils.arrayFilter(map, (x: phaseModel) => { return x.name() !== null; });
+			var phases = self.labels().phases();
+			return (phases.length > 0 ? (100 / phases.length) : 100) + "%"; 
 		});
 
 		this.logger.info("Started & bound");
@@ -200,7 +193,8 @@ class HomeViewModel {
 			this.labels.load({ user: this.selectedUser(), repository: repository });
 			this.milestones.load({ user: this.selectedUser(), repository: repository });
 		} else {
-			this.labels.removeAll();
+			this.labels().phases.removeAll();
+			this.labels().categories.removeAll();
 			this.milestones.removeAll();
 		}
 

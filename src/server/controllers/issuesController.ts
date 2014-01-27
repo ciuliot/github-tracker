@@ -1,6 +1,7 @@
 /// <reference path='../../../interfaces/async/async.d.ts'/>
 
 import abstractController = require("./abstractController");
+import labelsController = require("./labelsController");
 import async = require("async");
 import util = require("util");
 import configuration = require('../config/configuration');
@@ -23,43 +24,31 @@ class IssuesController extends abstractController {
 
 		async.waterfall([
 			(getLabelsCompleted: Function) => {
-				self.getGitHubClient().issues.getLabels({
-					user: user,
-					repo: repository
-				}, getLabelsCompleted); 
+				labelsController.getLabels(this, user, repository, getLabelsCompleted);
 			},
-			(allLabels: any[], processLabelsCompleted: Function) => { 
-				var result: any = null;
-				var categories = allLabels.filter((x: any) => { return x.name.indexOf("@") === 0 });
-				var phases = allLabels.filter((x: any) => {
-					return configuration.phaseRegEx.exec(x.name) !== null;
-				});
-
-				result = categories.map((x: any) => { return { color: "#" + x.color, name: x.name, phases: [] } });
-				result = result || [];
-				result.push({ name: configuration.defaultCategoryName, phases: [] });
-
-				processLabelsCompleted(null, result, phases);
-			},
-			(results: any[], phases: any[], getAllIssuesCompleted: Function) => { 
+			(labels: any, getAllIssuesCompleted: Function) => { 
 				self.getGitHubClient().issues.repoIssues({
 					user: user,
 					repo: repository,
 					milestone: milestone
 				}, (err: any, data: any[]) => { 
-					getAllIssuesCompleted(err, results, phases, data); 
+					getAllIssuesCompleted(err, labels, data); 
 				}); 
 			},
-			(results: any[], phases: any[], allIssues: any[], assignIssuesCompleted: Function) => {
+			(labels: any, allIssues: any[], assignIssuesCompleted: Function) => {
+				var results = JSON.parse(JSON.stringify(labels.categories)); // Clone categories
+				results = results.map((x: any) => { x.phases = null; return x; });
+
 				for (var i = 0; i < allIssues.length; i++) {
 					var issue = allIssues[i];
 					var category = configuration.defaultCategoryName;
-					var phase = configuration.backlogPhaseName;
+					var phase = configuration.phaseNames.backlog;
 
 					for (var j = 0; j < issue.labels.length; j++) {
 						var label = issue.labels[j];
+						var match = configuration.categoryRegEx.exec(label.name);
 
-						if (label.name.indexOf("@") === 0) {
+						if (match !== null) {
 							category = label.name;
 							break;
 						}
@@ -77,14 +66,12 @@ class IssuesController extends abstractController {
 
 					var categorizedIssues = results.filter((x: any) => { return x.name === category; })[0];
 
-					if (categorizedIssues.phases.length === 0) {
-						categorizedIssues.phases = phases.map((x: any) => { return { color: "#" + x.color, name: x.name, issues: [] }; });
-						categorizedIssues.phases = categorizedIssues.phases || [];
-						categorizedIssues.phases.unshift({ name: configuration.backlogPhaseName, issues: [] });
+					if (categorizedIssues.phases === null) {
+						categorizedIssues.phases = JSON.parse(JSON.stringify(labels.phases)); 
+						categorizedIssues.phases.map((x: any) => { x.issues = []; return x });
 					}
 
 					var phasedIssue = categorizedIssues.phases.filter((x: any) => { return x.name === phase; })[0];
-
 					phasedIssue.issues.push(issue);
 				}
 
