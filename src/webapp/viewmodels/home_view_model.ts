@@ -17,14 +17,14 @@ import knockout_mapping = require("knockout.mapping");
 import repositoryModel = require("../models/repository_model");
 import phaseModel = require("../models/phase_model");
 import milestoneModel = require("../models/milestone_model");
-import issueModel = require("../models/issue_model");
-import labelsModel = require("../models/labels_model");
+import issuesViewModel = require("./issues_view_model");
+import labelsViewModel = require("./labels_view_model");
 
 class HomeViewModel {
 	repositories: KnockoutObservableArray<repositoryModel>;
-	labels: KnockoutObservable<labelsModel.Labels>;
+	labelsViewModel: labelsViewModel.LabelsViewModel;
 	milestones: KnockoutObservableArray<milestoneModel>;
-	issues: KnockoutObservableArray<issueModel>;
+	issuesViewModel: issuesViewModel.IssuesViewModel;
 
 	users: KnockoutComputed<string[]>;
 	userRepositories: KnockoutComputed<repositoryModel[]>;
@@ -55,17 +55,7 @@ class HomeViewModel {
 			}
 		});
 
-		this.labels = knockout_mapping.fromJS(null, {
-			create: (options: any) => {
-				return ko.observable(knockout_mapping.fromJS({ phases: [], categories: [] }));
-			}
-		}).extend({ 
-			mapToJsonResource: { 
-				url: "/labels",
-				loadingCount: self.loadingCount,
-				loadOnStart: false
-			}
-		});
+		this.labelsViewModel = new labelsViewModel.LabelsViewModel(null, this.loadingCount);
 
 		this.milestones = knockout_mapping.fromJS([]).extend({ 
 			mapToJsonResource: { 
@@ -79,21 +69,7 @@ class HomeViewModel {
 			}
 		});
 
-		this.issues = knockout_mapping.fromJS([], {
-			'phases': {
-				create: (options: any) {
-					options.data.canStart = ko.computed(() => {
-						return false;
-					});
-				}
-			}
-		}).extend({ 
-			mapToJsonResource: { 
-				url: "/issues",
-				loadingCount: self.loadingCount,
-				loadOnStart: false
-			}
-		});
+		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.loadingCount);
 
 		this.selectedMilestoneTitle = ko.computed(() => {
 			var milestone = ko.utils.arrayFirst(self.milestones(), (x: milestoneModel) => {
@@ -121,7 +97,7 @@ class HomeViewModel {
 		});
 
 		this.issuesColumnWidth = ko.computed(() => {
-			var phases = self.labels().phases();
+			var phases = self.labelsViewModel.labels().phases();
 			return (phases.length > 0 ? (100 / phases.length) : 100) + "%"; 
 		});
 
@@ -198,11 +174,10 @@ class HomeViewModel {
 		this.logger.info("Selecting repository: ", repository);
 		
 		if (repository !== null) {
-			this.labels.load({ user: this.selectedUser(), repository: repository });
+			this.labelsViewModel.labels.load({ user: this.selectedUser(), repository: repository });
 			this.milestones.load({ user: this.selectedUser(), repository: repository });
 		} else {
-			this.labels().phases.removeAll();
-			this.labels().categories.removeAll();
+			this.labelsViewModel.removeAll();
 			this.milestones.removeAll();
 		}
 
@@ -230,10 +205,10 @@ class HomeViewModel {
 
 	reloadIssues(forceReload: boolean = false) {
 		if (this.selectedRepository() !== null) {
-			var call = forceReload ? this.issues.reload : this.issues.load;
+			var call = forceReload ? this.issuesViewModel.categories.reload : this.issuesViewModel.categories.load;
 			call({ user: this.selectedUser(), repository: this.selectedRepository(), milestone: this.selectedMilestone() });
 		} else {
-			this.issues.removeAll();
+			this.issuesViewModel.categories.removeAll();
 		}
 	}
 }

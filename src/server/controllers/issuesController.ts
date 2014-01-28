@@ -37,7 +37,7 @@ class IssuesController extends abstractController {
 			},
 			(labels: any, allIssues: any[], assignIssuesCompleted: Function) => {
 				var results = JSON.parse(JSON.stringify(labels.categories)); // Clone categories
-				results = results.map((x: any) => { x.phases = null; return x; });
+				results = results.map((x: any) => { x.phases = []; return x; });
 
 				for (var i = 0; i < allIssues.length; i++) {
 					var issue = allIssues[i];
@@ -66,13 +66,18 @@ class IssuesController extends abstractController {
 
 					var categorizedIssues = results.filter((x: any) => { return x.name === category; })[0];
 
-					if (categorizedIssues.phases === null) {
+					if (categorizedIssues.phases.length === 0) {
 						categorizedIssues.phases = JSON.parse(JSON.stringify(labels.phases)); 
 						categorizedIssues.phases.map((x: any) => { x.issues = []; return x });
 					}
 
 					var phasedIssue = categorizedIssues.phases.filter((x: any) => { return x.name === phase; })[0];
-					phasedIssue.issues.push(issue);
+					phasedIssue.issues.push( { 
+						title: issue.title,
+						number: issue.number,
+						body: issue.body,
+						assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : null
+					});
 				}
 
 				assignIssuesCompleted(null, results);

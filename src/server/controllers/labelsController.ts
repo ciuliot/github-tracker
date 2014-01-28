@@ -6,21 +6,15 @@ import util = require("util");
 
 import configuration = require('../config/configuration');
 
-interface Phase {
-	name?: string;
-	color?: string;
-	id: string;
-};
-
-interface Category {
+interface Label {
 	name?: string;
 	color?: string;
 	id: string;
 };
 
 interface IndexResult {
-	phases: Phase[];
-	categories: Category[];
+	phases: Label[];
+	categories: Label[];
 	declaration: any;
 };
 
