@@ -15,9 +15,16 @@ export class Issue {
 	canReject: KnockoutComputed<boolean>;
 
 	assignee: KnockoutObservable<collaboratorModel>;
+	number: KnockoutObservable<number>;
 
 	constructor(private labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, private phase: Phase, data: string) {
-		knockout_mapping.fromJS(data, {}, this);
+		knockout_mapping.fromJS(data || { assignee: null }, {
+			'assignee': {
+				create: (options: any) => {
+					return ko.observable(knockout_mapping.fromJS(options.data || { login: null, avatar_url: null }));
+				}
+			}
+		}, this);
 		var self = this;
 		var phases = labelsViewModel.labels().declaration.phases;
 
@@ -82,7 +89,8 @@ export class Category extends labelsViewModel.Label  {
 export class IssuesViewModel {
 	categories: KnockoutObservableArray<Category>;
 
-	constructor(public labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, loadingCount: KnockoutObservable<number>) {
+	constructor(public labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
+		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>) {
 		var self = this;
 		this.categories = knockout_mapping.fromJS([], {
 			create: (options: any) => {
@@ -92,6 +100,7 @@ export class IssuesViewModel {
 			mapToJsonResource: { 
 				url: "/issues",
 				loadingCount: loadingCount,
+				savingCount: savingCount,
 				loadOnStart: false
 			}
 		});

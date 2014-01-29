@@ -42,6 +42,7 @@ class HomeViewModel {
 	issuesColumnWidth: KnockoutComputed<string>;
 	
 	loadingCount: KnockoutObservable<number> = ko.observable(0);
+	savingCount: KnockoutObservable<number> = ko.observable(0);
 	logger: log4js.Logger = utilities.getLogger("HomeViewModel");
 
 	constructor() { 
@@ -53,6 +54,7 @@ class HomeViewModel {
 			mapToJsonResource: { 
 				url: "/repositories", 
 				loadingCount: self.loadingCount,
+				savingCount: self.savingCount,
 				indexDone: () => {
 					self.setFromUrl();
 				}
@@ -65,6 +67,7 @@ class HomeViewModel {
 			mapToJsonResource: { 
 				url: "/milestones",
 				loadingCount: self.loadingCount,
+				savingCount: self.savingCount,
 				loadOnStart: false,
 				indexDone: () => {
 					self.milestones.unshift(knockout_mapping.fromJS ({ id: "none", title: "No milestone" }));
@@ -77,11 +80,12 @@ class HomeViewModel {
 			mapToJsonResource: { 
 				url: "/collaborators",
 				loadingCount: self.loadingCount,
+				savingCount: self.savingCount,
 				loadOnStart: false
 			}
 		});
 
-		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount);
+		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount);
 
 		this.selectedMilestoneTitle = ko.computed(() => {
 			var milestone = ko.utils.arrayFirst(self.milestones(), (x: milestoneModel) => {
@@ -252,13 +256,16 @@ class HomeViewModel {
 
 	assignIssue(issue: issuesViewModel.Issue, collaborator: collaboratorModel): void {
 		var rawData = knockout_mapping.toJS(collaborator);
+		var self = this;
+		this.logger.info("Assigning " + collaborator.login() + " to " + issue.number());
 
-		if (issue.assignee() === null) {
-			issue.assignee(knockout_mapping.fromJS(rawData));	
-		} else {
-			knockout_mapping.fromJS(rawData, issue.assignee);	
-		}
-		
+		issue.assignee(knockout_mapping.fromJS(rawData));
+
+		this.issuesViewModel.categories.update(issue.number(), { 
+			user: self.selectedUser(), 
+			repository: self.selectedRepository(), 
+			collaborator: collaborator.login() 
+		});
 	}
 }
 

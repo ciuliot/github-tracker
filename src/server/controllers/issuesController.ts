@@ -70,6 +70,28 @@ class IssuesController extends abstractController {
 		);
 	}
 
+	update() {
+		var self = this;
+
+		var number = self.param("id");
+		var collaborator = self.param("collaborator");
+		var user = self.param("user");
+		var repository = self.param("repository");
+
+		if (collaborator !== undefined) {
+			self.logger.info("Updating issue %s - assigning collaborator %s", number, collaborator);
+
+			self.getGitHubClient().issues.edit({
+				user: user,
+				repo: repository,
+				number: number,
+				assignee: collaborator
+			}, (err: any, result: any) => { self.jsonResponse(err, result); });
+		} else {
+			self.jsonResponse("Operation not allowed");
+		}
+	}
+
 	transformIssues(labels: labelsModel.IndexResult, allIssues: any[], results: any, forcePhase: string = null) {
 		for (var i = 0; i < allIssues.length; i++) {
 			var issue = allIssues[i];

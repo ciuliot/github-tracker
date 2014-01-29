@@ -14,7 +14,7 @@
     this.resources("labels", { only: "index" });
     this.resources("milestones", { only: "index" });
     this.resources("collaborators", { only: "index" });
-    this.resources("issues", { only: "index" });
+    this.resources("issues", { only: ["index", "update"] });
 }
 
 export = initialize;

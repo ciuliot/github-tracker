@@ -52,7 +52,7 @@ class AbstractController extends locomotive.Controller {
             // required
             version: "3.0.0",
             // optional
-            debug: false,
+            debug: true,
             protocol: "https",
             host: "api.github.com",
             timeout: 5000
