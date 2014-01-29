@@ -3,6 +3,7 @@
 
 import knockout_mapping = require("knockout.mapping");
 import labelsViewModel = require("./labels_view_model");
+import collaboratorModel = require("../models/collaborator_model");
 import ko = require("knockout");
 
 export class Issue {
@@ -13,33 +14,33 @@ export class Issue {
 	canAccept: KnockoutComputed<boolean>;
 	canReject: KnockoutComputed<boolean>;
 
-	constructor(private labelsViewModel: labelsViewModel.LabelsViewModel, private phase: Phase, data: string) {
+	constructor(private labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, private phase: Phase, data: string) {
 		knockout_mapping.fromJS(data, {}, this);
 		var self = this;
 		var phases = labelsViewModel.labels().declaration.phases;
 
 		this.canStart = ko.computed(() => {
-			return self.phase.name() === phases.backlog() || self.phase.name() === phases.onhold();
+			return self.phase.id() === phases.backlog() || self.phase.id() === phases.onhold();
 		}, this);
 
 		this.canAssign = ko.computed(() => {
-			return self.phase.name() !== phases.closed();
+			return self.phase.id() !== phases.closed();
 		}, this);
 
 		this.canPause = ko.computed(() => {
-			return self.phase.name() === phases.inprogress();
+			return self.phase.id() === phases.inprogress();
 		}, this);
 
 		this.canStop = ko.computed(() => {
-			return self.phase.name() !== phases.closed();
+			return self.phase.id() !== phases.closed();
 		}, this);
 
 		this.canAccept = ko.computed(() => {
-			return self.phase.name() === phases.implemented();
+			return self.phase.id() === phases.implemented();
 		}, this);
 
 		this.canReject = ko.computed(() => {
-			return self.phase.name() === phases.implemented();
+			return self.phase.id() === phases.implemented();
 		}, this);
 	}
 }
@@ -54,7 +55,7 @@ export class Phase extends labelsViewModel.Label {
 		knockout_mapping.fromJS(data, {
 			"issues": {
 				create(options: any) {
-					return new Issue(self.parent.parent.labelsViewModel, self, options.data);
+					return new Issue(self.parent.parent.labelsViewModel, self.parent.parent.collaborators, self, options.data);
 				}
 			}
 		}, this);
@@ -79,7 +80,7 @@ export class Category extends labelsViewModel.Label  {
 export class IssuesViewModel {
 	categories: KnockoutObservableArray<Category>;
 
-	constructor(public labelsViewModel: labelsViewModel.LabelsViewModel, loadingCount: KnockoutObservable<number>) {
+	constructor(public labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, loadingCount: KnockoutObservable<number>) {
 		var self = this;
 		this.categories = knockout_mapping.fromJS([], {
 			create: (options: any) => {

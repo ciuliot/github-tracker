@@ -72,6 +72,8 @@ ko.extenders["mapToJsonResource"] = (target: any, options: any = {}) => {
 			logger.debug("Loading from session storage " + storageKey);
 			var data = JSON.parse(sessionStorage.getItem(storageKey));
 			loadData(data.err, data.result);
+
+			callback();
 		} else {
 			target.reload(args, callback);
 		}

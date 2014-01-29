@@ -26,7 +26,7 @@ block head
 		th.issue(data-bind="text: name, attr: { width: $root.issuesColumnWidth }")
 
 	script#issue-category-header-template(type="text/html")
-		li: a(data-bind="text: name, attr: { href: '#' + name().substring(1) }")
+		li: a(data-bind="text: name, attr: { href: id() }")
 
 	script#issue-phase-template(type="text/html")
 		td.issue(data-bind="foreach: issues, attr: { width: $root.issuesColumnWidth }")
@@ -40,22 +40,30 @@ block head
 						button.btn.btn-default.dropdown-toggle(type="button", data-bind="attr: { title: assignee.login }, css: { hide: !canAssign() }", data-toggle="dropdown")
 							img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: assignee.avatar_url || '/images/question_mark.svg'}")
 							span.caret
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }")
+						ul.dropdown-menu(role="menu", data-bind="foreach: collaborators")
+							li(data-bind="css: { active: login() === ($parent.assignee.login ? $parent.assignee.login() : '') }")
+								a(href="#") 
+									img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: avatar_url }")
+									span(data-bind="text: login")
+								
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }", title="Start work")
 							span.glyphicon.glyphicon-play
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canPause() }")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canPause() }", title="Put work on hold")
 							span.glyphicon.glyphicon-pause
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canStop() }")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canStop() }", title="Stop work")
 							span.glyphicon.glyphicon-stop
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canAccept() }")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canAccept() }", title="Accept implementation")
 							span.glyphicon.glyphicon-thumbs-up
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canReject() }")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canReject() }", title="Reject implementation")
 							span.glyphicon.glyphicon-thumbs-down
 
 
-
 	script#issue-category-template(type="text/html")
-		.panel.panel-default(data-bind="attr: { id : name().substring(1) }")
-			.panel-heading(data-bind="text: name")
+		.panel.panel-default(data-bind="attr: { id : id() }")
+			.panel-heading
+				span(data-bind="text: name")
+				button.disabled.btn.btn-default.btn-xs.pull-right(type="button") 
+					span Add new issue
 
 			table.table
 				tbody
@@ -96,9 +104,9 @@ block body
 				li: p.loading-indicator.navbar-text(data-bind="css: { invisible: loadingCount() == 0 }")
 				li
 					.btn-group
-						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: selectedRepository() === null }")
+						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: selectedRepository() === null }", title="Add new issue to product backlog")
 							span.glyphicon.glyphicon-plus
-						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: loadingCount() > 0 }, click: $root.reloadIssues.bind($root, true)")
+						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: loadingCount() > 0 }, click: $root.reloadIssues.bind($root, true)", title="Refresh issues")
 							span.glyphicon.glyphicon-refresh
 					
 				li.dropdown

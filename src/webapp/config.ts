@@ -6,7 +6,7 @@ requirejs.config({
     "log4js": "libs/log4js-lib",
     "jquery": "libs/jquery",
     "underscore": "libs/underscore",
-    "async": "libs/async",
+    "async": "libs/asyncjs",
     "knockout": "libs/knockout",
     "knockout.mapping": "libs/knockout.mapping",
     "moment": "libs/moment.min",

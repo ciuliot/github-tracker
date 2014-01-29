@@ -1,4 +1,5 @@
 /// <reference path='../../../interfaces/knockout/knockout.d.ts'/>
+/// <reference path='../../../interfaces/async/async.d.ts'/>
 /// <reference path='../../../interfaces/jquery/jquery.d.ts'/>
 /// <reference path='../../../interfaces/bootstrap/bootstrap.d.ts'/>
 /// <reference path='../../../interfaces/log4js/log4js.d.ts'/>
@@ -12,11 +13,13 @@ import ko = require("knockout");
 import $ = require("jquery");
 import utilities = require("../utilities");
 import log4js = require("log4js");
+import async = require("async");
 import knockout_mapping = require("knockout.mapping");
 
 import repositoryModel = require("../models/repository_model");
 import phaseModel = require("../models/phase_model");
 import milestoneModel = require("../models/milestone_model");
+import collaboratorModel = require("../models/collaborator_model");
 import issuesViewModel = require("./issues_view_model");
 import labelsViewModel = require("./labels_view_model");
 
@@ -24,6 +27,7 @@ class HomeViewModel {
 	repositories: KnockoutObservableArray<repositoryModel>;
 	labelsViewModel: labelsViewModel.LabelsViewModel;
 	milestones: KnockoutObservableArray<milestoneModel>;
+	collaborators: KnockoutObservableArray<collaboratorModel>;
 	issuesViewModel: issuesViewModel.IssuesViewModel;
 
 	users: KnockoutComputed<string[]>;
@@ -69,7 +73,15 @@ class HomeViewModel {
 			}
 		});
 
-		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.loadingCount);
+		this.collaborators = knockout_mapping.fromJS([]).extend({ 
+			mapToJsonResource: { 
+				url: "/collaborators",
+				loadingCount: self.loadingCount,
+				loadOnStart: false
+			}
+		});
+
+		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount);
 
 		this.selectedMilestoneTitle = ko.computed(() => {
 			var milestone = ko.utils.arrayFirst(self.milestones(), (x: milestoneModel) => {
@@ -170,46 +182,72 @@ class HomeViewModel {
 	}
 
 	selectRepository(repository: string, pushState: boolean = true) {
+		var self = this;
 		this.selectedRepository(repository);
 		this.logger.info("Selecting repository: ", repository);
-		
-		if (repository !== null) {
-			this.labelsViewModel.labels.load({ user: this.selectedUser(), repository: repository });
-			this.milestones.load({ user: this.selectedUser(), repository: repository });
+
+		this.loadIssues(false, () => {
+			self.selectMilestone("*", false);
+
+			if (pushState) {
+				history.pushState(null, null, self.getUrl());
+			}
+		});
+	}
+
+	reloadIssues(forceReload: boolean = false): void {
+		this.loadIssues(forceReload);
+	}
+
+	private loadIssues(forceReload: boolean = false, callback: Function = function() {}): void {
+		var self = this;
+		var callData = { user: self.selectedUser(), repository: self.selectedRepository(), milestone: self.selectedMilestone() };
+
+		if (this.selectedRepository() !== null) {
+			async.waterfall([
+				(labelsLoadCompleted: Function) => {
+					var labelsCall: Function = forceReload ? self.labelsViewModel.labels.reload :self.labelsViewModel.labels.load;
+					labelsCall(callData, labelsLoadCompleted);
+				},
+				(milestonesLoadCompleted: Function) => {
+					var milestonesCall: Function = forceReload ? self.milestones.reload : self.milestones.load;
+					milestonesCall(callData, milestonesLoadCompleted);
+				},
+				(collaboratorsLoadCompleted: Function) => {
+					var collaboratorsCall: Function = forceReload ? self.collaborators.reload : self.collaborators.load;
+					collaboratorsCall(callData, collaboratorsLoadCompleted);
+				},
+				(issuesLoadCompleted: Function) => {
+					var issuesCall: Function = forceReload ? self.issuesViewModel.categories.reload : self.issuesViewModel.categories.load;
+					issuesCall(callData, issuesLoadCompleted);
+				}
+			], (err: any) => {
+				callback(err);
+			});
 		} else {
 			this.labelsViewModel.removeAll();
 			this.milestones.removeAll();
-		}
+			this.collaborators.removeAll();
+			this.issuesViewModel.categories.removeAll();
 
-		this.selectMilestone("*", false);
-
-		if (pushState) {
-			history.pushState(null, null, this.getUrl());
+			callback();
 		}
 	}
 
 	selectMilestone(milestone: string, pushState: boolean = true) {
+		var self = this;
 		this.logger.info("Selecting milestone: " + milestone);
 		this.selectedMilestone(milestone);
 
-		this.reloadIssues();
-
-		if (pushState) {
-			history.pushState(null, null, this.getUrl());
-		}
+		this.loadIssues(false, () => {
+			if (pushState) {
+				history.pushState(null, null, self.getUrl());
+			}
+		});
 	}
 
 	reloadRepositories() {
 		this.repositories.reload();
-	}
-
-	reloadIssues(forceReload: boolean = false) {
-		if (this.selectedRepository() !== null) {
-			var call = forceReload ? this.issuesViewModel.categories.reload : this.issuesViewModel.categories.load;
-			call({ user: this.selectedUser(), repository: this.selectedRepository(), milestone: this.selectedMilestone() });
-		} else {
-			this.issuesViewModel.categories.removeAll();
-		}
 	}
 }
 
