@@ -249,6 +249,17 @@ class HomeViewModel {
 	reloadRepositories() {
 		this.repositories.reload();
 	}
+
+	assignIssue(issue: issuesViewModel.Issue, collaborator: collaboratorModel): void {
+		var rawData = knockout_mapping.toJS(collaborator);
+
+		if (issue.assignee() === null) {
+			issue.assignee(knockout_mapping.fromJS(rawData));	
+		} else {
+			knockout_mapping.fromJS(rawData, issue.assignee);	
+		}
+		
+	}
 }
 
 $(() => {

@@ -14,6 +14,8 @@ export class Issue {
 	canAccept: KnockoutComputed<boolean>;
 	canReject: KnockoutComputed<boolean>;
 
+	assignee: KnockoutObservable<collaboratorModel>;
+
 	constructor(private labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, private phase: Phase, data: string) {
 		knockout_mapping.fromJS(data, {}, this);
 		var self = this;

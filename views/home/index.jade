@@ -23,13 +23,13 @@ block head
 				span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data.id())") 
 
 	script#issue-phase-header-template(type="text/html")
-		th.issue(data-bind="text: name, attr: { width: $root.issuesColumnWidth }")
+		th.swimlane(data-bind="text: name, attr: { width: $root.issuesColumnWidth }")
 
 	script#issue-category-header-template(type="text/html")
 		li: a(data-bind="text: name, attr: { href: id() }")
 
 	script#issue-phase-template(type="text/html")
-		td.issue(data-bind="foreach: issues, attr: { width: $root.issuesColumnWidth }")
+		td.swimlane(data-bind="foreach: issues, attr: { width: $root.issuesColumnWidth }")
 			.panel.panel-default
 				.panel-heading
 					b(data-bind="text: ('#' + number() + ' - ')")
@@ -42,7 +42,7 @@ block head
 							span.caret
 						ul.dropdown-menu(role="menu", data-bind="foreach: collaborators")
 							li(data-bind="css: { active: login() === ($parent.assignee.login ? $parent.assignee.login() : '') }")
-								a(href="#") 
+								a(href="#", data-bind="click: $root.assignIssue.bind($root, $parent, $data)") 
 									img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: avatar_url }")
 									span(data-bind="text: login")
 								
