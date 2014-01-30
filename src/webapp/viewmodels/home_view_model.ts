@@ -263,7 +263,7 @@ class HomeViewModel {
 }
 
 $(() => {
-	require(["bootstrap"], (bootstrap: any) => {
+	require(["bootstrap", "knockout.bootstrap"], () => {
 		new HomeViewModel().start();
 	});
 });
