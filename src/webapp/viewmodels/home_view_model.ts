@@ -42,6 +42,7 @@ class HomeViewModel {
 	issuesColumnWidth: KnockoutComputed<string>;
 	
 	loadingCount: KnockoutObservable<number> = ko.observable(0);
+	savingCount: KnockoutObservable<number> = ko.observable(0);
 	logger: log4js.Logger = utilities.getLogger("HomeViewModel");
 
 	constructor() { 
@@ -53,6 +54,7 @@ class HomeViewModel {
 			mapToJsonResource: { 
 				url: "/repositories", 
 				loadingCount: self.loadingCount,
+				savingCount: self.savingCount,
 				indexDone: () => {
 					self.setFromUrl();
 				}
@@ -65,6 +67,7 @@ class HomeViewModel {
 			mapToJsonResource: { 
 				url: "/milestones",
 				loadingCount: self.loadingCount,
+				savingCount: self.savingCount,
 				loadOnStart: false,
 				indexDone: () => {
 					self.milestones.unshift(knockout_mapping.fromJS ({ id: "none", title: "No milestone" }));
@@ -77,11 +80,12 @@ class HomeViewModel {
 			mapToJsonResource: { 
 				url: "/collaborators",
 				loadingCount: self.loadingCount,
+				savingCount: self.savingCount,
 				loadOnStart: false
 			}
 		});
 
-		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount);
+		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount);
 
 		this.selectedMilestoneTitle = ko.computed(() => {
 			var milestone = ko.utils.arrayFirst(self.milestones(), (x: milestoneModel) => {
@@ -250,15 +254,49 @@ class HomeViewModel {
 		this.repositories.reload();
 	}
 
+	private updateIssue(issue: issuesViewModel.Issue, body: any): void {
+		body.user = this.selectedUser();
+		body.repository = this.selectedRepository();
+		this.issuesViewModel.categories.update(issue.number(), body);
+	}
+
+	private updateIssuePhase(issue: issuesViewModel.Issue, newPhase: string): void {
+		issue.moveToPhase(newPhase);
+		this.updateIssue(issue, { phase: newPhase });
+	}
+
 	assignIssue(issue: issuesViewModel.Issue, collaborator: collaboratorModel): void {
 		var rawData = knockout_mapping.toJS(collaborator);
+		var self = this;
+		this.logger.info("Assigning " + collaborator.login() + " to " + issue.number());
 
-		if (issue.assignee() === null) {
-			issue.assignee(knockout_mapping.fromJS(rawData));	
-		} else {
-			knockout_mapping.fromJS(rawData, issue.assignee);	
-		}
-		
+		issue.assignee(knockout_mapping.fromJS(rawData));
+
+		this.updateIssue(issue, { collaborator: collaborator.login() });
+	}
+
+	issueStart(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.inprogress());
+	}
+
+	issuePause(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
+	}
+
+	issueComplete(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.implemented());
+	}
+
+	issueStop(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.closed());
+	}
+
+	issueAccept(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.closed());
+	}
+
+	issueReject(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
 	}
 }
 

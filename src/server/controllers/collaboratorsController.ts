@@ -43,6 +43,7 @@ class CollaboratorsController extends abstractController {
 					};
 				});
 
+				result.unshift({ id: null, login: null, avatar_url: null });
 				transformCollaboratorsCompleted(null, result);
 			}
 			], (err: any, collaborators: any[]) => {
