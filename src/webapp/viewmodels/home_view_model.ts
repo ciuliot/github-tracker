@@ -254,6 +254,17 @@ class HomeViewModel {
 		this.repositories.reload();
 	}
 
+	private updateIssue(issue: issuesViewModel.Issue, body: any): void {
+		body.user = this.selectedUser();
+		body.repository = this.selectedRepository();
+		this.issuesViewModel.categories.update(issue.number(), body);
+	}
+
+	private updateIssuePhase(issue: issuesViewModel.Issue, newPhase: string): void {
+		issue.moveToPhase(newPhase);
+		this.updateIssue(issue, { phase: newPhase });
+	}
+
 	assignIssue(issue: issuesViewModel.Issue, collaborator: collaboratorModel): void {
 		var rawData = knockout_mapping.toJS(collaborator);
 		var self = this;
@@ -261,11 +272,31 @@ class HomeViewModel {
 
 		issue.assignee(knockout_mapping.fromJS(rawData));
 
-		this.issuesViewModel.categories.update(issue.number(), { 
-			user: self.selectedUser(), 
-			repository: self.selectedRepository(), 
-			collaborator: collaborator.login() 
-		});
+		this.updateIssue(issue, { collaborator: collaborator.login() });
+	}
+
+	issueStart(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.inprogress());
+	}
+
+	issuePause(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
+	}
+
+	issueComplete(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.implemented());
+	}
+
+	issueStop(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.closed());
+	}
+
+	issueAccept(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.closed());
+	}
+
+	issueReject(issue: issuesViewModel.Issue): void {
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
 	}
 }
 

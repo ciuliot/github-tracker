@@ -46,15 +46,17 @@ block head
 									img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: avatar_url() || '/images/question_mark.svg' }")
 									span(data-bind="text: login() || 'Unassigned' ")
 								
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }", title="Start work")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }, click: $root.issueStart.bind($root, $data)", title="Start work")
 							span.glyphicon.glyphicon-play
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canPause() }", title="Put work on hold")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canComplete() }, click: $root.issueComplete.bind($root, $data)", title="Complete work")
+							span.glyphicon.glyphicon-ok
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canPause() }, click: $root.issuePause.bind($root, $data)", title="Put work on hold")
 							span.glyphicon.glyphicon-pause
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canStop() }", title="Stop work")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canStop() }, click: $root.issueStop.bind($root, $data)", title="Stop work")
 							span.glyphicon.glyphicon-stop
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canAccept() }", title="Accept implementation")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canAccept() }, click: $root.issueAccept.bind($root, $data)", title="Accept implementation")
 							span.glyphicon.glyphicon-thumbs-up
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canReject() }", title="Reject implementation")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canReject() }, click: $root.issueReject.bind($root, $data)", title="Reject implementation")
 							span.glyphicon.glyphicon-thumbs-down
 
 

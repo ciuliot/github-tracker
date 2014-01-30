@@ -13,11 +13,13 @@ export class Issue {
 	canStop: KnockoutComputed<boolean>;
 	canAccept: KnockoutComputed<boolean>;
 	canReject: KnockoutComputed<boolean>;
+	canComplete: KnockoutComputed<boolean>;
 
 	assignee: KnockoutObservable<collaboratorModel>;
 	number: KnockoutObservable<number>;
+	phaseId: KnockoutObservable<string>;
 
-	constructor(private labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, private phase: Phase, data: string) {
+	constructor(private labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, public phase: Phase, data: string) {
 		knockout_mapping.fromJS(data || { assignee: null }, {
 			'assignee': {
 				create: (options: any) => {
@@ -28,43 +30,62 @@ export class Issue {
 		var self = this;
 		var phases = labelsViewModel.labels().declaration.phases;
 
+		this.phaseId = ko.observable(phase.id());
+
 		this.canStart = ko.computed(() => {
-			return self.phase.id() === phases.backlog() || self.phase.id() === phases.onhold();
+			return self.phaseId() === phases.backlog() || self.phaseId() === phases.onhold();
 		}, this);
 
 		this.canAssign = ko.computed(() => {
-			return self.phase.id() !== phases.closed();
+			return self.phaseId() !== phases.closed();
 		}, this);
 
 		this.canPause = ko.computed(() => {
-			return self.phase.id() === phases.inprogress();
+			return self.phaseId() === phases.inprogress();
 		}, this);
 
 		this.canStop = ko.computed(() => {
-			return self.phase.id() !== phases.closed();
+			return self.phaseId() !== phases.closed();
+		}, this);
+
+		this.canComplete = ko.computed(() => {
+			return self.phaseId() === phases.inprogress();
 		}, this);
 
 		this.canAccept = ko.computed(() => {
-			return self.phase.id() === phases.implemented();
+			return self.phaseId() === phases.implemented();
 		}, this);
 
 		this.canReject = ko.computed(() => {
-			return self.phase.id() === phases.implemented();
+			return self.phaseId() === phases.implemented();
 		}, this);
+	}
+
+	moveToPhase(newPhaseId: string): void {
+		var self = this;
+		self.phase.issues.remove(self);
+
+		var newPhase = self.phase.category.phases().filter(x => {
+			return x.id() == newPhaseId;
+		});
+
+		newPhase[0].issues.push(self);
+		self.phase = newPhase[0];
+		self.phaseId(newPhase[0].id());
 	}
 }
 
 export class Phase extends labelsViewModel.Label {
 	issues: KnockoutObservableArray<Issue>;
 
-	constructor(private parent: Category, data: string) {
+	constructor(public category: Category, data: string) {
 		super();
 
 		var self = this;
 		knockout_mapping.fromJS(data, {
 			"issues": {
 				create(options: any) {
-					return new Issue(self.parent.parent.labelsViewModel, self.parent.parent.collaborators, self, options.data);
+					return new Issue(self.category.viewModel.labelsViewModel, self.category.viewModel.collaborators, self, options.data);
 				}
 			}
 		}, this);
@@ -74,7 +95,7 @@ export class Phase extends labelsViewModel.Label {
 export class Category extends labelsViewModel.Label  {
 	phases: KnockoutObservableArray<Phase>;
 
-	constructor(public parent: IssuesViewModel, data: string) {
+	constructor(public viewModel: IssuesViewModel, data: string) {
 		super();
 		knockout_mapping.fromJS(data, {
 			"phases": {

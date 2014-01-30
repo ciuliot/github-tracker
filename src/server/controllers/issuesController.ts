@@ -74,21 +74,63 @@ class IssuesController extends abstractController {
 		var self = this;
 
 		var number = self.param("id");
-		var collaborator = self.param("collaborator");
 		var user = self.param("user");
 		var repository = self.param("repository");
 
+		var collaborator = self.param("collaborator");
+		var phase = self.param("phase");
+
+		var message: any = {				
+			user: user,
+			repo: repository,
+			number: number
+		};
+
+		var tasks: any[] = [];
+
 		if (collaborator !== undefined) {
 			self.logger.info("Updating issue %s - assigning collaborator %s", number, collaborator);
+			message.assignee = collaborator;
 
-			self.getGitHubClient().issues.edit({
-				user: user,
-				repo: repository,
-				number: number,
-				assignee: collaborator
-			}, (err: any, result: any) => { self.jsonResponse(err, result); });
-		} else {
+			tasks.push((updateIssueCompleted: Function) => {
+				self.getGitHubClient().issues.edit(message, updateIssueCompleted);
+			});
+
+			self.getGitHubClient().issues.edit(message, (err: any, result: any) => { self.jsonResponse(err, result); });
+		} else if (phase !== undefined) {
+			self.logger.info("Updating issue %s - updating phase to %s", number, phase);
+
+			tasks = [
+				(getIssueCompleted: Function) => {
+					self.getGitHubClient().issues.getRepoIssue(message, getIssueCompleted);
+				},
+				(issue: any, updateIssueCompleted: Function) => {
+					message.labels = issue.labels.map((x: any) => { return x.name });
+					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) === null; });
+
+					if (phase !== configuration.phaseNames.closed) {
+						message.labels.push(phase);
+					} else {
+						message.state = "closed";
+					}
+
+					self.getGitHubClient().issues.edit(message, updateIssueCompleted);
+				}
+			];
+		} 
+
+		if (tasks.length == 0) {
 			self.jsonResponse("Operation not allowed");
+		} else {
+			async.waterfall(tasks, (err: any, result: any[]) => {
+				if (err) {
+					self.logger.error("Error occured during issue update", err);	
+				} else {
+					
+				}
+
+				self.jsonResponse(err, result);
+			});
 		}
 	}
 
