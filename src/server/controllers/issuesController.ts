@@ -57,6 +57,38 @@ class IssuesController extends abstractController {
 			(labels: labelsModel.IndexResult, results: any, allIssues: any[], assignClosedIssuesCompleted: Function) => {
 				self.transformIssues(labels, allIssues, results, configuration.phaseNames.closed);
 				assignClosedIssuesCompleted(null, results);
+			},
+			(result: any[], getIssueBranchesCompleted: Function) => {
+				var issuesToRetrieve: any[] = [];
+				for (var i = 0; i < result.length; i++) {
+					var category: any = result[i];
+
+					for (var j = 0; j < category.phases.length; j++) {
+						var phase = category.phases[j];
+
+						if (phase.id === configuration.phaseNames.onhold || phase.id === configuration.phaseNames.inprogress) {
+							issuesToRetrieve = issuesToRetrieve.concat(phase.issues);
+						}
+					}
+				}
+
+				async.forEach(issuesToRetrieve, (issue: any, cb: Function) => {		
+					self.getGitHubClient().gitdata.getReference({
+						user: user,
+						repo: repository,
+						ref: util.format(configuration.branchNameFormat, issue.number)
+					}, (err:any, data: any) => {
+						if (err) {
+							cb(err.code === 404 ? null : err); // Branch not found
+						} else {
+							issue.hasBranch = true;
+							cb();
+						}
+					});
+
+				}, (err: any) => { 
+					getIssueBranchesCompleted(err, result); 
+				});
 			}
 			], (err: any, result: any[]) => {
 				if (err) {
@@ -166,7 +198,7 @@ class IssuesController extends abstractController {
 
 			if (categorizedIssues.phases.length === 0) {
 				categorizedIssues.phases = JSON.parse(JSON.stringify(labels.phases)); 
-				categorizedIssues.phases.map((x: any) => { x.issues = []; return x });
+				categorizedIssues.phases.map((x: any) => { x.issues = []; return x; });
 			}
 
 			var phasedIssue = categorizedIssues.phases.filter((x: any) => { return x.id === phase; })[0];
@@ -174,6 +206,7 @@ class IssuesController extends abstractController {
 				title: issue.title,
 				number: issue.number,
 				body: issue.body,
+				hasBranch: false,
 				assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : null
 			});
 		}

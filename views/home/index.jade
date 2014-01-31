@@ -8,6 +8,9 @@ block head
 
 	<!-- Templates -->
 
+	script#new-branch-template(type="text/html")
+		p Test 
+
 	script#user-template(type="text/html")
 		li(data-bind="css: { active: $root.selectedUser() === $data }")
 			a(href="#" data-bind="text: $data, click: $root.selectUser.bind($root, $data)") 
@@ -32,12 +35,14 @@ block head
 		td.swimlane(data-bind="foreach: issues, attr: { width: $root.issuesColumnWidth }")
 			.panel.panel-default
 				.panel-heading
-					b(data-bind="text: ('#' + number() + ' - ')")
-					b(data-bind="text: title")
+					b.issue-number(rel="popover", data-trigger="hover", data-container="body", data-toggle="popover", data-content="test", data-placement="top auto", data-bind="text: ('#' + number() + ' ')")
+					a(href="javascript:void(0)", data-bind="click: $root.issueOpen.bind($root, $data)")
+						b(data-bind="text: title")
+
 				.panel-body
 					span(data-bind="text: body")
 					.btn-group.btn-group-sm.pull-right
-						button.btn.btn-default.dropdown-toggle(type="button", data-bind="attr: { title: assignee().login() }, css: { hide: !canAssign() }", data-toggle="dropdown")
+						button.btn.btn-default.dropdown-toggle(type="button", data-bind=" css: { hide: !canAssign() }", data-toggle="dropdown")
 							img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: assignee().avatar_url() || '/images/question_mark.svg' }")
 							span.caret
 						ul.dropdown-menu(role="menu", data-bind="foreach: collaborators")
@@ -46,17 +51,17 @@ block head
 									img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: avatar_url() || '/images/question_mark.svg' }")
 									span(data-bind="text: login() || 'Unassigned' ")
 								
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }, click: $root.issueStart.bind($root, $data)", title="Start work")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }, click: $root.issueStart.bind($root, $data, $element), tooltip: { title: 'Start work', container: 'body' }")
 							span.glyphicon.glyphicon-play
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canComplete() }, click: $root.issueComplete.bind($root, $data)", title="Complete work")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canComplete() }, click: $root.issueComplete.bind($root, $data), tooltip: { title: 'Complete work', container: 'body' }")
 							span.glyphicon.glyphicon-ok
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canPause() }, click: $root.issuePause.bind($root, $data)", title="Put work on hold")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canPause() }, click: $root.issuePause.bind($root, $data), tooltip: { title: 'Put work on hold', container: 'body' }")
 							span.glyphicon.glyphicon-pause
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canStop() }, click: $root.issueStop.bind($root, $data)", title="Stop work")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canStop() }, click: $root.issueStop.bind($root, $data), tooltip: { title: 'Stop work', container: 'body' }")
 							span.glyphicon.glyphicon-stop
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canAccept() }, click: $root.issueAccept.bind($root, $data)", title="Accept implementation")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canAccept() }, click: $root.issueAccept.bind($root, $data), tooltip: { title: 'Accept implementation', container: 'body' }")
 							span.glyphicon.glyphicon-thumbs-up
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canReject() }, click: $root.issueReject.bind($root, $data)", title="Reject implementation")
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canReject() }, click: $root.issueReject.bind($root, $data), tooltip: { title: 'Reject implementation', container: 'body' }")
 							span.glyphicon.glyphicon-thumbs-down
 
 
@@ -79,7 +84,7 @@ block body
 				span.icon-bar
 				span.icon-bar
 				span.icon-bar
-			a.navbar-brand(href="#") Tracker
+			a.navbar-brand
 		.collapse.navbar-collapse#home-navbar-collapse
 			ul.nav.navbar-nav				
 				li.dropdown
@@ -107,13 +112,15 @@ block body
 				li: p.loading-indicator.navbar-text(data-bind="css: { invisible: loadingCount() == 0 }")
 				li
 					.btn-group
-						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: selectedRepository() === null }", title="Add new issue to product backlog")
+						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: selectedRepository() === null }, tooltip: { title: 'Add new issue to product backlog', container: 'body', placement: 'bottom' }")
 							span.glyphicon.glyphicon-plus
-						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: loadingCount() > 0 }, click: $root.reloadIssues.bind($root, true)", title="Refresh issues")
+						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: loadingCount() > 0 }, click: $root.reloadIssues.bind($root, true), tooltip: { title: 'Refresh issues', container: 'body', placement: 'bottom' }")
 							span.glyphicon.glyphicon-refresh
 					
 				li.dropdown
-					a.dropdown-toggle(href="#", data-toggle="dropdown") #{indexData.userName}
+					a.dropdown-toggle(href="#", data-toggle="dropdown")
+						div.new-branch-popover(data-bind="popover: { placement: 'left', trigger: 'manual', template: 'new-branch-template' }", title='test')    asdasd
+						span(data-bind="text: user().name()") 
 						b.caret
 					ul.dropdown-menu
 						li: a(href="#", data-bind="click: $root.reloadRepositories.bind($root)") Refresh repositories

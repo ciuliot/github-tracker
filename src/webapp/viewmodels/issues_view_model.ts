@@ -19,6 +19,8 @@ export class Issue {
 	number: KnockoutObservable<number>;
 	phaseId: KnockoutObservable<string>;
 
+	assigneeTooltip: KnockoutComputed<string>;
+
 	constructor(private labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, public phase: Phase, data: string) {
 		knockout_mapping.fromJS(data || { assignee: null }, {
 			'assignee': {
@@ -59,6 +61,10 @@ export class Issue {
 		this.canReject = ko.computed(() => {
 			return self.phaseId() === phases.implemented();
 		}, this);
+
+		this.assigneeTooltip = ko.computed(() => {
+			return self.assignee().login() || 'Assign';
+		});
 	}
 
 	moveToPhase(newPhaseId: string): void {

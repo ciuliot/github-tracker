@@ -30,6 +30,7 @@ class HomeViewModel {
 	collaborators: KnockoutObservableArray<collaboratorModel>;
 	issuesViewModel: issuesViewModel.IssuesViewModel;
 
+	user: KnockoutObservable<collaboratorModel>;
 	users: KnockoutComputed<string[]>;
 	userRepositories: KnockoutComputed<repositoryModel[]>;
 
@@ -40,6 +41,8 @@ class HomeViewModel {
 	selectedMilestone: KnockoutObservable<string> = ko.observable("*");
 	selectedMilestoneTitle: KnockoutComputed<string>;
 	issuesColumnWidth: KnockoutComputed<string>;
+
+	newBranchIssueNumber: KnockoutObservable<number> = ko.observable(0);
 	
 	loadingCount: KnockoutObservable<number> = ko.observable(0);
 	savingCount: KnockoutObservable<number> = ko.observable(0);
@@ -85,6 +88,18 @@ class HomeViewModel {
 			}
 		});
 
+		this.user = knockout_mapping.fromJS({ name: null, login: null }, {
+			create: (options: any) => {
+				return ko.observable(knockout_mapping.fromJS(options.data));
+			}
+		}).extend({ 
+			mapToJsonResource: { 
+				url: "/user", 
+				loadingCount: self.loadingCount,
+				savingCount: self.savingCount
+			}
+		});
+
 		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount);
 
 		this.selectedMilestoneTitle = ko.computed(() => {
@@ -124,6 +139,10 @@ class HomeViewModel {
 		window.addEventListener("popstate", (e: any) => {
 		    self.setFromUrl(false);
 		});
+
+		$('body').popover({
+            selector: '[rel=popover]'
+        });
 	}
 
 	private getUrlVars(): string[] {
@@ -275,8 +294,17 @@ class HomeViewModel {
 		this.updateIssue(issue, { collaborator: collaborator.login() });
 	}
 
-	issueStart(issue: issuesViewModel.Issue): void {
+	issueStart(issue: issuesViewModel.Issue, element: JQuery): void {
+		this.assignIssue(issue, this.user());
 		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.inprogress());
+
+		var panel = $(element).closest(".panel").find(".issue-number");
+
+		panel.tooltip("show");
+
+		window.setTimeout(() => {
+			panel.popover("hide");
+		}, 10000);
 	}
 
 	issuePause(issue: issuesViewModel.Issue): void {
@@ -297,6 +325,9 @@ class HomeViewModel {
 
 	issueReject(issue: issuesViewModel.Issue): void {
 		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
+	}
+
+	issueOpen(issue: issuesViewModel.Issue): void {
 	}
 }
 

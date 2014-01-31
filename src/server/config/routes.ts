@@ -10,6 +10,7 @@
     this.match("auth", "authentication#authenticate");
     this.match("auth/callback", "authentication#callback");
 
+    this.resources("user", { only: "index" });
     this.resources("repositories", { only: "index" });
     this.resources("labels", { only: "index" });
     this.resources("milestones", { only: "index" });

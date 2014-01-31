@@ -2,6 +2,7 @@
 /// <reference path='../../interfaces/knockout/knockout.d.ts'/>
 /// <reference path='../../interfaces/knockout.mapping/knockout.mapping.d.ts'/>
 /// <reference path='../../interfaces/jquery/jquery.d.ts'/>
+/// <reference path='../../interfaces/mapper.d.ts'/>
 
 import log4js = require("log4js");
 import ko = require("knockout");
@@ -30,7 +31,7 @@ class Utilities {
 	}
 }
 
-ko.extenders["mapToJsonResource"] = (target: any, options: any = {}) => {
+ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	var o = options;
 	o.indexDone = o.indexDone || function () {};
 	o.loadOnStart = typeof(o.loadOnStart) === "undefined" ? true : o.loadOnStart;
@@ -141,7 +142,5 @@ ko.extenders["mapToJsonResource"] = (target: any, options: any = {}) => {
 
 	return target;
 };
-
-
 
 export = Utilities;

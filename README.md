@@ -29,7 +29,8 @@ If you already executed some action or provided information in one system why yo
 should copy it over to other one if it can be done automatically? GitHub tracker
 can help you with that by:
 
-* Creating feature braches for all tasks opened by you on your private branch
+* Opening task means that it will be assigned to you and create feature braches 
+on your private branch
 * Keeping record of time spent on the task by monitoring commits into branch
 * Monitoring pull requests to indicate if task is ready to be reviewed and that it
 can be verified after merge
@@ -50,7 +51,7 @@ so you have all your information available all the time from one place.
 You should need only one look at the issue board to get an good picture where 
 project is and what is going on at the same time. 
 
-### Important actions are just click (or tap) away
+### Actions are just click (or tap) away
 
 Gestures, drag & drop looks nice on paper and in demos but in real work are getting
 in the way. GitHub tracker shows buttons and offer keyboard shortcuts

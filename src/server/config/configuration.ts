@@ -58,6 +58,8 @@ class Configuration {
     };
 
     static defaultCategoryName: string = "@other";
+
+    static branchNameFormat: string = "issue/%d";
 }
 
 export = Configuration;

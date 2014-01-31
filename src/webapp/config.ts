@@ -9,7 +9,7 @@ requirejs.config({
     "async": "libs/asyncjs",
     "knockout": "libs/knockout",
     "knockout.mapping": "libs/knockout.mapping",
-    "knockout.bootstrap": "libs/knockout-bootstrap.min",
+    "knockout.bootstrap": "libs/knockout-bootstrap",
     "moment": "libs/moment.min",
     "bootstrap": "libs/bootstrap.min"
   },
