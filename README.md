@@ -63,9 +63,12 @@ Initial procedure for repository setup should include (this will be automated in
 phases):
 
 * Allow issues to be used on your project
-* Create following labels: #inprogress, #onhold, #implemented
-* Create category labels with prefix `@`, e.g. @frontend, @backend
+* Create following labels: `#inprogress`, `#onhold`, `#implemented`
+* Create category labels with prefix `@`, e.g. `@frontend`, `@backend`
 * Fork project into your account
+* Create directory `_tracker` with following files:
+   * impediments.md
+   * configuration.md
 
 ## Prerequisites
 
