@@ -13,7 +13,7 @@ block head
 
 	script#user-template(type="text/html")
 		li(data-bind="css: { active: $root.selectedUser() === $data }")
-			a(href="#" data-bind="text: $data, click: $root.selectUser.bind($root, $data)") 
+			a(href="#", role="menuitem", data-bind="text: $data, click: $root.selectUser.bind($root, $data)") 
 
 	script#user-repositories-template(type="text/html")
 		li(data-bind="css: { active: $root.selectedRepository() === $data.name() }")
@@ -35,23 +35,33 @@ block head
 		td.swimlane(data-bind="foreach: issues, attr: { width: $root.issuesColumnWidth }")
 			.panel.panel-default
 				.panel-heading
-					b.issue-number(rel="popover", data-trigger="hover", data-container="body", data-toggle="popover", data-content="test", data-placement="top auto", data-bind="text: ('#' + number() + ' ')")
+					b(data-bind="text: ('#' + number() + ' ')")
 					a(href="javascript:void(0)", data-bind="click: $root.issueOpen.bind($root, $data)")
 						b(data-bind="text: title")
 
 				.panel-body
 					span(data-bind="text: body")
 					.btn-group.btn-group-sm.pull-right
-						button.btn.btn-default.dropdown-toggle(type="button", data-bind=" css: { hide: !canAssign() }", data-toggle="dropdown")
-							img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: assignee().avatar_url() || '/images/question_mark.svg' }")
-							span.caret
-						ul.dropdown-menu(role="menu", data-bind="foreach: collaborators")
-							li(data-bind="css: { active: login() === $parent.assignee().login() }")
-								a(href="#", data-bind="click: $root.assignIssue.bind($root, $parent, $data)") 
-									img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: avatar_url() || '/images/question_mark.svg' }")
-									span(data-bind="text: login() || 'Unassigned' ")
+						.btn-group.btn-group-sm
+							button.btn.btn-default.dropdown-toggle(type="button", data-bind=" css: { hide: !canAssign() } , tooltip: { title: assigneeTooltip, container: 'body' }", data-toggle="dropdown")
+								img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: assignee().avatar_url() || '/images/question_mark.svg' }")
+								span.caret
+							ul.dropdown-menu(role="menu", data-bind="foreach: collaborators", aria-labelledby="assignee-menu")
+								li(data-bind="css: { active: login() === $parent.assignee().login() }")
+									a(href="#", data-bind="click: $root.assignIssue.bind($root, $parent, $data)") 
+										img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: avatar_url() || '/images/question_mark.svg' }")
+										span(data-bind="text: login() || 'Unassigned' ")
+						.btn-group.btn-group-sm
+							button.btn.btn-default.dropdown-toggle(type="button", data-bind="css: { hide: !haveBranch() }, tooltip: { title: 'Branch information', container: 'body' }", data-toggle="dropdown")
+								span.glyphicon.glyphicon-random.issue-assignee-avatar
+								span.caret
+							ul.dropdown-menu(role="menu", aria-labelledby="branch-menu")
+								li.dropdown-header.checkout-command
+									form: input(type="text", readonly="readonly", onclick="this.select()", data-bind="attr: { value: checkoutCommand() }")
+								li(role="presentation"): a(role="menuitem", data-bind="attr: { href: 'https://github.com/ciuliot/github-tracker/tree/' + branch().name() }", target="_blank") Open branch on GitHub
 								
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }, click: $root.issueStart.bind($root, $data, $element), tooltip: { title: 'Start work', container: 'body' }")
+								
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }, click: $root.issueStart.bind($root, $data), tooltip: { title: 'Start work', container: 'body' }")
 							span.glyphicon.glyphicon-play
 						button.btn.btn-default(type="button", data-bind="css: { hide: !canComplete() }, click: $root.issueComplete.bind($root, $data), tooltip: { title: 'Complete work', container: 'body' }")
 							span.glyphicon.glyphicon-ok
@@ -84,7 +94,7 @@ block body
 				span.icon-bar
 				span.icon-bar
 				span.icon-bar
-			a.navbar-brand
+			a.navbar-brand Tracker
 		.collapse.navbar-collapse#home-navbar-collapse
 			ul.nav.navbar-nav				
 				li.dropdown
@@ -103,7 +113,7 @@ block body
 						span(data-bind="text: selectedMilestoneTitle()")
 						b.caret
 					ul.dropdown-menu
-						li.disabled: a(href="#") Add new milestone
+						li.disabled: a(href="javascript:void(0)") Add new milestone
 						li.divider
 						<!-- ko template { name: 'milestone-template', foreach: milestones } -->			
 						<!-- /ko -->
@@ -119,7 +129,7 @@ block body
 					
 				li.dropdown
 					a.dropdown-toggle(href="#", data-toggle="dropdown")
-						div.new-branch-popover(data-bind="popover: { placement: 'left', trigger: 'manual', template: 'new-branch-template' }", title='test')    asdasd
+						div
 						span(data-bind="text: user().name()") 
 						b.caret
 					ul.dropdown-menu

@@ -59,6 +59,8 @@ class Configuration {
 
     static defaultCategoryName: string = "@other";
 
+    // See http://developer.github.com/v3/git/refs/#create-a-reference for format
+    // Prefix /refs/heads is added automatically
     static branchNameFormat: string = "issue/%d";
 }
 

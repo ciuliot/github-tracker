@@ -11,7 +11,7 @@ requirejs.config({
     "knockout.mapping": "libs/knockout.mapping",
     "knockout.bootstrap": "libs/knockout-bootstrap",
     "moment": "libs/moment.min",
-    "bootstrap": "libs/bootstrap.min"
+    "bootstrap": "libs/bootstrap"
   },
   shim: {
     jquery: {

@@ -14,18 +14,26 @@ export class Issue {
 	canAccept: KnockoutComputed<boolean>;
 	canReject: KnockoutComputed<boolean>;
 	canComplete: KnockoutComputed<boolean>;
+	haveBranch: KnockoutComputed<boolean>;
+	checkoutCommand: KnockoutComputed<string>;
 
 	assignee: KnockoutObservable<collaboratorModel>;
+	branch: KnockoutObservable<any>;
 	number: KnockoutObservable<number>;
 	phaseId: KnockoutObservable<string>;
 
 	assigneeTooltip: KnockoutComputed<string>;
 
 	constructor(private labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, public phase: Phase, data: string) {
-		knockout_mapping.fromJS(data || { assignee: null }, {
+		knockout_mapping.fromJS(data || { assignee: null, branch: null }, {
 			'assignee': {
 				create: (options: any) => {
 					return ko.observable(knockout_mapping.fromJS(options.data || { login: null, avatar_url: null }));
+				}
+			},
+			'branch': {
+				create: (options: any) => {
+					return ko.observable(knockout_mapping.fromJS(options.data || { name: null }));
 				}
 			}
 		}, this);
@@ -62,8 +70,16 @@ export class Issue {
 			return self.phaseId() === phases.implemented();
 		}, this);
 
+		this.haveBranch = ko.computed(() => {
+			return self.branch().name() !== null;
+		}, this);
+
 		this.assigneeTooltip = ko.computed(() => {
 			return self.assignee().login() || 'Assign';
+		});
+
+		this.checkoutCommand = ko.computed(() => {
+			return "git checkout " + self.branch().name();
 		});
 	}
 
@@ -119,16 +135,41 @@ export class IssuesViewModel {
 	constructor(public labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
 		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>) {
 		var self = this;
-		this.categories = knockout_mapping.fromJS([], {
-			create: (options: any) => {
-				return new Category(self, options.data); 
-			}
-		}).extend({ 
+		this.categories = ko.observableArray<Category>();
+
+		this.categories.extend({ 
 			mapToJsonResource: { 
 				url: "/issues",
+				mapping: {
+					create: (options: any) => {
+						return new Category(self, options.data); 
+					}
+				},
 				loadingCount: loadingCount,
 				savingCount: savingCount,
-				loadOnStart: false
+				loadOnStart: false,
+				findById: (where: any, id: any) => {
+					var result: Issue = null;
+
+					for (var i=0; i < where().length && result === null; i++) {
+						var category = where()[i];
+						for (var j = 0; j < category.phases().length && result === null; j++) {
+							var phase = category.phases()[j];
+							for (var k = 0; k < phase.issues().length; k++) {
+								var issue = phase.issues()[k];
+								if (issue.number() === id) {
+									result = issue;
+									break;
+								}
+							}
+						}
+					}
+
+					return result;
+				},
+				indexDone: () => {
+					$('.checkout-command').on('click', function (e) { e.stopPropagation(); });
+				}
 			}
 		});
 	}

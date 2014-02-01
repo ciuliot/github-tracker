@@ -53,10 +53,19 @@ project is and what is going on at the same time.
 
 ### Actions are just click (or tap) away
 
-Gestures, drag & drop looks nice on paper and in demos but in real work are getting
+Gestures, drag & drop looks nice on paper and in demos but in real world are getting
 in the way. GitHub tracker shows buttons and offer keyboard shortcuts
 for all with important actions. 
 
+## Repository setup
+
+Initial procedure for repository setup should include (this will be automated in later
+phases):
+
+* Allow issues to be used on your project
+* Create following labels: #inprogress, #onhold, #implemented
+* Create category labels with prefix `@`, e.g. @frontend, @backend
+* Fork project into your account
 
 ## Prerequisites
 

@@ -139,10 +139,6 @@ class HomeViewModel {
 		window.addEventListener("popstate", (e: any) => {
 		    self.setFromUrl(false);
 		});
-
-		$('body').popover({
-            selector: '[rel=popover]'
-        });
 	}
 
 	private getUrlVars(): string[] {
@@ -276,7 +272,7 @@ class HomeViewModel {
 	private updateIssue(issue: issuesViewModel.Issue, body: any): void {
 		body.user = this.selectedUser();
 		body.repository = this.selectedRepository();
-		this.issuesViewModel.categories.update(issue.number(), body);
+		this.issuesViewModel.categories.updateItem(issue.number(), body);
 	}
 
 	private updateIssuePhase(issue: issuesViewModel.Issue, newPhase: string): void {
@@ -294,17 +290,9 @@ class HomeViewModel {
 		this.updateIssue(issue, { collaborator: collaborator.login() });
 	}
 
-	issueStart(issue: issuesViewModel.Issue, element: JQuery): void {
+	issueStart(issue: issuesViewModel.Issue): void {
 		this.assignIssue(issue, this.user());
 		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.inprogress());
-
-		var panel = $(element).closest(".panel").find(".issue-number");
-
-		panel.tooltip("show");
-
-		window.setTimeout(() => {
-			panel.popover("hide");
-		}, 10000);
 	}
 
 	issuePause(issue: issuesViewModel.Issue): void {
@@ -328,6 +316,10 @@ class HomeViewModel {
 	}
 
 	issueOpen(issue: issuesViewModel.Issue): void {
+	}
+
+	copyCheckoutCommand(element: JQuery):void {
+
 	}
 }
 

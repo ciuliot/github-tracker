@@ -34,9 +34,18 @@ class Utilities {
 ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	var o = options;
 	o.indexDone = o.indexDone || function () {};
+	o.mapping = o.mapping || {};
 	o.loadOnStart = typeof(o.loadOnStart) === "undefined" ? true : o.loadOnStart;
 	o.loadingCount = o.loadingCount || function() {}; 
 	o.savingCount = o.savingCount || function() {}; 
+	o.findById = o.findById || ((where: any, id: any) => {
+		return ko.utils.arrayFirst(where, (x: any) => {
+			return x.id == id;
+		});
+	});
+
+	var initialData = knockout_mapping.toJSON(target);
+	knockout_mapping.fromJSON(initialData, o.mapping, target);
 
 	var logger = Utilities.getLogger(options.url + " mapper");
 	var lastIndexUrl: string = null;
@@ -60,11 +69,36 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 
 			var nextItem = storeQueue[0];
 
-			$.ajax(nextItem.url, nextItem.ajaxParams)
-				.done(() => {
+			$.ajax(nextItem.url, { type: "PUT", data: nextItem.data })
+				.done((data: any) => {
 					if (lastIndexUrl !== null) {
 						logger.debug("Updating data as: " + lastIndexUrl);
 						sessionStorage.setItem(lastIndexUrl, nextItem.updatedData);
+
+						// Try to reload data from server and merge 
+						logger.debug("Refreshing item " + nextItem.id + " from server");
+						o.loadingCount(o.loadingCount() + 1);
+
+						$.get(nextItem.url, nextItem.data, (freshItemData: any) => {
+							var item = o.findById(target, nextItem.id);
+
+							if (item !== null) {
+								knockout_mapping.fromJS(freshItemData.result, item);
+
+								// And finally merge and store updated object
+
+								var wholeSet = knockout_mapping.fromJSON(nextItem.updatedData, o.mapping);
+								var oldItem = o.findById(wholeSet, nextItem.id);
+
+								knockout_mapping.fromJS(freshItemData.result, oldItem);
+
+								var newSet = knockout_mapping.toJSON(wholeSet);
+								sessionStorage.setItem(lastIndexUrl, newSet);
+							}
+
+						}).always(() => {
+							o.loadingCount(o.loadingCount() - 1);
+						});
 					}
 
 					o.savingCount(storeQueue.length);
@@ -117,16 +151,14 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 		}
 	}
 
-	target.update = (id: any, args: any = {}, callback: Function = () => {}) => {
+	target.updateItem = (id: any, args: any = {}) => {
 		logger.debug("Queuing update");
 
 		storeQueue.push({
 			url: options.url + "/" + id,
+			id: id,
 			updatedData: knockout_mapping.toJSON(target),
-			ajaxParams: {
-				data: args,
-				type: "PUT"
-			}
+			data: args
 		});
 
 		executeNextInStoreQueue();
@@ -135,10 +167,6 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	if (o.loadOnStart) {
 		Utilities._deferredExtenderLoads.push(target.load);
 	}
-
-	target.subscribe((newValue:any) => {
-		logger.debug("got update");
-	});
 
 	return target;
 };
