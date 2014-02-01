@@ -47,9 +47,11 @@ class ImpedimentsController extends abstractController {
 
 		async.waterfall([
 			(createCommentCompleted: Function) => {
+				self.logger.debug("Adding impediment comment to issue #%d", requestBody.number);
 				self.getGitHubClient().issues.createComment(requestBody, createCommentCompleted);
 			}, 
 			(comment: any, getImpedimentsFileComplete: Function) => {
+				self.logger.debug("Getting impediments file");
 				self.getGitHubClient().repos.getContent(requestBody, getImpedimentsFileComplete);
 			}
 		], (err: any, result: any) => {

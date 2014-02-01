@@ -148,29 +148,35 @@ export class IssuesViewModel {
 				loadingCount: loadingCount,
 				savingCount: savingCount,
 				loadOnStart: false,
-				findById: (where: any, id: any) => {
-					var result: Issue = null;
-
-					for (var i=0; i < where().length && result === null; i++) {
-						var category = where()[i];
-						for (var j = 0; j < category.phases().length && result === null; j++) {
-							var phase = category.phases()[j];
-							for (var k = 0; k < phase.issues().length; k++) {
-								var issue = phase.issues()[k];
-								if (issue.number() === id) {
-									result = issue;
-									break;
-								}
-							}
-						}
-					}
-
-					return result;
-				},
+				findById: self.findIssueOnCollection,
 				indexDone: () => {
 					$('.checkout-command').on('click', function (e) { e.stopPropagation(); });
 				}
 			}
 		});
+	}
+
+	private findIssueOnCollection(where: any, number: number): Issue {
+		var result: Issue = null;
+
+		for (var i=0; i < where().length && result === null; i++) {
+			var category = where()[i];
+			for (var j = 0; j < category.phases().length && result === null; j++) {
+				var phase = category.phases()[j];
+				for (var k = 0; k < phase.issues().length; k++) {
+					var issue = phase.issues()[k];
+					if (issue.number() === number) {
+						result = issue;
+						break;
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+
+	findIssue(number: number): Issue {
+		return this.findIssueOnCollection(this.categories, number);
 	}
 }
