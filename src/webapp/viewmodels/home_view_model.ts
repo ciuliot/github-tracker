@@ -112,6 +112,7 @@ class HomeViewModel {
 		}).extend({
 			mapToJsonResource: { 
 				url: "/impediments",
+				refreshAfterUpdate: false,
 				loadingCount: self.loadingCount,
 				savingCount: self.savingCount,
 				loadOnStart: false
@@ -313,6 +314,7 @@ class HomeViewModel {
 
 	issuePause(issue: issuesViewModel.Issue): void {
 		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
+		this.impediment.updateItem(issue.number(), { user: this.selectedUser(), repository: this.selectedRepository() });
 	}
 
 	issuePauseOpen(issue: issuesViewModel.Issue): void {

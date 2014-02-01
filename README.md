@@ -66,9 +66,8 @@ phases):
 * Create following labels: `#inprogress`, `#onhold`, `#implemented`
 * Create category labels with prefix `@`, e.g. `@frontend`, `@backend`
 * Fork project into your account
-* Create directory `_tracker` with following files:
+* Create following files in root level:
    * impediments.md
-   * configuration.md
 
 ## Prerequisites
 

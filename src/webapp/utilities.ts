@@ -38,6 +38,7 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	o.loadOnStart = typeof(o.loadOnStart) === "undefined" ? true : o.loadOnStart;
 	o.loadingCount = o.loadingCount || function() {}; 
 	o.savingCount = o.savingCount || function() {}; 
+	o.refreshAfterUpdate = typeof(o.refreshAfterUpdate) === undefined ? true : o.refreshAfterUpdate;
 	o.findById = o.findById || ((where: any, id: any) => {
 		return ko.utils.arrayFirst(where, (x: any) => {
 			return x.id == id;
@@ -75,30 +76,32 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 						logger.debug("Updating data as: " + lastIndexUrl);
 						sessionStorage.setItem(lastIndexUrl, nextItem.updatedData);
 
-						// Try to reload data from server and merge 
-						logger.debug("Refreshing item " + nextItem.id + " from server");
-						o.loadingCount(o.loadingCount() + 1);
+						if (o.refreshAfterUpdate) {
+							// Try to reload data from server and merge 
+							logger.debug("Refreshing item " + nextItem.id + " from server");
+							o.loadingCount(o.loadingCount() + 1);
 
-						$.get(nextItem.url, nextItem.data, (freshItemData: any) => {
-							var item = o.findById(target, nextItem.id);
+							$.get(nextItem.url, nextItem.data, (freshItemData: any) => {
+								var item = o.findById(target, nextItem.id);
 
-							if (item !== null) {
-								knockout_mapping.fromJS(freshItemData.result, item);
+								if (item !== null) {
+									knockout_mapping.fromJS(freshItemData.result, item);
 
-								// And finally merge and store updated object
+									// And finally merge and store updated object
 
-								var wholeSet = knockout_mapping.fromJSON(nextItem.updatedData, o.mapping);
-								var oldItem = o.findById(wholeSet, nextItem.id);
+									var wholeSet = knockout_mapping.fromJSON(nextItem.updatedData, o.mapping);
+									var oldItem = o.findById(wholeSet, nextItem.id);
 
-								knockout_mapping.fromJS(freshItemData.result, oldItem);
+									knockout_mapping.fromJS(freshItemData.result, oldItem);
 
-								var newSet = knockout_mapping.toJSON(wholeSet);
-								sessionStorage.setItem(lastIndexUrl, newSet);
-							}
+									var newSet = knockout_mapping.toJSON(wholeSet);
+									sessionStorage.setItem(lastIndexUrl, newSet);
+								}
 
-						}).always(() => {
-							o.loadingCount(o.loadingCount() - 1);
-						});
+							}).always(() => {
+								o.loadingCount(o.loadingCount() - 1);
+							});
+						}
 					}
 
 					o.savingCount(storeQueue.length);
