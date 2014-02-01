@@ -16,6 +16,7 @@
     this.resources("milestones", { only: "index" });
     this.resources("collaborators", { only: "index" });
     this.resources("issues", { only: ["index", "update", "show"] });
+    this.resources("impediments", { only: ["update", "show"] });
 }
 
 export = initialize;

@@ -65,7 +65,8 @@ block head
 							span.glyphicon.glyphicon-play
 						button.btn.btn-default(type="button", data-bind="css: { hide: !canComplete() }, click: $root.issueComplete.bind($root, $data), tooltip: { title: 'Complete work', container: 'body' }")
 							span.glyphicon.glyphicon-ok
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canPause() }, click: $root.issuePause.bind($root, $data), tooltip: { title: 'Put work on hold', container: 'body' }")
+						button.btn.btn-default(type="button", data-toggle="modal" data-target="#add-impediment-modal"
+							data-bind="css: { hide: !canPause() }, click: $root.issuePauseOpen.bind($root, $data), tooltip: { title: 'Put work on hold', container: 'body' }")
 							span.glyphicon.glyphicon-pause
 						button.btn.btn-default(type="button", data-bind="css: { hide: !canStop() }, click: $root.issueStop.bind($root, $data), tooltip: { title: 'Stop work', container: 'body' }")
 							span.glyphicon.glyphicon-stop
@@ -87,6 +88,22 @@ block head
 				tr(data-bind="template: { name: 'issue-phase-template', foreach: phases }")
 
 block body
+	#add-impediment-modal.modal.fade(data-bind="with: impediment")
+		.modal-dialog
+			.modal-content
+				.modal-header
+					button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+					h4.modal-title(data-bind="text: ('Impediment for issue #' + issue_id()) ")
+				.modal-body
+					form(role="form")
+						.form-group
+							p.help-block Please describe why work on this issue is blocked:
+							textarea.form-control(rows="3", data-bind="value: description, valueUpdate: 'afterkeydown'")
+
+				.modal-footer
+					button.btn.btn-default(type="button", data-dismiss="modal") Close
+					button.btn.btn-primary(type="button", data-bind="click: $root.issuePause.bind($root, $data)") Save changes
+
 	nav.navbar.navbar-default(role="navigation")
 		.navbar-header
 			button.navbar-toggle(type="button", data-toggle="collapse" data-target="#home-navbar-collapse")

@@ -22,6 +22,7 @@ import milestoneModel = require("../models/milestone_model");
 import collaboratorModel = require("../models/collaborator_model");
 import issuesViewModel = require("./issues_view_model");
 import labelsViewModel = require("./labels_view_model");
+import impedimentModel = require("../models/impediment_model");
 
 class HomeViewModel {
 	repositories: KnockoutObservableArray<repositoryModel>;
@@ -31,6 +32,8 @@ class HomeViewModel {
 	issuesViewModel: issuesViewModel.IssuesViewModel;
 
 	user: KnockoutObservable<collaboratorModel>;
+	impediment: KnockoutObservable<impedimentModel>;
+
 	users: KnockoutComputed<string[]>;
 	userRepositories: KnockoutComputed<repositoryModel[]>;
 
@@ -101,6 +104,19 @@ class HomeViewModel {
 		});
 
 		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount);
+
+		this.impediment = knockout_mapping.fromJS({ issue_id: null, description: null }, {
+			create: (options: any) => {
+				return ko.observable(knockout_mapping.fromJS(options.data));
+			}
+		}).extend({
+			mapToJsonResource: { 
+				url: "/impediments",
+				loadingCount: self.loadingCount,
+				savingCount: self.savingCount,
+				loadOnStart: false
+			}
+		});
 
 		this.selectedMilestoneTitle = ko.computed(() => {
 			var milestone = ko.utils.arrayFirst(self.milestones(), (x: milestoneModel) => {
@@ -297,6 +313,10 @@ class HomeViewModel {
 
 	issuePause(issue: issuesViewModel.Issue): void {
 		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
+	}
+
+	issuePauseOpen(issue: issuesViewModel.Issue): void {
+		this.impediment().issue_id(issue.number());
 	}
 
 	issueComplete(issue: issuesViewModel.Issue): void {
