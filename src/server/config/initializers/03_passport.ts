@@ -13,13 +13,16 @@ var mongoStore = require('connect-mongodb')
 
 function initializeDatabase(app: express.Application, done: (result?: any) => void) {
     var logger = log4js.getLogger("Passport");
-    logger.info("Setting up authentication");
+    var dnsName = configuration.githubApplication.dnsName || util.format("%s:%d", configuration.http_address, configuration.http_port);
+    var callbackURL = util.format("http://%s/auth/callback", dnsName);
+    logger.info("Setting up authentication using ID %s, secret %s and callback URL %s",
+      configuration.githubApplication.clientID, configuration.githubApplication.clientSecret, callbackURL);
 
     passport.use(new GitHubStrategy({
-        clientID: "39796dadb4d9d2a45354",
-        clientSecret: "69e659d98975cbdf854e9403ae2ffbee60911194",
-        scope: ["user", "repo"],
-        callbackURL: util.format("http://%s:%d/auth/callback", configuration.http_address, configuration.http_port)
+        clientID: configuration.githubApplication.clientID,
+        clientSecret: configuration.githubApplication.clientSecret,
+        scope: configuration.githubApplication.scope,
+        callbackURL: callbackURL
       },
       function(accessToken: string, refreshToken: string, profile: any, done: Function) {
         profile.accessToken = accessToken;

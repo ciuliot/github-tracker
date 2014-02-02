@@ -17,14 +17,14 @@ class Configuration {
      * @property https_address
      * @type {String}
      */
-    static http_address: string = process.env.HTTPS_ADDRESS || "127.0.0.1";
+    static http_address: string = process.env.HTTP_ADDRESS || "127.0.0.1";
     /** 
     * Defines HTTPS port of server, uses environment value `HTTPS_PORT` if available.
     * @default 3110
     * @property https_port
     * @type {String}
     */
-    static http_port: number = process.env.HTTPS_PORT || 3110;
+    static http_port: number = process.env.HTTP_PORT || 3110;
     /** 
     * Defines server environment, uses environment value `NODE_ENV` if available.
     * @default production 
@@ -64,6 +64,13 @@ class Configuration {
     static branchNameFormat: string = "issue/%d";
 
     static impedimentsFile: string = "impediments.md";
+
+    static githubApplication: any = {
+        clientID: process.env.GITHUB_CLIENT_ID || "39796dadb4d9d2a45354",
+        clientSecret: process.env.GITHUB_CLIENT_SECRET || "69e659d98975cbdf854e9403ae2ffbee60911194",
+        dnsName: null,
+        scope: ["user", "repo"]
+    };
 }
 
 export = Configuration;

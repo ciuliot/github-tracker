@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/ciuliot/github-tracker"
   },
-  "author": "Ixonos",
+  "author": "Oto Ciulis",
   "license": "BSD",
   "devDependencies": {
     "grunt": "*",
@@ -24,7 +24,8 @@
     "grunt-contrib-yuidoc": "*",
     "grunt-vows-runner": "*",
     "vows": "*",
-    "should": "*"
+    "should": "*",
+    "grunt-contrib-stylus": "*"
   },
   "dependencies": {
     "moment": "*",
@@ -46,7 +47,6 @@
     "bootable-environment": "0.2.x",
     "passport-github": "*",
     "connect-ensure-login": "*",
-    "github": "*",
-    "grunt-contrib-stylus": "*"
+    "github": "*"
   }
 }

@@ -84,6 +84,18 @@ class Server {
         });
     }
 
+    startHttpServer(): Function {
+      var options: any = {};
+      
+      return function httpServer(done: Function) {
+        http.createServer(this.express).listen(configuration.http_port, configuration.http_address, function() {
+          var addr = this.address();
+          console.info('HTTP server listening on %s:%d', addr.address, addr.port);
+          return done();
+        });
+      };
+    }
+
     /**
     * Starts the server: </br>
     * <ul>
@@ -120,9 +132,10 @@ class Server {
         locomotive.phase(bootable.initializers(initializersDir));
 
         locomotive.phase(locomotive.boot.routes(routesFile));
-        locomotive.phase(locomotive.boot.httpServer(configuration.http_port, configuration.http_address));
+        locomotive.phase(this.startHttpServer());
 
         locomotive.boot(configuration.environment, (err: String) => {
+            this.logger.debug("Server initialized at : %s:%d", configuration.http_address, configuration.http_port);
             if (!err) {
                 locomotive.use(locomotive.router);
             }
