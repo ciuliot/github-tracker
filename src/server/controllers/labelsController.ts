@@ -37,44 +37,49 @@ class LabelsController extends abstractController {
 				}, getAllLabels); 
 			}
 			], (err: any, allLabels: labelsModel.Label[]) => {
-				var result: labelsModel.IndexResult = {
-					categories: [],
-					phases: [],
-					types: [],
-					declaration: {
-						phases: configuration.phaseNames,
-						defaultCategory: configuration.defaultCategoryName
-					}
-				};
-
-				allLabels.push({ id: null, name: configuration.defaultCategoryName });
-				allLabels.unshift({ id: null, name: configuration.phaseNames.backlog });
-				allLabels.push({ id: null, name: configuration.phaseNames.closed });
-
-				for (var i = 0; i < allLabels.length; i++) {
-					var label: labelsModel.Label = allLabels[i];
-					var category = configuration.categoryRegEx.exec(label.name);
-					var phase = configuration.phaseRegEx.exec(label.name);
-					var convertedLabel: labelsModel.Label = {
-						color: "#" + label.color,
-						id: label.name,
-						name: label.name
+				if (err) {
+					controller.logger.error("Error occured during labels retrieval");
+					callback(err, null);
+				} else {
+					var result: labelsModel.IndexResult = {
+						categories: [],
+						phases: [],
+						types: [],
+						declaration: {
+							phases: configuration.phaseNames,
+							defaultCategory: configuration.defaultCategoryName
+						}
 					};
 
-					if (category !== null) {
-						convertedLabel.name = category[1];
-						result.categories.push(convertedLabel);
-					} else if (phase !== null) {
-						convertedLabel.name = phase[1];
-						result.phases.push(convertedLabel);
-					} else {
-						result.types.push(convertedLabel);
+					allLabels.push({ id: null, name: configuration.defaultCategoryName });
+					allLabels.unshift({ id: null, name: configuration.phaseNames.backlog });
+					allLabels.push({ id: null, name: configuration.phaseNames.closed });
+
+					for (var i = 0; i < allLabels.length; i++) {
+						var label: labelsModel.Label = allLabels[i];
+						var category = configuration.categoryRegEx.exec(label.name);
+						var phase = configuration.phaseRegEx.exec(label.name);
+						var convertedLabel: labelsModel.Label = {
+							color: "#" + label.color,
+							id: label.name,
+							name: label.name
+						};
+
+						if (category !== null) {
+							convertedLabel.name = category[1];
+							result.categories.push(convertedLabel);
+						} else if (phase !== null) {
+							convertedLabel.name = phase[1];
+							result.phases.push(convertedLabel);
+						} else {
+							result.types.push(convertedLabel);
+						}
 					}
+
+					controller.logger.debug(result);
+
+					callback(err, result);
 				}
-
-				controller.logger.debug(result);
-
-				callback(err, result);
 			}
 		);
 	}

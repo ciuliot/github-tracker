@@ -38,7 +38,7 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	o.loadOnStart = typeof(o.loadOnStart) === "undefined" ? true : o.loadOnStart;
 	o.loadingCount = o.loadingCount || function() {}; 
 	o.savingCount = o.savingCount || function() {}; 
-	o.refreshAfterUpdate = typeof(o.refreshAfterUpdate) === undefined ? true : o.refreshAfterUpdate;
+	o.refreshAfterUpdate = typeof(o.refreshAfterUpdate) === "undefined" ? true : o.refreshAfterUpdate;
 	o.findById = o.findById || ((where: any, id: any) => {
 		return ko.utils.arrayFirst(where, (x: any) => {
 			return x.id == id;
@@ -123,13 +123,15 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 		o.loadingCount(o.loadingCount() + 1);
 
 		$.get(options.url, args, (data:any) => {
-			loadData(data.err, data.result);
+			if (!data.err) {
+				loadData(data.err, data.result);
 
-			var storageKey = getStorageKey("index", args);
-			logger.debug("Storing data as: " + storageKey);
-			sessionStorage.setItem(storageKey, JSON.stringify(data.result));
+				var storageKey = getStorageKey("index", args);
+				logger.debug("Storing data as: " + storageKey);
+				sessionStorage.setItem(storageKey, JSON.stringify(data.result));
 
-			lastIndexUrl = options.url;
+				lastIndexUrl = options.url;
+			}
 		}).fail((error: string) => {
 			o.indexDone(error);
 			logger.error(error);

@@ -30,6 +30,7 @@ class HomeViewModel {
 	milestones: KnockoutObservableArray<milestoneModel>;
 	collaborators: KnockoutObservableArray<collaboratorModel>;
 	issuesViewModel: issuesViewModel.IssuesViewModel;
+	issueDetail: KnockoutObservable<issuesViewModel.Issue>;
 
 	user: KnockoutObservable<collaboratorModel>;
 	impediment: KnockoutObservable<impedimentModel>;
@@ -118,6 +119,12 @@ class HomeViewModel {
 				loadOnStart: false
 			}
 		});
+
+		this.issueDetail = knockout_mapping.fromJS({ number: null }, {
+			create: (options: any) => {
+				return ko.observable(knockout_mapping.fromJS(options.data));
+			}
+		})
 
 		this.selectedMilestoneTitle = ko.computed(() => {
 			var milestone = ko.utils.arrayFirst(self.milestones(), (x: milestoneModel) => {

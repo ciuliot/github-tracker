@@ -33,7 +33,7 @@ block head
 
 	script#issue-phase-template(type="text/html")
 		td.swimlane(data-bind="foreach: issues, attr: { width: $root.issuesColumnWidth }")
-			.panel.panel-default
+			.panel.panel-default.issue
 				.panel-heading
 					b(data-bind="text: ('#' + number() + ' ')")
 					a(href="javascript:void(0)", data-bind="click: $root.issueOpen.bind($root, $data)")
@@ -65,7 +65,7 @@ block head
 							span.glyphicon.glyphicon-play
 						button.btn.btn-default(type="button", data-bind="css: { hide: !canComplete() }, click: $root.issueComplete.bind($root, $data), tooltip: { title: 'Complete work', container: 'body' }")
 							span.glyphicon.glyphicon-ok
-						button.btn.btn-default(type="button", data-toggle="modal" data-target="#add-impediment-modal"
+						button.btn.btn-default(type="button", data-toggle="modal" data-target="#impediment-modal"
 							data-bind="css: { hide: !canPause() }, click: $root.issuePauseOpen.bind($root, $data), tooltip: { title: 'Put work on hold', container: 'body' }")
 							span.glyphicon.glyphicon-pause
 						button.btn.btn-default(type="button", data-bind="css: { hide: !canStop() }, click: $root.issueStop.bind($root, $data), tooltip: { title: 'Stop work', container: 'body' }")
@@ -77,18 +77,18 @@ block head
 
 
 	script#issue-category-template(type="text/html")
-		.panel.panel-default(data-bind="attr: { id : id() }")
-			.panel-heading
+		.panel.panel-default.category-panel(data-bind="attr: { id : id() }")
+			.panel-heading.category-heading(data-bind="style: { background: 'linear-gradient(45deg, transparent, ' + color() + ' 0px, ' + color() + ' 10%, transparent 10%)' }")
 				span(data-bind="text: name")
 				button.disabled.btn.btn-default.btn-xs.pull-right(type="button") 
 					span Add new issue
 
 			table.table
 				tbody
-				tr(data-bind="template: { name: 'issue-phase-template', foreach: phases }")
+					tr(data-bind="template: { name: 'issue-phase-template', foreach: phases }")
 
 block body
-	#add-impediment-modal.modal.fade(data-bind="with: impediment")
+	#impediment-modal.modal.fade(data-bind="with: impediment")
 		.modal-dialog
 			.modal-content
 				.modal-header
@@ -99,6 +99,20 @@ block body
 						.form-group
 							p.help-block Please describe why work on this issue is blocked:
 							textarea.form-control(rows="3", data-bind="value: description, valueUpdate: 'afterkeydown'")
+
+				.modal-footer
+					button.btn.btn-default(type="button", data-dismiss="modal") Close
+					button.btn.btn-primary(type="button", data-dismiss="modal", data-bind="click: $root.issuePause.bind($root, $data)") Save changes
+
+	#issue-modal.modal.fade(data-bind="with: issueDetail")
+		.modal-dialog
+			.modal-content
+				.modal-header
+					button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+					h4.modal-title(data-bind="text: ('Issue #' + number()) ")
+				.modal-body
+					form(role="form")
+						include ../partials/feature
 
 				.modal-footer
 					button.btn.btn-default(type="button", data-dismiss="modal") Close
@@ -139,7 +153,8 @@ block body
 				li: p.loading-indicator.navbar-text(data-bind="css: { invisible: loadingCount() == 0 }")
 				li
 					.btn-group
-						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: selectedRepository() === null }, tooltip: { title: 'Add new issue to product backlog', container: 'body', placement: 'bottom' }")
+						button.btn.btn-default.navbar-btn(data-toggle="modal" data-target="#issue-modal"
+							data-bind="css: { disabled: selectedRepository() === null }, tooltip: { title: 'Add new issue to product backlog', container: 'body', placement: 'bottom' }")
 							span.glyphicon.glyphicon-plus
 						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: loadingCount() > 0 }, click: $root.reloadIssues.bind($root, true), tooltip: { title: 'Refresh issues', container: 'body', placement: 'bottom' }")
 							span.glyphicon.glyphicon-refresh
@@ -154,14 +169,11 @@ block body
 						li.divider
 						li: a(href="/logout") Logout
 
-	table.table
+	table.table.phases
 		thead
 			tr(data-bind="template: { name: 'issue-phase-header-template', foreach: labelsViewModel.labels().phases }")
 
-	nav.navbar.navbar-default#issues-navbar(role="navigation")
-		.navbar-header
-			a.navbar-brand(href="#") Issues
-		ul.nav.navbar-nav(data-bind="template: { name: 'issue-category-header-template', foreach: issuesViewModel.categories() }")
+
 	.issues(data-spy="scroll", data-target="#issues-navbar")
 		<!-- ko template: { name: 'issue-category-template', foreach: issuesViewModel.categories() } -->
 		<!-- /ko -->
