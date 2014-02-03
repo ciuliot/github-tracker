@@ -176,4 +176,5 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	return target;
 };
 
+
 export = Utilities;

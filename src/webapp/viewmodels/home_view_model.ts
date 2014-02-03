@@ -41,6 +41,8 @@ class HomeViewModel {
 	selectedUser: KnockoutObservable<string> = ko.observable(null);
 	selectedRepository: KnockoutObservable<string> = ko.observable(null);
 
+	url: KnockoutComputed<string>;
+
 	allMilestonesItem: milestoneModel = knockout_mapping.fromJS ({ id: "*", title: "All milestones" });
 	selectedMilestone: KnockoutObservable<string> = ko.observable("*");
 	selectedMilestoneTitle: KnockoutComputed<string>;
@@ -63,7 +65,7 @@ class HomeViewModel {
 				loadingCount: self.loadingCount,
 				savingCount: self.savingCount,
 				indexDone: () => {
-					self.setFromUrl();
+					self.url(null);
 				}
 			}
 		});
@@ -156,59 +158,74 @@ class HomeViewModel {
 			return (phases.length > 0 ? (100 / phases.length) : 100) + "%"; 
 		});
 
+		this.url = ko.computed({
+			read: () => {
+				var origin = [window.location.protocol, "//", window.location.hostname, ":", window.location.port].join("");
+				var parts = [origin, "index", self.selectedUser()];
+
+				if (self.selectedRepository() !== null) {
+					parts.push(self.selectedRepository());
+
+					if (self.selectedMilestone() !== null) {
+						parts.push(self.selectedMilestone());
+					}
+				}
+
+				var url = parts.join("/");
+
+				if (self.issuesViewModel.filter().length > 0) {
+					url += "?q=" + self.issuesViewModel.filter();
+				}
+
+				if (self.url) {
+					history.pushState(null, null, url);
+				}
+
+				return url;
+			},
+			write: (newValue: string) => {
+				var href = newValue || window.location.href;
+				var pathParts = href.split("//")[1].split("?");
+				var variables = pathParts[0].split("/") || [];				
+
+				var user = variables.length > 2 ? variables[2] : "";
+				var repository = variables.length > 3 ? variables[3] : null;
+				var milestone = variables.length > 4 ? variables[4] : "*";
+
+				if (user.length === 0 && self.users().length > 0) {
+					user = self.users()[0];
+				}
+
+				if (user.length > 0) {
+					self.selectUser(user);
+				}
+
+				self.selectRepository(repository);
+				self.selectMilestone(milestone);
+
+				if (pathParts[1]) { // Querystring
+					var queryString = pathParts[1].split("&");
+
+					for (var i = 0; i < queryString.length; i++) {
+						var parts = queryString[i].split("=");
+							if (parts.length === 2) {
+							var key = parts[0], value = parts[1];
+							if (key === "q") {
+								self.issuesViewModel.filter(value);
+							}
+						}
+					}
+				}
+			}
+		});
+
 		this.logger.info("Started & bound");
 		ko.applyBindings(this);
 		utilities.loadMapper();
 
 		window.addEventListener("popstate", (e: any) => {
-		    self.setFromUrl(false);
+		    self.url(null);
 		});
-	}
-
-	private getUrlVars(): string[] {
-	    var vars: any[] = [], hash: any;
-	    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
-	    for(var i = 0; i < hashes.length; i++)
-	    {
-	        hash = hashes[i].split('=');
-	        vars.push(hash[0]);
-	        vars[hash[0]] = hash[1];
-	    }
-	    return vars;
-	}
-
-	private setFromUrl(pushState: boolean = true): void {
-		var variables = window.location.pathname.split("/") || [];
-		var user = variables.length > 2 ? variables[2] : "";
-		var repository = variables.length > 3 ? variables[3] : null;
-		var milestone = variables.length > 4 ? variables[4] : "*";
-
-
-		if (user.length === 0 && this.users().length > 0) {
-			user = this.users()[0];
-		}
-
-		if (user.length > 0) {
-			this.selectUser(user, pushState);
-		}
-
-		this.selectRepository(repository, pushState);
-		this.selectMilestone(milestone, pushState);
-	}
-
-	private getUrl(): string {
-		var origin = [window.location.protocol, "//", window.location.hostname, ":", window.location.port].join("");
-		var parts = [origin, "index", this.selectedUser()];
-
-		if (this.selectedRepository() !== null) {
-			parts.push(this.selectedRepository());
-
-			if (this.selectedMilestone() !== null) {
-				parts.push(this.selectedMilestone());
-			}
-		}
-
-		return parts.join("/");
 	}
 
 	selectUser(user: string, pushState: boolean = true) {
@@ -218,10 +235,6 @@ class HomeViewModel {
 		}
 
 		this.selectedUser(user);
-
-		if (pushState) {
-			history.pushState(null, null, this.getUrl());
-		}
 	}
 
 	selectRepository(repository: string, pushState: boolean = true) {
@@ -231,10 +244,6 @@ class HomeViewModel {
 
 		this.loadIssues(false, () => {
 			self.selectMilestone("*", false);
-
-			if (pushState) {
-				history.pushState(null, null, self.getUrl());
-			}
 		});
 	}
 
@@ -282,11 +291,7 @@ class HomeViewModel {
 		this.logger.info("Selecting milestone: " + milestone);
 		this.selectedMilestone(milestone);
 
-		this.loadIssues(false, () => {
-			if (pushState) {
-				history.pushState(null, null, self.getUrl());
-			}
-		});
+		this.loadIssues(false);
 	}
 
 	reloadRepositories() {

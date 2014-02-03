@@ -315,7 +315,7 @@ class IssuesController extends abstractController {
 				number: issue.number,
 				body: issue.body,
 				branch: { name: null, url: null },
-				assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : null
+				assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null }
 			});
 		}
 	}

@@ -21,6 +21,7 @@ export class Issue {
 	branch: KnockoutObservable<any>;
 	number: KnockoutObservable<number>;
 	phaseId: KnockoutObservable<string>;
+	title: KnockoutObservable<string>;
 
 	assigneeTooltip: KnockoutComputed<string>;
 
@@ -99,8 +100,9 @@ export class Issue {
 
 export class Phase extends labelsViewModel.Label {
 	issues: KnockoutObservableArray<Issue>;
+	filteredIssues: KnockoutComputed<Issue[]>;
 
-	constructor(public category: Category, data: string) {
+	constructor(public category: Category, private filter: KnockoutObservable<string>, data: string) {
 		super();
 
 		var self = this;
@@ -111,6 +113,19 @@ export class Phase extends labelsViewModel.Label {
 				}
 			}
 		}, this);
+
+		this.filteredIssues = ko.computed(() => {
+			return ko.utils.arrayFilter(self.issues(), x => {
+				var filterValue = self.filter().toLowerCase();
+
+				return filterValue.length === 0 
+					|| (x.number().toString().indexOf(filterValue) >= 0)
+					|| (x.title().toLowerCase().indexOf(filterValue) >= 0)
+					|| (self.category.name().toLowerCase().indexOf(filterValue) >= 0)
+					|| (self.name().toLowerCase().indexOf(filterValue) >= 0)
+					|| (x.assignee().login() !== null && x.assignee().login().toLowerCase().indexOf(filterValue) >= 0);
+			});
+		});
 	}
 }
 
@@ -122,7 +137,7 @@ export class Category extends labelsViewModel.Label  {
 		knockout_mapping.fromJS(data, {
 			"phases": {
 				create: (options: any) => {
-					return new Phase(options.parent, options.data);
+					return new Phase(options.parent, viewModel.filter, options.data);
 				}
 			}
 		}, this);
@@ -131,6 +146,7 @@ export class Category extends labelsViewModel.Label  {
 
 export class IssuesViewModel {
 	categories: KnockoutObservableArray<Category>;
+	filter: KnockoutObservable<string> = ko.observable("");
 
 	constructor(public labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
 		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>) {

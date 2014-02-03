@@ -32,9 +32,9 @@ block head
 		li: a(data-bind="text: name, attr: { href: id() }")
 
 	script#issue-phase-template(type="text/html")
-		td.swimlane(data-bind="foreach: issues, attr: { width: $root.issuesColumnWidth }")
+		td.swimlane(data-bind="foreach: filteredIssues, attr: { width: $root.issuesColumnWidth }")
 			.panel.panel-default.issue
-				.panel-heading
+				.panel-heading(data-bind="style: { background: 'linear-gradient(45deg, transparent, ' + $parents[1].color() + ' 0px, ' + $parents[1].color() + ' 50%, transparent 50%)' }, tooltip: { title: $parents[1].name() }")
 					b(data-bind="text: ('#' + number() + ' ')")
 					a(href="javascript:void(0)", data-bind="click: $root.issueOpen.bind($root, $data)")
 						b(data-bind="text: title")
@@ -73,19 +73,7 @@ block head
 						button.btn.btn-default(type="button", data-bind="css: { hide: !canAccept() }, click: $root.issueAccept.bind($root, $data), tooltip: { title: 'Accept implementation', container: 'body' }")
 							span.glyphicon.glyphicon-thumbs-up
 						button.btn.btn-default(type="button", data-bind="css: { hide: !canReject() }, click: $root.issueReject.bind($root, $data), tooltip: { title: 'Reject implementation', container: 'body' }")
-							span.glyphicon.glyphicon-thumbs-down
-
-
-	script#issue-category-template(type="text/html")
-		.panel.panel-default.category-panel(data-bind="attr: { id : id() }")
-			.panel-heading.category-heading(data-bind="style: { background: 'linear-gradient(45deg, transparent, ' + color() + ' 0px, ' + color() + ' 10%, transparent 10%)' }")
-				span(data-bind="text: name")
-				button.disabled.btn.btn-default.btn-xs.pull-right(type="button") 
-					span Add new issue
-
-			table.table
-				tbody
-					tr(data-bind="template: { name: 'issue-phase-template', foreach: phases }")
+							span.glyphicon.glyphicon-thumbs-down		
 
 block body
 	#impediment-modal.modal.fade(data-bind="with: impediment")
@@ -152,6 +140,10 @@ block body
 				li: p.saving-indicator.navbar-text(data-bind="css: { invisible: savingCount() == 0 }")
 				li: p.loading-indicator.navbar-text(data-bind="css: { invisible: loadingCount() == 0 }")
 				li
+					form.navbar-form(role="form")
+						.form-group
+							input.form-control(type="text", placeholder="Search", data-bind="value: $root.issuesViewModel.filter, valueUpdate: 'afterkeydown'")
+				li
 					.btn-group
 						button.btn.btn-default.navbar-btn(data-toggle="modal" data-target="#issue-modal"
 							data-bind="css: { disabled: selectedRepository() === null }, tooltip: { title: 'Add new issue to product backlog', container: 'body', placement: 'bottom' }")
@@ -175,8 +167,13 @@ block body
 
 
 	.issues(data-spy="scroll", data-target="#issues-navbar")
-		<!-- ko template: { name: 'issue-category-template', foreach: issuesViewModel.categories() } -->
-		<!-- /ko -->
+		table.table
+			tbody
+				<!-- ko foreach: issuesViewModel.categories() -->
+				tr(data-bind="template: { name: 'issue-phase-template', foreach: phases }")
+				<!-- /ko -->
+				
+		
 
 
 
