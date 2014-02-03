@@ -34,8 +34,8 @@ block head
 	script#issue-phase-template(type="text/html")
 		td.swimlane(data-bind="foreach: filteredIssues, attr: { width: $root.issuesColumnWidth }")
 			.panel.panel-default.issue
-				.panel-heading(data-bind="style: { background: 'linear-gradient(45deg, transparent, ' + $parents[1].color() + ' 0px, ' + $parents[1].color() + ' 50%, transparent 50%)' }, tooltip: { title: $parents[1].name() }")
-					b(data-bind="text: ('#' + number() + ' ')")
+				.panel-heading(data-bind="style: { background: 'linear-gradient(45deg, transparent, ' + $parents[1].color() + ' 0px, ' + $parents[1].color() + ' 50%, transparent 50%)' }")
+					b(data-bind="text: ('#' + number() + ' '), tooltip: { title: $parents[1].name() }")
 					a(href="javascript:void(0)", data-bind="click: $root.issueOpen.bind($root, $data)")
 						b(data-bind="text: title")
 

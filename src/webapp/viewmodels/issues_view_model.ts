@@ -76,7 +76,7 @@ export class Issue {
 		}, this);
 
 		this.assigneeTooltip = ko.computed(() => {
-			return self.assignee().login() || 'Assign';
+			return self.assignee().login() === null ? 'Assign' : ('Assigned to ' + self.assignee().login());
 		});
 
 		this.checkoutCommand = ko.computed(() => {

@@ -309,14 +309,28 @@ class IssuesController extends abstractController {
 				categorizedIssues.phases.map((x: any) => { x.issues = []; return x; });
 			}
 
-			var phasedIssue = categorizedIssues.phases.filter((x: any) => { return x.id === phase; })[0];
-			phasedIssue.issues.push( { 
+			var convertedIssue: any = {
 				title: issue.title,
 				number: issue.number,
 				body: issue.body,
 				branch: { name: null, url: null },
 				assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null }
-			});
+			};
+
+			var bodyParts = convertedIssue.body.split("***");
+			this.logger.debug(bodyParts);
+
+			if (bodyParts.length === 2) {
+				convertedIssue.body = bodyParts[1].trim();
+				var fields = configuration.bodyFieldsRegEx.exec(bodyParts[0]);
+
+				for (var j = 1; j < fields.length; j+=2) {
+					convertedIssue[fields[j].trim().toLowerCase()] = fields[j + 1].trim();
+				}
+			}
+
+			var phasedIssue = categorizedIssues.phases.filter((x: any) => { return x.id === phase; })[0];
+			phasedIssue.issues.push(convertedIssue); 
 		}
 	}
 }

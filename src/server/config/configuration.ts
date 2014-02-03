@@ -79,6 +79,8 @@ class Configuration {
         dnsName: null,
         scope: ["user", "repo"]
     };
+
+    static bodyFieldsRegEx = /__(.+):__\s+(.+)/;
 }
 
 export = Configuration;
