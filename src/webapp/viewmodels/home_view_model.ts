@@ -122,7 +122,7 @@ class HomeViewModel {
 			}
 		});
 
-		this.issueDetail = knockout_mapping.fromJS({ number: null }, {
+		this.issueDetail = knockout_mapping.fromJS({ number: null, estimate: "XS", description: null }, {
 			create: (options: any) => {
 				return ko.observable(knockout_mapping.fromJS(options.data));
 			}
@@ -352,6 +352,8 @@ class HomeViewModel {
 	}
 
 	issueOpen(issue: issuesViewModel.Issue): void {
+		var rawData = knockout_mapping.toJSON(issue);
+		knockout_mapping.fromJSON(rawData, this.issueDetail);
 	}
 
 	copyCheckoutCommand(element: JQuery):void {

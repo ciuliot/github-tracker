@@ -29,7 +29,7 @@ export class Issue {
 		knockout_mapping.fromJS(data || { assignee: null, branch: null }, {
 			'assignee': {
 				create: (options: any) => {
-					return ko.observable(knockout_mapping.fromJS(options.data || { login: null, avatar_url: null }));
+					return ko.observable(knockout_mapping.fromJS(options.data || { login: null, avatar_url: null, estimate: null, description: null }));
 				}
 			},
 			'branch': {

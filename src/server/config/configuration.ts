@@ -64,11 +64,11 @@ class Configuration {
     static branchNameFormat: string = "issue/%d";
 
     static estimateSizes: any = {
-        xs: 1,
-        s: 2,
-        m: 3,
-        l: 5,
-        xl: 8
+        XS: 1,
+        SM: 2,
+        M: 3,
+        L: 5,
+        XL: 8
     };
 
     static impedimentsFile: string = "impediments.md";

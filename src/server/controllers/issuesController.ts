@@ -312,16 +312,17 @@ class IssuesController extends abstractController {
 			var convertedIssue: any = {
 				title: issue.title,
 				number: issue.number,
-				body: issue.body,
+				description: issue.body,
 				branch: { name: null, url: null },
-				assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null }
+				assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null },
+				estimate: null
 			};
 
-			var bodyParts = convertedIssue.body.split("***");
+			var bodyParts = convertedIssue.description.split("***");
 			this.logger.debug(bodyParts);
 
 			if (bodyParts.length === 2) {
-				convertedIssue.body = bodyParts[1].trim();
+				convertedIssue.description = bodyParts[1].trim();
 				var fields = configuration.bodyFieldsRegEx.exec(bodyParts[0]);
 
 				for (var j = 1; j < fields.length; j+=2) {

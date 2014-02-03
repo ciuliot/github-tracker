@@ -36,11 +36,12 @@ block head
 			.panel.panel-default.issue
 				.panel-heading(data-bind="style: { background: 'linear-gradient(45deg, transparent, ' + $parents[1].color() + ' 0px, ' + $parents[1].color() + ' 50%, transparent 50%)' }")
 					b(data-bind="text: ('#' + number() + ' '), tooltip: { title: $parents[1].name() }")
-					a(href="javascript:void(0)", data-bind="click: $root.issueOpen.bind($root, $data)")
+					a(data-bind="click: $root.issueOpen.bind($root, $data)", data-toggle="modal", data-target="#issue-modal")
 						b(data-bind="text: title")
+					span.badge.pull-right(data-bind="text: estimate")
 
-				.panel-body
-					span(data-bind="text: body")
+				.panel-body(data-bind="css: { hide: description().length === 0 && $parent.id() === '#closed' }")
+					span(data-bind="text: description")
 					.btn-group.btn-group-sm.pull-right
 						.btn-group.btn-group-sm
 							button.btn.btn-default.dropdown-toggle(type="button", data-bind=" css: { hide: !canAssign() } , tooltip: { title: assigneeTooltip, container: 'body' }", data-toggle="dropdown")
@@ -101,6 +102,8 @@ block body
 				.modal-body
 					form(role="form")
 						include ../partials/feature
+						label(for="description") Description:
+						textarea.form-control(rows="3", data-bind="value: description")
 
 				.modal-footer
 					button.btn.btn-default(type="button", data-dismiss="modal") Close
