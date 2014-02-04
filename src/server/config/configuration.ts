@@ -80,7 +80,21 @@ class Configuration {
         scope: ["user", "repo"]
     };
 
-    static bodyFieldsRegEx = /__(.+):__\s+(.+)/;
+     static bodyFieldsSeparator: string = "***";
+
+    // Matches format of body fields (also multilines), e.g.
+    /* __Estimate:__ XXL
+        __Size:__ blah
+        __Steps:__
+        1. Test
+        2. Test
+        __List:__
+        * Test
+        * Test
+        __Estimate:__ XXL
+        ***
+        */
+    static bodyFieldsRegEx = /__(.+?):__([\s\S]*?)(?=__|\*\*\*)/;
 }
 
 export = Configuration;
