@@ -102,12 +102,9 @@ block body
 				.modal-body
 					form(role="form")
 						include ../partials/feature
-						label(for="description") Description:
-						textarea.form-control(rows="3", data-bind="value: description")
-
 				.modal-footer
 					button.btn.btn-default(type="button", data-dismiss="modal") Close
-					button.btn.btn-primary(type="button", data-dismiss="modal", data-bind="click: $root.issuePause.bind($root, $data)") Save changes
+					button.btn.btn-primary(type="button", data-dismiss="modal", data-bind="click: $root.issueSave.bind($root, $data)") Save changes
 
 	nav.navbar.navbar-default(role="navigation")
 		.navbar-header

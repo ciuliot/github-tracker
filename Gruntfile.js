@@ -71,6 +71,7 @@ module.exports = function (grunt) {
                 files: [
                     { src: "libs/**", dest: "dist/public/js/",  },
                     { src: "images/**", dest: "dist/public/",  },
+                    { src: "templates/**", dest: "dist/",  },
                     { src: "fonts/**", dest: "dist/public/",  },
                     { src: "**/*.css", dest: "dist/public/css/", cwd: "styles/", expand: true }
                 ]

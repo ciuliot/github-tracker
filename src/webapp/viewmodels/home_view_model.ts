@@ -356,8 +356,14 @@ class HomeViewModel {
 		knockout_mapping.fromJSON(rawData, this.issueDetail);
 	}
 
-	copyCheckoutCommand(element: JQuery):void {
+	issueSave():void {
+		var body = {
+			user: this.selectedUser(),
+			repository: this.selectedRepository(),
+			body: knockout_mapping.toJS(this.issueDetail())
+		};
 
+		this.issuesViewModel.categories.updateItem(this.issueDetail().number(), body);
 	}
 }
 

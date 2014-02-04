@@ -1,12 +1,17 @@
 /// <reference path='../../../interfaces/async/async.d.ts'/>
+/// <reference path='../../../interfaces/mustache/mustache.d.ts'/>
 
 import async = require("async");
 import util = require("util");
+import fs = require("fs");
+import path = require("path");
 
 import abstractController = require("./abstractController");
 import labelsController = require("./labelsController");
 import configuration = require('../config/configuration');
 import labelsModel = require("../models/labels_model");
+
+var mustache: MustacheStatic = require("mustache");
 
 class IssuesController extends abstractController {
 	constructor() {
@@ -195,6 +200,7 @@ class IssuesController extends abstractController {
 
 		var collaborator = self.param("collaborator");
 		var phase = self.param("phase");
+		var body = self.param("body");
 
 		var message: any = {				
 			user: user,
@@ -258,6 +264,38 @@ class IssuesController extends abstractController {
 				});
 			}
 		} 
+		else if (body !== undefined) {
+			self.logger.info("Updating issue %s - updating body to %o", number, body);
+
+			var templateDir = path.resolve(configuration.startupDirectory, './dist/templates');
+
+			tasks = [
+				(templateExistsCompleted: (err: ErrnoException, data: any) => void) => {
+					var type: string = body.type.name || "default";
+					
+					if (!fs.existsSync(path.resolve(templateDir, type))) {
+						type = "default";
+					}
+
+					templateExistsCompleted(null, type);
+				},
+				(templateName: string, loadTemplateCompleted: (err: ErrnoException, data: any) => void) => {
+					self.logger.debug("Using template %s", templateName);
+					fs.readFile(path.resolve(templateDir, templateName), { encoding: 'utf8' }, loadTemplateCompleted);
+				},
+				(data: string, renderTemplateCompleted: Function) => {
+					mustache["escapeHtml"] = (text: string) => { return text; } // Disable escaping, we really just want plaintext
+					var output = mustache.render(data, body);
+					renderTemplateCompleted(null, output);
+				},
+				(formattedBody: string, issueSaveCompleted: Function) => {
+					message.body = formattedBody;
+					self.getGitHubClient().issues.edit(message, issueSaveCompleted);
+				}
+			];
+
+			mustache.render
+		}
 
 		if (tasks.length == 0) {
 			self.jsonResponse("Operation not allowed");
@@ -279,26 +317,21 @@ class IssuesController extends abstractController {
 			var issue = allIssues[i];
 			var category = configuration.defaultCategoryName;
 			var phase = forcePhase || configuration.phaseNames.backlog;
+			var type: labelsModel.Label = null;
 
 			for (var j = 0; j < issue.labels.length; j++) {
 				var label = issue.labels[j];
-				var match = configuration.categoryRegEx.exec(label.name);
+				var categoryMatch = configuration.categoryRegEx.exec(label.name);
+				var phaseMatch = configuration.phaseRegEx.exec(label.name);
 
-				if (match !== null) {
+				if (categoryMatch !== null) {
 					category = label.name;
-					break;
-				}
-			}
-
-			if (forcePhase === null) {
-				for (var j = 0; j < issue.labels.length; j++) {
-					var label = issue.labels[j];
-					var match = configuration.phaseRegEx.exec(label.name);
-
-					if (match !== null) {
+				} else if (phaseMatch !== null) {
+					if (forcePhase === null) {
 						phase = label.name;
-						break;
 					}
+				} else if (type === null) {
+					type = label;
 				}
 			}
 
@@ -311,6 +344,7 @@ class IssuesController extends abstractController {
 
 			var convertedIssue: any = {
 				title: issue.title,
+				type: type || { name: null, id: null },
 				number: issue.number,
 				description: issue.body,
 				branch: { name: null, url: null },
