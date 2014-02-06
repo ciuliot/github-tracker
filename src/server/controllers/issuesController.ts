@@ -344,7 +344,7 @@ class IssuesController extends abstractController {
 
 			var convertedIssue: any = {
 				title: issue.title,
-				type: type || { name: null, id: null },
+				type: type || { name: null, id: null, color: null },
 				number: issue.number,
 				description: issue.body,
 				branch: { name: null, url: null },

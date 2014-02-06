@@ -39,7 +39,7 @@ export class Issue {
 			},
 			'type': {
 				create: (options: any) => {
-					return ko.observable(knockout_mapping.fromJS(options.data || { name: null }));
+					return ko.observable(knockout_mapping.fromJS(options.data || { name: null, color: null }));
 				}
 			}
 		}, this);
