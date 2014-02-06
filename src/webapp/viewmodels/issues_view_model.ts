@@ -172,6 +172,14 @@ export class IssuesViewModel {
 				findById: self.findIssueOnCollection,
 				indexDone: () => {
 					$('.checkout-command').on('click', function (e) { e.stopPropagation(); });
+
+					$(".issue").on("mouseenter", function() {
+						$(".actions", this).show();
+						$(".description", this).addClass("background");
+					}).on("mouseleave", function() {
+						$(".actions", this).hide();
+						$(".description", this).removeClass("background");
+					});
 				}
 			}
 		});

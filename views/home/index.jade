@@ -35,14 +35,14 @@ block head
 		td.swimlane(data-bind="foreach: filteredIssues, attr: { width: $root.issuesColumnWidth }")
 			.panel.panel-default.issue
 				.panel-heading(data-bind="style: { background: $parents[1].color() }")
-					b(data-bind="text: ('#' + number() + ' '), tooltip: { title: $parents[1].name() }")
+					strong(data-bind="text: ('#' + number() + ' '), tooltip: { title: $parents[1].name() }")
 					a(data-bind="click: $root.issueOpen.bind($root, $data)", data-toggle="modal", data-target="#issue-modal")
-						b(data-bind="text: title")
+						strong(data-bind="text: title")
 					span.badge.pull-right(data-bind="text: estimate")
 
 				.panel-body(data-bind="css: { hide: description().length === 0 && $parent.id() === '#closed' }")
-					span.description(data-bind="text: description")
-					.btn-group.btn-group-sm.pull-right
+					img.avatar(data-bind="attr: { src: assignee().avatar_url() }, visible: assignee().avatar_url() !== null")
+					.actions.btn-group.btn-group-sm.pull-right
 						.btn-group.btn-group-sm
 							button.btn.btn-default.dropdown-toggle(type="button", data-bind=" css: { hide: !canAssign() } , tooltip: { title: assigneeTooltip, container: 'body' }", data-toggle="dropdown")
 								img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: assignee().avatar_url() || '/images/question_mark.svg' }")
@@ -75,6 +75,7 @@ block head
 							span.glyphicon.glyphicon-thumbs-up
 						button.btn.btn-default(type="button", data-bind="css: { hide: !canReject() }, click: $root.issueReject.bind($root, $data), tooltip: { title: 'Reject implementation', container: 'body' }")
 							span.glyphicon.glyphicon-thumbs-down		
+					span.description(data-bind="text: description")
 
 block body
 	#impediment-modal.modal.fade(data-bind="with: impediment")
