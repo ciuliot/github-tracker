@@ -357,10 +357,13 @@ class IssuesController extends abstractController {
 
 			if (bodyParts.length === 2) {
 				convertedIssue.description = bodyParts[1].trim();
-				var fields = configuration.bodyFieldsRegEx.exec(bodyParts[0] + configuration.bodyFieldsSeparator);
+				var input = bodyParts[0] + configuration.bodyFieldsSeparator;
+				var fields: any = null;
+				while ( (fields = configuration.bodyFieldsRegEx.exec(input)) !== null) {
+					var name = fields[1].trim().toLowerCase();
+					name = name.split(" ").map((val: string, index: number) => { return index === 0 ? val : (val[0].toUpperCase() + val.substring(1)); }).join("");
 
-				for (var j = 1; j < fields.length; j+=2) {
-					convertedIssue[fields[j].trim().toLowerCase()] = fields[j + 1].trim();
+					convertedIssue[name] = fields[2].trim();
 				}
 			}
 

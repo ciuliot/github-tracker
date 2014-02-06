@@ -94,7 +94,7 @@ class Configuration {
         __Estimate:__ XXL
         ***
         */
-    static bodyFieldsRegEx = /__(.+?):__([\s\S]*?)(?=__|\*\*\*)/;
+    static bodyFieldsRegEx = /__(.+?):__([\s\S]*?)(?=__|\*\*\*)/g;
 }
 
 export = Configuration;

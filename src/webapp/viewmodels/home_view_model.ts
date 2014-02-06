@@ -122,9 +122,15 @@ class HomeViewModel {
 			}
 		});
 
-		this.issueDetail = knockout_mapping.fromJS({ number: null, estimate: "XS", description: null }, {
+		this.issueDetail = knockout_mapping.fromJS({ number: null, estimate: "XS", description: null, type: null, environment: null, expectedBehavior: null }, {
 			create: (options: any) => {
-				return ko.observable(knockout_mapping.fromJS(options.data));
+				return ko.observable(knockout_mapping.fromJS(options.data, {
+					'type': {
+						create: (options: any) => {
+							return ko.observable(knockout_mapping.fromJS(options.data || { name: null }));
+						}
+					}
+				}));
 			}
 		})
 

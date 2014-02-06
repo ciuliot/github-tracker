@@ -34,14 +34,14 @@ block head
 	script#issue-phase-template(type="text/html")
 		td.swimlane(data-bind="foreach: filteredIssues, attr: { width: $root.issuesColumnWidth }")
 			.panel.panel-default.issue
-				.panel-heading(data-bind="style: { background: 'linear-gradient(45deg, transparent, ' + $parents[1].color() + ' 0px, ' + $parents[1].color() + ' 50%, transparent 50%)' }")
+				.panel-heading(data-bind="style: { background: $parents[1].color() }")
 					b(data-bind="text: ('#' + number() + ' '), tooltip: { title: $parents[1].name() }")
 					a(data-bind="click: $root.issueOpen.bind($root, $data)", data-toggle="modal", data-target="#issue-modal")
 						b(data-bind="text: title")
 					span.badge.pull-right(data-bind="text: estimate")
 
 				.panel-body(data-bind="css: { hide: description().length === 0 && $parent.id() === '#closed' }")
-					span(data-bind="text: description")
+					span.description(data-bind="text: description")
 					.btn-group.btn-group-sm.pull-right
 						.btn-group.btn-group-sm
 							button.btn.btn-default.dropdown-toggle(type="button", data-bind=" css: { hide: !canAssign() } , tooltip: { title: assigneeTooltip, container: 'body' }", data-toggle="dropdown")
@@ -101,7 +101,12 @@ block body
 					h4.modal-title(data-bind="text: ('Issue #' + number()) ")
 				.modal-body
 					form(role="form")
-						include ../partials/feature
+						.default(data-bind="visible: type().name() === null")
+							include ../partials/default
+						.feature(data-bind="visible: type().name() === 'feature'")
+							include ../partials/feature
+						.bug(data-bind="visible: type().name() === 'bug'")
+							include ../partials/bug	
 				.modal-footer
 					button.btn.btn-default(type="button", data-dismiss="modal") Close
 					button.btn.btn-primary(type="button", data-dismiss="modal", data-bind="click: $root.issueSave.bind($root, $data)") Save changes

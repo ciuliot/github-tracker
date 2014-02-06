@@ -26,13 +26,18 @@ export class Issue {
 	assigneeTooltip: KnockoutComputed<string>;
 
 	constructor(private labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, public phase: Phase, data: string) {
-		knockout_mapping.fromJS(data || { assignee: null, branch: null }, {
+		knockout_mapping.fromJS(data || { assignee: null, branch: null, type: null, environment: null, expectedBehavior: null }, {
 			'assignee': {
 				create: (options: any) => {
 					return ko.observable(knockout_mapping.fromJS(options.data || { login: null, avatar_url: null, estimate: null, description: null }));
 				}
 			},
 			'branch': {
+				create: (options: any) => {
+					return ko.observable(knockout_mapping.fromJS(options.data || { name: null }));
+				}
+			},
+			'type': {
 				create: (options: any) => {
 					return ko.observable(knockout_mapping.fromJS(options.data || { name: null }));
 				}

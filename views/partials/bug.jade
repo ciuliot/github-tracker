@@ -1,0 +1,10 @@
+include ./estimate
+.form-data
+	label(for="expected-behavior") Expected behavior:&nbsp;
+	input#expected-behavior.form-control(type="text", data-bind="value: expectedBehavior", placeholder="Please describe expected behavior")
+.form-data
+	label(for="environment") Environment:&nbsp;
+	input#environment.form-control(type="text", data-bind="value: environment", placeholder="Please describe test environment")
+.form-data
+	label(for="steps-to-reproduce") Steps to reproduce:
+	textarea#steps-to-reproduce.form-control(rows="3", data-bind="value: description, valueUpdate: 'afterkeydown'")
