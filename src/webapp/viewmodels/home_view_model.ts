@@ -327,7 +327,13 @@ class HomeViewModel {
 
 	issueStart(issue: issuesViewModel.Issue): void {
 		this.assignIssue(issue, this.user());
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.inprogress());
+		var phases = this.labelsViewModel.labels().declaration.phases;
+		if (issue.phase.id() === phases.backlog()) {
+			this.issueDetail().number(issue.number());
+			$("#new-branch.alert").addClass("in");
+		}
+
+		this.updateIssuePhase(issue, phases.inprogress());
 	}
 
 	issuePause(impediment: impedimentModel): void {
@@ -377,12 +383,18 @@ class HomeViewModel {
 		};
 
 		this.issuesViewModel.categories.updateItem(this.issueDetail().number(), body);
+
 		var originalIssue = this.issuesViewModel.findIssue(this.issueDetail().number());
 		originalIssue.moveToCategory(this.issueDetail().categoryId());
 
 		var newType = this.labelsViewModel.labels().types().filter(x => x.id () === self.issueDetail().typeId());
 		var newTypeJSON = knockout_mapping.toJSON(newType.length > 0 ? newType[0] : labelsViewModel.Label.empty);
 		knockout_mapping.fromJSON(newTypeJSON, originalIssue.type);
+	}
+
+	issueAdd(issue: issuesViewModel.Issue): void {
+		knockout_mapping.fromJS(this.emptyIssue, this.issueDetail); // Cleanup fields
+		this.issueDetail().mainLabelsViewModel = this.labelsViewModel;
 	}
 
 	changeDetailIssueType(type: labelsViewModel.Label) {

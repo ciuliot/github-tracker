@@ -188,19 +188,18 @@ export class IssuesViewModel {
 				loadingCount: loadingCount,
 				savingCount: savingCount,
 				loadOnStart: false,
-				findById: self.findIssueOnCollection,
-				indexDone: () => {
-					$('.checkout-command').on('click', function (e) { e.stopPropagation(); });
-
-					$(".issue").on("mouseenter", function() {
-						$(".actions", this).show();
-						$(".description", this).addClass("background");
-					}).on("mouseleave", function() {
-						$(".actions", this).hide();
-						$(".description", this).removeClass("background");
-					});
-				}
+				findById: self.findIssueOnCollection
 			}
+		});
+
+		$(document).on('click', '.checkout-command', function (e) { e.stopPropagation(); });
+
+		$(document).on("mouseenter", ".issue", function() {
+			$(".actions", this).show();
+			$(".description", this).addClass("background");
+		}).on("mouseleave", ".issue", function() {
+			$(".actions", this).hide();
+			$(".description", this).removeClass("background");
 		});
 	}
 

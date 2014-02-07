@@ -70,7 +70,7 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 
 			var nextItem = storeQueue[0];
 
-			$.ajax(nextItem.url, { type: "PUT", data: nextItem.data })
+			$.ajax(nextItem.url, { type: nextItem.type, data: nextItem.data })
 				.done((data: any) => {
 					if (lastIndexUrl !== null) {
 						logger.debug("Updating data as: " + lastIndexUrl);
@@ -161,6 +161,21 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 
 		storeQueue.push({
 			url: options.url + "/" + id,
+			type: "PUT",
+			id: id,
+			updatedData: knockout_mapping.toJSON(target),
+			data: args
+		});
+
+		executeNextInStoreQueue();
+	}
+
+	target.createItem = (args: any = {}) => {
+		logger.debug("Queuing insert");
+
+		storeQueue.push({
+			url: options.url,
+			type: "POST",
 			id: id,
 			updatedData: knockout_mapping.toJSON(target),
 			data: args

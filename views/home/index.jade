@@ -99,7 +99,7 @@ block body
 			.modal-content
 				.modal-header
 					button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
-					h4.modal-title(data-bind="text: ('Issue #' + number()) ")
+					h4.modal-title(data-bind="text: number() === null ? 'New issue' : ('Issue #' + number()) ")
 				.modal-body
 					form(role="form")
 						.form-data
@@ -161,7 +161,7 @@ block body
 				li
 					.btn-group
 						button.btn.btn-default.navbar-btn(data-toggle="modal" data-target="#issue-modal"
-							data-bind="css: { disabled: selectedRepository() === null }, tooltip: { title: 'Add new issue to product backlog', container: 'body', placement: 'bottom' }")
+							data-bind="css: { disabled: selectedRepository() === null }, tooltip: { title: 'Add new issue to product backlog', container: 'body', placement: 'bottom' }, click: $root.issueAdd.bind($root)")
 							span.glyphicon.glyphicon-plus
 						button.btn.btn-default.navbar-btn(data-bind="css: { disabled: loadingCount() > 0 }, click: $root.reloadIssues.bind($root, true), tooltip: { title: 'Refresh issues', container: 'body', placement: 'bottom' }")
 							span.glyphicon.glyphicon-refresh
@@ -175,6 +175,11 @@ block body
 						li: a(href="#", data-bind="click: $root.reloadRepositories.bind($root)") Refresh repositories
 						li.divider
 						li: a(href="/logout") Logout
+
+	#new-branch.alert.alert-info.alert-dismissable.fade
+		button(type="button", class="close", data-dismiss="alert", aria-hidden="true") &times;
+		strong 
+			span New branch was created. Please see issue branch details.
 
 	table.table.phases
 		thead
