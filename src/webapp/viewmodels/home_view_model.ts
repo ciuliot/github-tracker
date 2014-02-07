@@ -382,6 +382,10 @@ class HomeViewModel {
 			body: knockout_mapping.toJS(this.issueDetail())
 		};
 
+		var rawData = knockout_mapping.toJSON(this.issueDetail());
+		var originalIssue = this.issuesViewModel.findIssue(this.issueDetail().number());
+		knockout_mapping.fromJSON(rawData, originalIssue);
+
 		this.issuesViewModel.categories.updateItem(this.issueDetail().number(), body);
 
 		var originalIssue = this.issuesViewModel.findIssue(this.issueDetail().number());
