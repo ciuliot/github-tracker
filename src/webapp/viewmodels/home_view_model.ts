@@ -379,6 +379,7 @@ class HomeViewModel {
 		var body = {
 			user: this.selectedUser(),
 			repository: this.selectedRepository(),
+			title: this.issueDetail().title(),
 			body: knockout_mapping.toJS(this.issueDetail())
 		};
 

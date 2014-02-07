@@ -298,6 +298,7 @@ class IssuesController extends abstractController {
 					message.labels.push(body.categoryId);
 					message.labels.push(body.typeId);
 					message.body = formattedBody;
+					message.title = body.title;
 
 					self.logger.debug(message);
 
