@@ -286,10 +286,21 @@ class IssuesController extends abstractController {
 				(data: string, renderTemplateCompleted: Function) => {
 					mustache["escapeHtml"] = (text: string) => { return text; } // Disable escaping, we really just want plaintext
 					var output = mustache.render(data, body);
-					renderTemplateCompleted(null, output);
+
+					self.getGitHubClient().issues.getRepoIssue(message, (err: any, data: any) => {
+						renderTemplateCompleted(err, data, output);
+					});
 				},
-				(formattedBody: string, issueSaveCompleted: Function) => {
+				(issue: any, formattedBody: string, issueSaveCompleted: Function) => {
+					message.labels = issue.labels.map((x: any) => { return x.name });
+					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) !== null; }); // Keep only phase labels
+
+					message.labels.push(body.categoryId);
+					message.labels.push(body.typeId);
 					message.body = formattedBody;
+
+					self.logger.debug(message);
+
 					self.getGitHubClient().issues.edit(message, issueSaveCompleted);
 				}
 			];
@@ -332,6 +343,7 @@ class IssuesController extends abstractController {
 					}
 				} else if (type === null) {
 					type = label;
+					type.id = label.name;
 				}
 			}
 

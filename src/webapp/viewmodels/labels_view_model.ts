@@ -8,6 +8,8 @@ export class Label {
 	name: KnockoutObservable<string>;
 	color: KnockoutObservable<string>;
 	id: KnockoutObservable<string>;
+
+	static empty: any = { name: null, color: null };
 };
 
 export interface PhasesDeclaration {
@@ -25,6 +27,7 @@ export interface LabelsDeclaration {
 export interface Labels {
 	phases: KnockoutObservableArray<Label>;
 	categories: KnockoutObservableArray<Label>;
+	types: KnockoutObservableArray<Label>;
 	declaration: LabelsDeclaration;
 }
 
@@ -32,7 +35,7 @@ export class LabelsViewModel {
 	labels: KnockoutObservable<Labels>;
 
 	constructor(data: string, loadingCount: KnockoutObservable<number>) {
-		this.labels = knockout_mapping.fromJS({ phases: [], categories: [] }, {
+		this.labels = knockout_mapping.fromJS({ phases: [], categories: [], types: [] }, {
 				create: (options: any) => {
 					return ko.observable(knockout_mapping.fromJS(options.data));
 				}

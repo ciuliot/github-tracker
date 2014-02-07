@@ -1,5 +1,6 @@
 .form-group
-	label(for="estimate") Estimate:&nbsp;
+	label(for="estimate") Complexity estimate:&nbsp;
+	br
 	#estimate.btn-group.btn-group-sm
 		each val in [ { id: null, name: "N/A" }, { id: "XS" }, { id: "S" }, { id: "M" }, { id: "L" }, { id: "XL" }]
 			- var realVal = val.id === null ? "null" : ("'" + val.id + "'")

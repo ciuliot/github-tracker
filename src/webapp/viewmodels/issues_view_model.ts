@@ -22,10 +22,11 @@ export class Issue {
 	number: KnockoutObservable<number>;
 	phaseId: KnockoutObservable<string>;
 	title: KnockoutObservable<string>;
+	type: KnockoutObservable<labelsViewModel.Label>;
 
 	assigneeTooltip: KnockoutComputed<string>;
 
-	constructor(private labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, public phase: Phase, data: string) {
+	constructor(public mainLabelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, public phase: Phase, data: string) {
 		knockout_mapping.fromJS(data || { assignee: null, branch: null, type: null, environment: null, expectedBehavior: null }, {
 			'assignee': {
 				create: (options: any) => {
@@ -39,12 +40,12 @@ export class Issue {
 			},
 			'type': {
 				create: (options: any) => {
-					return ko.observable(knockout_mapping.fromJS(options.data || { name: null, color: null }));
+					return ko.observable(knockout_mapping.fromJS(options.data || labelsViewModel.Label.empty));
 				}
 			}
 		}, this);
 		var self = this;
-		var phases = labelsViewModel.labels().declaration.phases;
+		var phases = mainLabelsViewModel.labels().declaration.phases;
 
 		this.phaseId = ko.observable(phase.id());
 
@@ -93,15 +94,33 @@ export class Issue {
 		var self = this;
 		self.phase.issues.remove(self);
 
-		var newPhase = self.phase.category.phases().filter(x => {
-			return x.id() == newPhaseId;
-		});
+		var newPhase = self.phase.category.phases().filter(x => { return x.id() == newPhaseId; });
 
 		newPhase[0].issues.push(self);
 		self.phase = newPhase[0];
 		self.phaseId(newPhase[0].id());
 	}
+
+	moveToCategory(newCategoryId: string): void {
+		var self = this;
+		var currentPhaseId = self.phase.id();
+
+		self.phase.issues.remove(self);
+
+		var newCategory: Category = self.phase.category.viewModel.categories().filter(x => { return x.id() == newCategoryId; })[0];
+		var newPhase = newCategory.phases().filter(x => { return x.id() == currentPhaseId; })[0];
+
+		newPhase.issues.push(self);
+		self.phase = newPhase;
+		self.phaseId(newPhase.id());
+	}
 }
+
+export class IssueDetail extends Issue {
+	categoryId: KnockoutObservable<string>;
+	typeId: KnockoutObservable<string>;
+}
+
 
 export class Phase extends labelsViewModel.Label {
 	issues: KnockoutObservableArray<Issue>;

@@ -102,11 +102,20 @@ block body
 					h4.modal-title(data-bind="text: ('Issue #' + number()) ")
 				.modal-body
 					form(role="form")
-						.default(data-bind="visible: type().name() === null")
+						.form-data
+							label(for="type") Issue type:
+							br
+							.btn-group.btn-group-sm(data-bind="foreach: labelsViewModel.labels().types")
+								button.btn.btn-default(type="button", data-bind="text: name, css: { 'btn-primary': id() === $parent.typeId() }, click: $root.changeDetailIssueType.bind($root, $data)")
+							
+						.form-data
+							label(for="category") Category:
+							select#category.form-control(data-bind="options: labelsViewModel.labels().categories, optionsText: 'name', optionsValue: 'id', value: categoryId") 
+						.default(data-bind="visible: typeId() === null")
 							include ../partials/default
-						.feature(data-bind="visible: type().name() === 'feature'")
+						.feature(data-bind="visible: typeId() === 'feature'")
 							include ../partials/feature
-						.bug(data-bind="visible: type().name() === 'bug'")
+						.bug(data-bind="visible: typeId() === 'bug'")
 							include ../partials/bug	
 				.modal-footer
 					button.btn.btn-default(type="button", data-dismiss="modal") Close

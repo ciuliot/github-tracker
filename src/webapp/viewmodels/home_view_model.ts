@@ -30,7 +30,7 @@ class HomeViewModel {
 	milestones: KnockoutObservableArray<milestoneModel>;
 	collaborators: KnockoutObservableArray<collaboratorModel>;
 	issuesViewModel: issuesViewModel.IssuesViewModel;
-	issueDetail: KnockoutObservable<issuesViewModel.Issue>;
+	issueDetail: KnockoutObservable<issuesViewModel.IssueDetail>;
 
 	user: KnockoutObservable<collaboratorModel>;
 	impediment: KnockoutObservable<impedimentModel>;
@@ -53,6 +53,9 @@ class HomeViewModel {
 	loadingCount: KnockoutObservable<number> = ko.observable(0);
 	savingCount: KnockoutObservable<number> = ko.observable(0);
 	logger: log4js.Logger = utilities.getLogger("HomeViewModel");
+
+	emptyIssue: any = { number: null, estimate: "XS", description: null, title: null,
+						type: null, environment: null, expectedBehavior: null, categoryId: null, typeId: null };
 
 	constructor() { 
 	}
@@ -122,15 +125,12 @@ class HomeViewModel {
 			}
 		});
 
-		this.issueDetail = knockout_mapping.fromJS({ number: null, estimate: "XS", description: null, type: null, environment: null, expectedBehavior: null }, {
+		this.issueDetail = knockout_mapping.fromJS(this.emptyIssue, {
 			create: (options: any) => {
-				return ko.observable(knockout_mapping.fromJS(options.data, {
-					'type': {
-						create: (options: any) => {
-							return ko.observable(knockout_mapping.fromJS(options.data || { name: null }));
-						}
-					}
-				}));
+				var res = ko.observable(knockout_mapping.fromJS(options.data));
+				res().labelsViewModel = this.labelsViewModel;
+
+				return res;
 			}
 		})
 
@@ -359,10 +359,17 @@ class HomeViewModel {
 
 	issueOpen(issue: issuesViewModel.Issue): void {
 		var rawData = knockout_mapping.toJSON(issue);
+		knockout_mapping.fromJS(this.emptyIssue, this.issueDetail); // Cleanup fields
 		knockout_mapping.fromJSON(rawData, this.issueDetail);
+
+
+		this.issueDetail().mainLabelsViewModel = this.labelsViewModel;
+		this.issueDetail().categoryId(issue.phase.category.id());
+		this.issueDetail().typeId(issue.type() === null ? null : issue.type().id());
 	}
 
 	issueSave():void {
+		var self = this;
 		var body = {
 			user: this.selectedUser(),
 			repository: this.selectedRepository(),
@@ -370,6 +377,16 @@ class HomeViewModel {
 		};
 
 		this.issuesViewModel.categories.updateItem(this.issueDetail().number(), body);
+		var originalIssue = this.issuesViewModel.findIssue(this.issueDetail().number());
+		originalIssue.moveToCategory(this.issueDetail().categoryId());
+
+		var newType = this.labelsViewModel.labels().types().filter(x => x.id () === self.issueDetail().typeId());
+		var newTypeJSON = knockout_mapping.toJSON(newType.length > 0 ? newType[0] : labelsViewModel.Label.empty);
+		knockout_mapping.fromJSON(newTypeJSON, originalIssue.type);
+	}
+
+	changeDetailIssueType(type: labelsViewModel.Label) {
+		this.issueDetail().typeId(type.id());
 	}
 }
 
