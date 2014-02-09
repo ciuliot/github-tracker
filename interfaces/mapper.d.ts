@@ -3,7 +3,8 @@
 interface KnockoutObservable<T> {
 	reload(args?: any): any;
 	load(args?: any): any;
-	updateItem(id: any, args?: any) : void;
+	updateItem(id: any, obj:any, args?: any) : void;
+	createItem(obj:any, args?: any) : void;
 }
 
 interface KnockoutExtenders {

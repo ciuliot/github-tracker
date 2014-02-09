@@ -52,7 +52,7 @@ class IssuesController extends abstractController {
 				});
 			},
 			(labels: labelsModel.IndexResult, results: any, allIssues: any[], assignClosedIssuesCompleted: Function) => {
-				self.logger.debug("Transforming closed issues");
+				self.logger.debug("Transforming %d closed issues", allIssues.length);
 				self.transformIssues(labels, allIssues, results, configuration.phaseNames.closed);
 				assignClosedIssuesCompleted(null, results);
 			}
@@ -72,7 +72,6 @@ class IssuesController extends abstractController {
 		var loadStep: Function = (labels: labelsModel.IndexResult, getIssueCompleted: Function) => { 
 				self.logger.debug("Retrieving issue #%s", requestBody.number);
 				self.getGitHubClient().issues.getRepoIssue(requestBody, (err: any, data: any) => { 
-					self.logger.debug(data);
 					getIssueCompleted(err, labels, [ data ]); 
 				}); 
 			};
@@ -115,7 +114,7 @@ class IssuesController extends abstractController {
 			(labels: labelsModel.IndexResult, allIssues: any[], assignOpenIssuesCompleted: Function) => {
 				var results = JSON.parse(JSON.stringify(labels.categories)); // Clone categories
 				results = results.map((x: any) => { x.phases = []; return x; });
-				self.logger.debug("Transforming %d issues", allIssues.length);
+				self.logger.debug("Transforming %d open issues", allIssues.length);
 
 				self.transformIssues(labels, allIssues, results);
 
@@ -130,11 +129,8 @@ class IssuesController extends abstractController {
 				var issuesToRetrieve: any[] = [];
 				self.logger.debug("Looking for issue branches");
 
-				self.logger.debug(result);
 				for (var i = 0; i < result.length; i++) {
 					var category: any = result[i];
-
-					self.logger.debug(category);
 
 					for (var j = 0; j < category.phases.length; j++) {
 						var phase = category.phases[j];
@@ -178,6 +174,12 @@ class IssuesController extends abstractController {
 					self.logger.error("Error occured during issues retrieval", err);	
 				} 
 
+				/*result["meta"] = {
+					estimateSizes: configuration.estimateSizes,
+					branchNameFormat: configuration.branchNameFormat,
+					priorityType: configuration.priorityType
+				};*/
+
 				self.jsonResponse(err, result);
 			}
 		);
@@ -191,7 +193,7 @@ class IssuesController extends abstractController {
 		};
 	}
 
-	update() {
+	update(): void {
 		var self = this;
 
 		var number = self.param("id");
@@ -300,8 +302,6 @@ class IssuesController extends abstractController {
 					message.body = formattedBody;
 					message.title = body.title;
 
-					self.logger.debug(message);
-
 					self.getGitHubClient().issues.edit(message, issueSaveCompleted);
 				}
 			];
@@ -316,12 +316,52 @@ class IssuesController extends abstractController {
 				if (err) {
 					self.logger.error("Error occured during issue update", err);	
 				} else {
-					self.logger.debug(result);
 				}
 
 				self.jsonResponse(err);
 			});
 		}
+	}
+
+	create(): void {
+		var self = this;
+
+		var user = self.param("user");
+		var repository = self.param("repository");
+
+		var body = self.param("body");
+
+		var message: any = {				
+			user: user,
+			repo: repository,
+			milestone: self.param("milestone"),
+			title: self.param("title")
+		};
+
+		async.waterfall([
+			(getLabelsCompleted: Function) => {
+				labelsController.getLabels(self, user, repository, getLabelsCompleted);
+			},
+			(labels: labelsModel.IndexResult, createIssueCompleted: Function) => {
+				message.labels = [];
+				if (body.categoryId) {
+					message.labels.push(body.categoryId);
+				}
+				if (body.typeId) {
+					message.labels.push(body.typeId);
+				}
+
+				self.getGitHubClient().issues.create(message, createIssueCompleted);
+			}
+		], (err: any, result: any) => {
+			if (err) {
+				self.logger.error("Error occured during issue create", err);	
+			} else {
+				//self.logger.debug(result);
+			}
+
+			self.jsonResponse(err, result);
+		});
 	}
 
 	transformIssues(labels: labelsModel.IndexResult, allIssues: any[], results: any, forcePhase: string = null) {
@@ -348,6 +388,8 @@ class IssuesController extends abstractController {
 				}
 			}
 
+			this.logger.debug("Transforming issue #%d to '%s'/'%s' [%s]", issue.number, category, phase, type === null ? "" : type.id);
+
 			var categorizedIssues = results.filter((x: any) => { return x.id === category; })[0];
 
 			if (categorizedIssues.phases.length === 0) {
@@ -359,14 +401,13 @@ class IssuesController extends abstractController {
 				title: issue.title,
 				type: type || { name: null, id: null, color: null },
 				number: issue.number,
-				description: issue.body,
+				description: issue.body || "",
 				branch: { name: null, url: null },
 				assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null },
 				estimate: null
 			};
 
 			var bodyParts = convertedIssue.description.split(configuration.bodyFieldsSeparator);
-			this.logger.debug(bodyParts);
 
 			if (bodyParts.length === 2) {
 				convertedIssue.description = bodyParts[1].trim();

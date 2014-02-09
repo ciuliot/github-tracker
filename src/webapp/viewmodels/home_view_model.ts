@@ -43,7 +43,7 @@ class HomeViewModel {
 
 	url: KnockoutComputed<string>;
 
-	allMilestonesItem: milestoneModel = knockout_mapping.fromJS ({ id: "*", title: "All milestones" });
+	allMilestonesItem: milestoneModel = knockout_mapping.fromJS ({ number: "*", title: "All milestones" });
 	selectedMilestone: KnockoutObservable<string> = ko.observable("*");
 	selectedMilestoneTitle: KnockoutComputed<string>;
 	issuesColumnWidth: KnockoutComputed<string>;
@@ -82,7 +82,7 @@ class HomeViewModel {
 				savingCount: self.savingCount,
 				loadOnStart: false,
 				indexDone: () => {
-					self.milestones.unshift(knockout_mapping.fromJS ({ id: "none", title: "No milestone" }));
+					self.milestones.unshift(knockout_mapping.fromJS ({ number: "none", title: "No milestone" }));
 					self.milestones.unshift(self.allMilestonesItem);
 				}
 			}
@@ -136,7 +136,7 @@ class HomeViewModel {
 
 		this.selectedMilestoneTitle = ko.computed(() => {
 			var milestone = ko.utils.arrayFirst(self.milestones(), (x: milestoneModel) => {
-				return x.id() === self.selectedMilestone();
+				return x.number().toString() === self.selectedMilestone();
 			});
 
 			return null === milestone ? self.allMilestonesItem.title() : milestone.title();
@@ -307,7 +307,7 @@ class HomeViewModel {
 	private updateIssue(issue: issuesViewModel.Issue, body: any): void {
 		body.user = this.selectedUser();
 		body.repository = this.selectedRepository();
-		this.issuesViewModel.categories.updateItem(issue.number(), body);
+		this.issuesViewModel.categories.updateItem(issue.number(), undefined, body);
 	}
 
 	private updateIssuePhase(issue: issuesViewModel.Issue, newPhase: string): void {
@@ -340,7 +340,7 @@ class HomeViewModel {
 		var issue = this.issuesViewModel.findIssue(this.impediment().issue_id());
 
 		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
-		this.impediment.updateItem(issue.number(), { user: this.selectedUser(), repository: this.selectedRepository(), description: this.impediment().description() });
+		this.impediment.updateItem(issue.number(), this.impediment(), { user: this.selectedUser(), repository: this.selectedRepository() });
 	}
 
 	issuePauseOpen(issue: issuesViewModel.Issue): void {
@@ -376,25 +376,33 @@ class HomeViewModel {
 
 	issueSave():void {
 		var self = this;
-		var body = {
+		var id = this.issueDetail().number();
+		var args: any = {
 			user: this.selectedUser(),
 			repository: this.selectedRepository(),
-			title: this.issueDetail().title(),
-			body: knockout_mapping.toJS(this.issueDetail())
+			title: this.issueDetail().title()
 		};
 
 		var rawData = knockout_mapping.toJSON(this.issueDetail());
-		var originalIssue = this.issuesViewModel.findIssue(this.issueDetail().number());
-		knockout_mapping.fromJSON(rawData, originalIssue);
+		
 
-		this.issuesViewModel.categories.updateItem(this.issueDetail().number(), body);
+		if (id === null) {
+			args.milestone = (this.selectedMilestone() === "*" || this.selectedMilestone() === "none") ? undefined : this.selectedMilestone();
 
-		var originalIssue = this.issuesViewModel.findIssue(this.issueDetail().number());
-		originalIssue.moveToCategory(this.issueDetail().categoryId());
+			this.issuesViewModel.categories.createItem(this.issueDetail(), args);
+		} else {
+			var originalIssue = this.issuesViewModel.findIssue(id);
+			knockout_mapping.fromJSON(rawData, originalIssue);
 
-		var newType = this.labelsViewModel.labels().types().filter(x => x.id () === self.issueDetail().typeId());
-		var newTypeJSON = knockout_mapping.toJSON(newType.length > 0 ? newType[0] : labelsViewModel.Label.empty);
-		knockout_mapping.fromJSON(newTypeJSON, originalIssue.type);
+			var originalIssue = this.issuesViewModel.findIssue(id);
+			originalIssue.moveToCategory(this.issueDetail().categoryId());
+
+			var newType = this.labelsViewModel.labels().types().filter(x => x.id () === self.issueDetail().typeId());
+			var newTypeJSON = knockout_mapping.toJSON(newType.length > 0 ? newType[0] : labelsViewModel.Label.empty);
+			knockout_mapping.fromJSON(newTypeJSON, originalIssue.type);
+
+			this.issuesViewModel.categories.updateItem(id, this.issueDetail(), args);
+		}
 	}
 
 	issueAdd(issue: issuesViewModel.Issue): void {

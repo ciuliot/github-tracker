@@ -47,7 +47,6 @@ class CollaboratorsController extends abstractController {
 				transformCollaboratorsCompleted(null, result);
 			}
 			], (err: any, collaborators: any[]) => {
-				controller.logger.debug(collaborators);
 				controller.jsonResponse(err, collaborators);
 			}
 		);

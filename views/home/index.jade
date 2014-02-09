@@ -20,10 +20,10 @@ block head
 			a(href="#" data-bind="text: name, click: $root.selectRepository.bind($root, $data.name())") 
 
 	script#milestone-template(type="text/html")
-		li(data-bind="css: { active: $root.selectedMilestone() === $data.id() }")
+		li(data-bind="css: { active: $root.selectedMilestone() === $data.number() }")
 			a(href="#")
 				<!-- span.badge.pull-right(data-bind="text: (id === '*' || id === 'none') ? '' : open_issues") -->
-				span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data.id())") 
+				span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data.number())") 
 
 	script#issue-phase-header-template(type="text/html")
 		th.swimlane(data-bind="text: name, attr: { width: $root.issuesColumnWidth }")

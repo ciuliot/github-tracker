@@ -60,7 +60,7 @@ class LabelsController extends abstractController {
 						var category = configuration.categoryRegEx.exec(label.name);
 						var phase = configuration.phaseRegEx.exec(label.name);
 						var convertedLabel: labelsModel.Label = {
-							color: "#" + label.color,
+							color: label.color ? ("#" + label.color) : null,
 							id: label.name,
 							name: label.name
 						};
@@ -75,8 +75,6 @@ class LabelsController extends abstractController {
 							result.types.push(convertedLabel);
 						}
 					}
-
-					controller.logger.debug(result);
 
 					callback(err, result);
 				}

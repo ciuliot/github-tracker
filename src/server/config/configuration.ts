@@ -71,6 +71,8 @@ class Configuration {
         XL: 8
     };
 
+    static priorityTypeId: string = "bug";
+
     static impedimentsFile: string = "impediments.md";
 
     static githubApplication: any = {

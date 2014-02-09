@@ -27,7 +27,6 @@ class MilestonesController extends abstractController {
 				}, getAllMilestones); 
 			}
 			], (err: any, milestones: any[]) => {
-				self.logger.debug(milestones);
 				self.jsonResponse(err, milestones);
 			}
 		);

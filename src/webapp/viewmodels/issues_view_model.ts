@@ -171,6 +171,7 @@ export class Category extends labelsViewModel.Label  {
 export class IssuesViewModel {
 	categories: KnockoutObservableArray<Category>;
 	filter: KnockoutObservable<string> = ko.observable("");
+	lastTemporaryId: number = 0;
 
 	constructor(public labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
 		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>) {
@@ -188,7 +189,11 @@ export class IssuesViewModel {
 				loadingCount: loadingCount,
 				savingCount: savingCount,
 				loadOnStart: false,
-				findById: self.findIssueOnCollection
+				findById: self.findIssueOnCollection,
+				setId: (where: any, id: number) => {
+					where.number(id);
+				}
+
 			}
 		});
 

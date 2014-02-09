@@ -39,6 +39,12 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	o.loadingCount = o.loadingCount || function() {}; 
 	o.savingCount = o.savingCount || function() {}; 
 	o.refreshAfterUpdate = typeof(o.refreshAfterUpdate) === "undefined" ? true : o.refreshAfterUpdate;
+
+	var lastTemporaryId = 0;
+	o.setId = o.setId || ((where:any, id: number) => {
+		where.id(id);
+	});
+
 	o.findById = o.findById || ((where: any, id: any) => {
 		return ko.utils.arrayFirst(where, (x: any) => {
 			return x.id == id;
@@ -62,6 +68,7 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 
 	var storeQueue: any[] = [];
 	var isStoring: boolean;
+
 	var executeNextInStoreQueue = () => {
 		o.savingCount(storeQueue.length);
 
@@ -156,29 +163,41 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 		}
 	}
 
-	target.updateItem = (id: any, args: any = {}) => {
-		logger.debug("Queuing update");
+	target.updateItem = (id: any, obj: any, args: any = {}) => {
+		logger.debug("Queuing update for id " + id);
+		var data = args;
+		if (obj) {
+			data.body = knockout_mapping.toJS(obj);
+		}
 
 		storeQueue.push({
 			url: options.url + "/" + id,
 			type: "PUT",
 			id: id,
 			updatedData: knockout_mapping.toJSON(target),
-			data: args
+			data: data
 		});
 
 		executeNextInStoreQueue();
 	}
 
-	target.createItem = (args: any = {}) => {
-		logger.debug("Queuing insert");
+	target.createItem = (obj: any, args: any = {}) => {
+		lastTemporaryId--;
+
+		logger.debug("Queuing insert of temporary id " + lastTemporaryId);
+		var data = args;
+		if (obj) {
+			data.body = knockout_mapping.toJS(obj);
+		}
+
+		o.setId(obj, lastTemporaryId);
 
 		storeQueue.push({
 			url: options.url,
 			type: "POST",
-			id: id,
+			id: lastTemporaryId,
 			updatedData: knockout_mapping.toJSON(target),
-			data: args
+			data: data
 		});
 
 		executeNextInStoreQueue();
