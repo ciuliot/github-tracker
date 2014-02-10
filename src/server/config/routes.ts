@@ -17,6 +17,7 @@
     this.resources("collaborators", { only: "index" });
     this.resources("issues", { only: ["index", "update", "show", "create"] });
     this.resources("impediments", { only: ["update", "show"] });
+    this.resources("comments", { only: ["update"] });
 }
 
 export = initialize;

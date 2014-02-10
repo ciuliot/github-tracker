@@ -73,7 +73,8 @@ block head
 							span.glyphicon.glyphicon-stop
 						button.btn.btn-default(type="button", data-bind="css: { hide: !canAccept() }, click: $root.issueAccept.bind($root, $data), tooltip: { title: 'Accept implementation', container: 'body' }")
 							span.glyphicon.glyphicon-thumbs-up
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canReject() }, click: $root.issueReject.bind($root, $data), tooltip: { title: 'Reject implementation', container: 'body' }")
+						button.btn.btn-default(type="button", data-toggle="modal" data-target="#reject-implementation-modal"
+							data-bind="css: { hide: !canReject() }, click: $root.issueRejectOpen.bind($root, $data), tooltip: { title: 'Reject implementation', container: 'body' }")
 							span.glyphicon.glyphicon-thumbs-down		
 					span.description(data-bind="text: description")
 
@@ -93,6 +94,22 @@ block body
 				.modal-footer
 					button.btn.btn-default(type="button", data-dismiss="modal") Close
 					button.btn.btn-primary(type="button", data-dismiss="modal", data-bind="click: $root.issuePause.bind($root, $data)") Save changes
+
+	#reject-implementation-modal.modal.fade(data-bind="with: rejectImplementation")
+		.modal-dialog
+			.modal-content
+				.modal-header
+					button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+					h4.modal-title(data-bind="text: ('Reject implementation of issue #' + issue_id()) ")
+				.modal-body
+					form(role="form")
+						.form-group
+							p.help-block Please describe why implementation should be rejected:
+							textarea.form-control(rows="3", data-bind="value: description, valueUpdate: 'afterkeydown'")
+
+				.modal-footer
+					button.btn.btn-default(type="button", data-dismiss="modal") Close
+					button.btn.btn-primary(type="button", data-dismiss="modal", data-bind="click: $root.issueReject.bind($root, $data)") Save changes
 
 	#issue-modal.modal.fade(data-bind="with: issueDetail")
 		.modal-dialog

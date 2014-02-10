@@ -35,6 +35,7 @@ class HomeViewModel {
 
 	user: KnockoutObservable<collaboratorModel>;
 	impediment: KnockoutObservable<impedimentModel>;
+	rejectImplementation: KnockoutObservable<impedimentModel>;
 
 	users: KnockoutComputed<string[]>;
 	userRepositories: KnockoutComputed<repositoryModel[]>;
@@ -127,6 +128,20 @@ class HomeViewModel {
 			}
 		});
 
+		this.rejectImplementation = knockout_mapping.fromJS({ issue_id: null, description: null }, {
+			create: (options: any) => {
+				return ko.observable(knockout_mapping.fromJS(options.data));
+			}
+		}).extend({
+			mapToJsonResource: { 
+				url: "/comments",
+				refreshAfterUpdate: false,
+				loadingCount: self.loadingCount,
+				savingCount: self.savingCount,
+				loadOnStart: false
+			}
+		});
+
 		this.issueDetail = knockout_mapping.fromJS(this.emptyIssue, {
 			create: (options: any) => {
 				var res = ko.observable(knockout_mapping.fromJS(options.data));
@@ -141,7 +156,7 @@ class HomeViewModel {
 				return x.number().toString() === self.selectedMilestone().toString();
 			});
 
-			return null === milestone ? "" : milestone.title();
+			return null === milestone ? "Milestone" : milestone.title();
 		});
 
 		this.users = ko.computed(() => {
@@ -354,6 +369,22 @@ class HomeViewModel {
 		this.impediment().description("");
 	}
 
+	issueRejectOpen(issue: issuesViewModel.Issue): void {
+		this.rejectImplementation().issue_id(issue.number());
+		this.rejectImplementation().description("");
+	}
+
+	issueReject(issue: issuesViewModel.Issue): void {
+		var issue = this.issuesViewModel.findIssue(this.rejectImplementation().issue_id());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
+
+		this.rejectImplementation.updateItem(issue.number(), {}, { 
+			user: this.selectedUser(), 
+			description: this.rejectImplementation().description(), 
+			repository: this.selectedRepository() 
+		});
+	}
+
 	issueComplete(issue: issuesViewModel.Issue): void {
 		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.implemented());
 	}
@@ -364,10 +395,6 @@ class HomeViewModel {
 
 	issueAccept(issue: issuesViewModel.Issue): void {
 		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.closed());
-	}
-
-	issueReject(issue: issuesViewModel.Issue): void {
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
 	}
 
 	issueOpen(issue: issuesViewModel.Issue): void {
