@@ -52,13 +52,13 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	});
 
 	var initialData = knockout_mapping.toJSON(target);
-	knockout_mapping.fromJSON(initialData, o.mapping, target);
+	knockout_mapping.fromJSON(initialData, target);
 
 	var logger = Utilities.getLogger(options.url + " mapper");
 	var lastIndexUrl: string = null;
 
 	var loadData = (err: any, data: any) => {
-		knockout_mapping.fromJS(data, target);
+		knockout_mapping.fromJS(data, o.mapping, target);
 		o.indexDone(err, data);
 	}
 

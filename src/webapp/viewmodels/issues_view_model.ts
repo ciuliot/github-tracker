@@ -20,18 +20,21 @@ export class Issue {
 	assignee: KnockoutObservable<collaboratorModel>;
 	branch: KnockoutObservable<any>;
 	number: KnockoutObservable<number>;
-	phaseId: KnockoutObservable<string>;
+	phase: KnockoutObservable<labelsViewModel.Label>;
+	category: KnockoutObservable<labelsViewModel.Label>;
 	title: KnockoutObservable<string>;
 	type: KnockoutObservable<labelsViewModel.Label>;
 
 	assigneeTooltip: KnockoutComputed<string>;
 
-	constructor(public mainLabelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, public phase: Phase, data: any = {}) {
+	constructor(public mainLabelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, data: any = {}) {
 		data.assignee = data.assignee || null;
 		data.branch = data.branch || null;
 		data.type = data.type || null;
 		data.environment = data.environment || null;
 		data.expectedBehavior = data.expectedBehavior || null;
+		data.phase = data.phase || null;
+		data.category = data.category || null;
 
 		knockout_mapping.fromJS(data, {
 			'assignee': {
@@ -48,39 +51,47 @@ export class Issue {
 				create: (options: any) => {
 					return ko.observable(knockout_mapping.fromJS(options.data || labelsViewModel.Label.empty));
 				}
+			},
+			'phase': {
+				create: (options: any) => {
+					return ko.observable(knockout_mapping.fromJS(options.data || labelsViewModel.Label.empty));
+				}
+			},
+			'category': {
+				create: (options: any) => {
+					return ko.observable(knockout_mapping.fromJS(options.data || labelsViewModel.Label.empty));
+				}
 			}
 		}, this);
 		var self = this;
 		var phases = mainLabelsViewModel.labels().declaration.phases;
 
-		this.phaseId = ko.observable(phase.id());
-
 		this.canStart = ko.computed(() => {
-			return self.phaseId() === phases.backlog() || self.phaseId() === phases.onhold();
+			return self.phase().id() === phases.backlog() || self.phase().id() === phases.onhold();
 		}, this);
 
 		this.canAssign = ko.computed(() => {
-			return self.phaseId() !== phases.closed();
+			return self.phase().id() !== phases.closed();
 		}, this);
 
 		this.canPause = ko.computed(() => {
-			return self.phaseId() === phases.inprogress();
+			return self.phase().id() === phases.inprogress();
 		}, this);
 
 		this.canStop = ko.computed(() => {
-			return self.phaseId() !== phases.closed();
+			return self.phase().id() !== phases.closed();
 		}, this);
 
 		this.canComplete = ko.computed(() => {
-			return self.phaseId() === phases.inprogress();
+			return self.phase().id() === phases.inprogress();
 		}, this);
 
 		this.canAccept = ko.computed(() => {
-			return self.phaseId() === phases.implemented();
+			return self.phase().id() === phases.implemented();
 		}, this);
 
 		this.canReject = ko.computed(() => {
-			return self.phaseId() === phases.implemented();
+			return self.phase().id() === phases.implemented();
 		}, this);
 
 		this.haveBranch = ko.computed(() => {
@@ -97,18 +108,18 @@ export class Issue {
 	}
 
 	moveToPhase(newPhaseId: string): void {
-		var self = this;
+		/*var self = this;
 		self.phase.issues.remove(self);
 
 		var newPhase = self.phase.category.phases().filter(x => { return x.id() == newPhaseId; });
 
 		newPhase[0].issues.push(self);
 		self.phase = newPhase[0];
-		self.phaseId(newPhase[0].id());
+		self.phaseId(newPhase[0].id());*/
 	}
 
 	moveToCategory(newCategoryId: string): void {
-		var self = this;
+		/*var self = this;
 		var currentPhaseId = self.phase.id();
 
 		self.phase.issues.remove(self);
@@ -118,7 +129,7 @@ export class Issue {
 
 		newPhase.issues.push(self);
 		self.phase = newPhase;
-		self.phaseId(newPhase.id());
+		self.phaseId(newPhase.id());*/
 	}
 }
 
@@ -130,20 +141,20 @@ export class IssueDetail extends Issue {
 
 
 export class Phase extends labelsViewModel.Label {
-	issues: KnockoutObservableArray<Issue>;
+	issues: KnockoutComputed<Issue[]>;
 	filteredIssues: KnockoutComputed<Issue[]>;
 
 	constructor(public category: Category, private filter: KnockoutObservable<string>, data: string) {
 		super();
 
 		var self = this;
-		knockout_mapping.fromJS(data, {
-			"issues": {
-				create(options: any) {
-					return new Issue(self.category.viewModel.labelsViewModel, self.category.viewModel.collaborators, self, options.data);
-				}
-			}
-		}, this);
+		knockout_mapping.fromJS(data, {}, this);
+
+		this.issues = ko.computed(() => {
+			return ko.utils.arrayFilter(self.category.viewModel.issuesData().issues(), x => {
+				return x.phase().id() === self.id() && x.category().id() === self.category.id();
+			});
+		});
 
 		this.filteredIssues = ko.computed(() => {
 			return ko.utils.arrayFilter(self.issues(), x => {
@@ -161,14 +172,32 @@ export class Phase extends labelsViewModel.Label {
 }
 
 export class Category extends labelsViewModel.Label  {
-	phases: KnockoutObservableArray<Phase>;
+	phases: KnockoutComputed<Phase[]>;
 
 	constructor(public viewModel: IssuesViewModel, data: string) {
 		super();
+
+		var self = this;
+		knockout_mapping.fromJS(data, {}, this);
+
+		self.phases = ko.computed(() => {
+			return ko.utils.arrayMap(self.viewModel.labelsViewModel.labels().phases(), phase => {
+				return new Phase(self, viewModel.filter, knockout_mapping.toJS(phase));
+			});
+		});
+	}
+}
+
+export class IssuesData {
+	issues: KnockoutObservableArray<Issue>;
+	meta: KnockoutObservable<any>;
+
+	constructor(public viewModel: IssuesViewModel, data: string) {
+		var self = this;
 		knockout_mapping.fromJS(data, {
-			"phases": {
+			'issues': {
 				create: (options: any) => {
-					return new Phase(options.parent, viewModel.filter, options.data);
+					return new Issue(self.viewModel.labelsViewModel, self.viewModel.collaborators, options.data);
 				}
 			}
 		}, this);
@@ -176,21 +205,26 @@ export class Category extends labelsViewModel.Label  {
 }
 
 export class IssuesViewModel {
-	categories: KnockoutObservableArray<Category>;
+	issuesData: KnockoutObservable<IssuesData>;
+	categories: KnockoutComputed<Category[]>;
 	filter: KnockoutObservable<string> = ko.observable("");
 	lastTemporaryId: number = 0;
 
 	constructor(public labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
 		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>) {
 		var self = this;
-		this.categories = ko.observableArray<Category>();
+		this.issuesData = knockout_mapping.fromJS({ issues: [], meta: null }, {
+			create: (options: any) => {
+				return ko.observable(new IssuesData(self, options.data)); 
+			}
+		});
 
-		this.categories.extend({ 
+		this.issuesData.extend({ 
 			mapToJsonResource: { 
 				url: "/issues",
 				mapping: {
 					create: (options: any) => {
-						return new Category(self, options.data); 
+						return new IssuesData(self, options.data); 
 					}
 				},
 				loadingCount: loadingCount,
@@ -202,6 +236,12 @@ export class IssuesViewModel {
 				}
 
 			}
+		});
+
+		this.categories = ko.computed(() => {
+			return ko.utils.arrayMap(self.labelsViewModel.labels().categories(), category => {
+				return new Category(self, knockout_mapping.toJS(category));
+			});
 		});
 
 		$(document).on('click', '.checkout-command', function (e) { e.stopPropagation(); });
@@ -216,26 +256,10 @@ export class IssuesViewModel {
 	}
 
 	private findIssueOnCollection(where: any, number: number): Issue {
-		var result: Issue = null;
-
-		for (var i=0; i < where().length && result === null; i++) {
-			var category = where()[i];
-			for (var j = 0; j < category.phases().length && result === null; j++) {
-				var phase = category.phases()[j];
-				for (var k = 0; k < phase.issues().length; k++) {
-					var issue = phase.issues()[k];
-					if (issue.number() === number) {
-						result = issue;
-						break;
-					}
-				}
-			}
-		}
-
-		return result;
+		return ko.utils.arrayFirst(where(), (x: Issue) => { return x.number() === number });
 	}
 
 	findIssue(number: number): Issue {
-		return this.findIssueOnCollection(this.categories, number);
+		return this.findIssueOnCollection(this.issuesData().issues, number);
 	}
 }

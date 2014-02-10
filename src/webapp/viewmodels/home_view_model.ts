@@ -293,7 +293,7 @@ class HomeViewModel {
 					collaboratorsCall(callData, collaboratorsLoadCompleted);
 				},
 				(issuesLoadCompleted: Function) => {
-					var issuesCall: Function = forceReload ? self.issuesViewModel.categories.reload : self.issuesViewModel.categories.load;
+					var issuesCall: Function = forceReload ? self.issuesViewModel.issuesData.reload : self.issuesViewModel.issuesData.load;
 					issuesCall(callData, issuesLoadCompleted);
 				}
 			], (err: any) => {
@@ -303,7 +303,7 @@ class HomeViewModel {
 			this.labelsViewModel.removeAll();
 			this.milestones.removeAll();
 			this.collaborators.removeAll();
-			this.issuesViewModel.categories.removeAll();
+			this.issuesViewModel.issuesData().issues.removeAll();
 
 			callback();
 		}
@@ -345,7 +345,7 @@ class HomeViewModel {
 	issueStart(issue: issuesViewModel.Issue): void {
 		this.assignIssue(issue, this.user());
 		var phases = this.labelsViewModel.labels().declaration.phases;
-		if (issue.phase.id() === phases.backlog()) {
+		if (issue.phase().id() === phases.backlog()) {
 			this.issueDetail().number(issue.number());
 			$("#new-branch.alert").addClass("in");
 		}
@@ -404,8 +404,9 @@ class HomeViewModel {
 		this.issueDetail().milestone(this.selectedMilestone());
 
 		this.issueDetail().mainLabelsViewModel = this.labelsViewModel;
-		this.issueDetail().categoryId(issue.phase.category.id());
-		this.issueDetail().typeId(issue.type() === null ? null : issue.type().id());
+		
+		//this.issueDetail().categoryId(issue.phase.category.id());
+		//this.issueDetail().typeId(issue.type() === null ? null : issue.type().id());
 	}
 
 	issueSave():void {
@@ -425,10 +426,10 @@ class HomeViewModel {
 			var category = this.issuesViewModel.categories().filter(x => { return x.id() === this.issueDetail().categoryId() } )[0];
 			var phase = category.phases()[0];
 
-			var newIssue = new issuesViewModel.Issue(category.viewModel.labelsViewModel	, category.viewModel.collaborators, phase, rawData);
-			phase.issues.push(newIssue);
+			//var newIssue = new issuesViewModel.Issue(category.viewModel.labelsViewModel, category.viewModel.collaborators, phase, rawData);
+			//phase.issues.push(newIssue);
 
-			this.issuesViewModel.categories.createItem(newIssue, args);
+			//this.issuesViewModel.issues.createItem(newIssue, args);
 		} else {
 			var originalIssue = this.issuesViewModel.findIssue(id);
 			knockout_mapping.fromJS(rawData, originalIssue);
@@ -440,7 +441,7 @@ class HomeViewModel {
 			var newTypeJSON = knockout_mapping.toJSON(newType.length > 0 ? newType[0] : labelsViewModel.Label.empty);
 			knockout_mapping.fromJSON(newTypeJSON, originalIssue.type);
 
-			this.issuesViewModel.categories.updateItem(id, this.issueDetail(), args);
+			this.issuesViewModel.issuesData.updateItem(id, this.issueDetail(), args);
 		}
 	}
 

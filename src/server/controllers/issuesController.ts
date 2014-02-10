@@ -112,8 +112,8 @@ class IssuesController extends abstractController {
 			},
 			retrieveStep,
 			(labels: labelsModel.IndexResult, allIssues: any[], assignOpenIssuesCompleted: Function) => {
-				var results = JSON.parse(JSON.stringify(labels.categories)); // Clone categories
-				results = results.map((x: any) => { x.phases = []; return x; });
+				var results: any[] = []; // JSON.parse(JSON.stringify(labels.categories)); // Clone categories
+				//results = results.map((x: any) => { x.phases = []; return x; });
 				self.logger.debug("Transforming %d open issues", allIssues.length);
 
 				self.transformIssues(labels, allIssues, results);
@@ -124,7 +124,7 @@ class IssuesController extends abstractController {
 
 		steps = steps.concat(additionalLoadSteps);
 
-		steps.push(
+		/*steps.push(
 			(result: any[], getIssueBranchesCompleted: Function) => {
 				var issuesToRetrieve: any[] = [];
 				self.logger.debug("Looking for issue branches");
@@ -162,7 +162,7 @@ class IssuesController extends abstractController {
 				}, (err: any) => { 
 					getIssueBranchesCompleted(err, result); 
 				});
-		});
+		});*/
 
 		if (transformFunction !== null) {
 			steps.push(transformFunction);
@@ -180,7 +180,13 @@ class IssuesController extends abstractController {
 					priorityType: configuration.priorityType
 				};*/
 
-				self.jsonResponse(err, result);
+				self.jsonResponse(err, {
+					meta: {
+						estimateSizes: configuration.estimateSizes,
+						branchNameFormat: configuration.branchNameFormat
+					},
+					issues: result
+				});
 			}
 		);
 	}
@@ -338,11 +344,20 @@ class IssuesController extends abstractController {
 		if (tasks.length == 0) {
 			self.jsonResponse("Operation not allowed");
 		} else {
+			tasks.push((issue: any, getLabelsCompleted: Function) => {
+				labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
+					getLabelsCompleted(err, issue, labels);
+				});
+			});
+			tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
+				convertIssueCompleted(null, self.convertIssue(issue, labels));
+			});
+
 			async.waterfall(tasks, (err: any, result: any) => {
 				if (err) {
 					self.logger.error("Error occured during issue update", err);	
 				} else {
-					result = self.convertIssue(result);
+					
 				}
 
 				self.jsonResponse(err, result);
@@ -378,13 +393,17 @@ class IssuesController extends abstractController {
 					message.labels.push(body.typeId);
 				}
 
-				self.getGitHubClient().issues.create(message, createIssueCompleted);
+				self.getGitHubClient().issues.create(message, (err: any, issue: any) => {
+					createIssueCompleted(err, issue, labels);
+				});
+			},
+			(issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
+				convertIssueCompleted(null, self.convertIssue(issue, labels));
 			}
 		], (err: any, result: any) => {
 			if (err) {
 				self.logger.error("Error occured during issue create", err);	
 			} else {
-				result = self.convertIssue(result);
 			}
 
 			self.jsonResponse(err, result);
@@ -395,28 +414,28 @@ class IssuesController extends abstractController {
 		for (var i = 0; i < allIssues.length; i++) {
 			var issue = allIssues[i];
 
-			var convertedIssue = this.convertIssue(issue, forcePhase);	
+			var convertedIssue = this.convertIssue(issue, labels, forcePhase);	
 
-			var categorizedIssues = results.filter((x: any) => { return x.id === convertedIssue.categoryId; })[0];
+			/*var categorizedIssues = results.filter((x: any) => { return x.id === convertedIssue.categoryId; })[0];
 
 			if (categorizedIssues.phases.length === 0) {
 				categorizedIssues.phases = JSON.parse(JSON.stringify(labels.phases)); 
 				categorizedIssues.phases.map((x: any) => { x.issues = []; return x; });
 			}	
 
-			var phasedIssue = categorizedIssues.phases.filter((x: any) => { return x.id === convertedIssue.phaseId; })[0];
-			phasedIssue.issues.push(convertedIssue); 
+			var phasedIssue = categorizedIssues.phases.filter((x: any) => { return x.id === convertedIssue.phaseId; })[0];*/
+			results.push(convertedIssue); 
 		}
 	}
 
-	private convertIssue(issue: any, forcePhase: string = null): any {
+	private convertIssue(issue: any, labels: labelsModel.IndexResult, forcePhase: string = null): any {
 		var category = configuration.defaultCategoryName;
 		var phase = forcePhase || configuration.phaseNames.backlog;
 		var type: labelsModel.Label = null;
-		var labels = issue.labels || [];
+		var issueLabels = issue.labels || [];
 
-		for (var j = 0; j < labels.length; j++) {
-			var label = labels[j];
+		for (var j = 0; j < issueLabels.length; j++) {
+			var label = issueLabels[j];
 			var categoryMatch = configuration.categoryRegEx.exec(label.name);
 			var phaseMatch = configuration.phaseRegEx.exec(label.name);
 
@@ -436,8 +455,8 @@ class IssuesController extends abstractController {
 
 		var convertedIssue: any = {
 			title: issue.title,
-			categoryId: category,
-			phaseId: phase,
+			category: labels.categories.filter(x => x.id === category)[0],
+			phase: labels.phases.filter(x => x.id === phase)[0],
 			type: type || { name: null, id: null, color: null },
 			number: issue.number,
 			description: issue.body || "",
