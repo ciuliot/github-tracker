@@ -227,28 +227,49 @@ class IssuesController extends abstractController {
 			var branchInfo: any = undefined;
 
 			if (phase === configuration.phaseNames.inprogress) {
-				self.logger.debug("Trying to create new branch for issue %d", number);
-				tasks.push((getMasterBranchCompleted: Function) => {
+				var branchName = util.format("heads/" + configuration.branchNameFormat, number);
+				self.logger.debug("Trying to get branch %s for issue %d", branchName, number);
+
+				tasks.push((getBranchCompleted: Function) => {
 					self.getGitHubClient().gitdata.getReference({
 						user: user,
 						repo: repository,
-						ref: "heads/master"
-					}, (err: any, data: any) => {
-						getMasterBranchCompleted(err, data);
-					});	
-				});
-
-				tasks.push((masterBranch: any, createBranchCompleted: Function) => {
-					self.getGitHubClient().gitdata.createReference({
-						user: user,
-						repo: repository,
-						ref: util.format("refs/heads/" + configuration.branchNameFormat, number),
-						sha: masterBranch.object.sha
+						ref: branchName
 					}, (err: any, result: any) => {
 						self.logger.debug(result);
-						branchInfo = result;
-						createBranchCompleted(err);
+						if (err) {
+							self.logger.debug("Issue branch doesn't exists, trying to create new branch %s for issue %d", branchName, number);
+							async.waterfall([
+								(getMasterBranchCompleted: Function) => {
+									self.getGitHubClient().gitdata.getReference({
+										user: user,
+										repo: repository,
+										ref: "heads/master"
+									}, (err: any, data: any) => {
+										getMasterBranchCompleted(err, data);
+									});	
+								}, 
+								(masterBranch: any, createBranchCompleted: Function) => {
+									self.getGitHubClient().gitdata.createReference({
+										user: user,
+										repo: repository,
+										ref: "refs/" + branchName,
+										sha: masterBranch.object.sha
+									}, createBranchCompleted);
+								}
+								], (err: any, result: any) => { 
+									getBranchCompleted(err, result); 
+								});
+						} else
+						{
+							getBranchCompleted(err, result);
+						}				
 					});
+				});
+
+				tasks.push((result: any, storeBranchCompleted: Function) => {
+					branchInfo = result;
+					storeBranchCompleted();
 				});
 			}
 
@@ -312,8 +333,6 @@ class IssuesController extends abstractController {
 					self.getGitHubClient().issues.edit(message, issueSaveCompleted);
 				}
 			];
-
-			mustache.render
 		}
 
 		if (tasks.length == 0) {

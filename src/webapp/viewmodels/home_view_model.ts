@@ -342,11 +342,16 @@ class HomeViewModel {
 		var issue = this.issuesViewModel.findIssue(this.impediment().issue_id());
 
 		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
-		this.impediment.updateItem(issue.number(), this.impediment(), { user: this.selectedUser(), repository: this.selectedRepository() });
+		this.impediment.updateItem(issue.number(), {}, { 
+			user: this.selectedUser(), 
+			description: this.impediment().description(), 
+			repository: this.selectedRepository() 
+		});
 	}
 
 	issuePauseOpen(issue: issuesViewModel.Issue): void {
 		this.impediment().issue_id(issue.number());
+		this.impediment().description("");
 	}
 
 	issueComplete(issue: issuesViewModel.Issue): void {
