@@ -223,48 +223,55 @@ class IssuesController extends abstractController {
 			self.getGitHubClient().issues.edit(message, (err: any, result: any) => { self.jsonResponse(err, result); });
 		} else if (phase !== undefined) {
 			self.logger.info("Updating issue %s - updating phase to %s", number, phase);
-
-			tasks = [
-				(getIssueCompleted: Function) => {
-					self.getGitHubClient().issues.getRepoIssue(message, getIssueCompleted);
-				},
-				(issue: any, updateIssueCompleted: Function) => {
-					message.labels = issue.labels.map((x: any) => { return x.name });
-					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) === null; });
-
-					if (phase !== configuration.phaseNames.closed) {
-						message.labels.push(phase);
-					} else {
-						message.state = "closed";
-					}
-
-					self.getGitHubClient().issues.edit(message, (err: any) => {
-						updateIssueCompleted(err, issue);
-					});
-				},
-				
-			];
+			tasks = [];
+			var branchInfo: any = undefined;
 
 			if (phase === configuration.phaseNames.inprogress) {
-				tasks.push((issue: any, getMasterBranchCompleted: Function) => {
+				self.logger.debug("Trying to create new branch for issue %d", number);
+				tasks.push((getMasterBranchCompleted: Function) => {
 					self.getGitHubClient().gitdata.getReference({
 						user: user,
 						repo: repository,
 						ref: "heads/master"
 					}, (err: any, data: any) => {
-						getMasterBranchCompleted(err, issue, data);
+						getMasterBranchCompleted(err, data);
 					});	
 				});
 
-				tasks.push((issue: any, masterBranch: any, createBranchCompleted: Function) => {
+				tasks.push((masterBranch: any, createBranchCompleted: Function) => {
 					self.getGitHubClient().gitdata.createReference({
 						user: user,
 						repo: repository,
-						ref: util.format("refs/heads/" + configuration.branchNameFormat, issue.number),
+						ref: util.format("refs/heads/" + configuration.branchNameFormat, number),
 						sha: masterBranch.object.sha
-					}, createBranchCompleted);
+					}, (err: any, result: any) => {
+						self.logger.debug(result);
+						branchInfo = result;
+						createBranchCompleted(err);
+					});
 				});
 			}
+
+			tasks.push((getIssueCompleted: Function) => {
+				self.getGitHubClient().issues.getRepoIssue(message, getIssueCompleted);
+			});
+			tasks.push((issue: any, updateIssueCompleted: Function) => {
+				message.labels = issue.labels.map((x: any) => { return x.name });
+				message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) === null; });
+
+				if (phase !== configuration.phaseNames.closed) {
+					message.labels.push(phase);
+				} else {
+					message.state = "closed";
+				}
+
+				self.getGitHubClient().issues.edit(message, (err: any, result: any) => {
+					if (branchInfo) {
+						result.branch = self.convertBranchInfo(branchInfo);
+					}
+					updateIssueCompleted(err, result);
+				});
+			});
 		} 
 		else if (body !== undefined) {
 			self.logger.info("Updating issue %s - updating body to %o", number, body);
@@ -312,13 +319,14 @@ class IssuesController extends abstractController {
 		if (tasks.length == 0) {
 			self.jsonResponse("Operation not allowed");
 		} else {
-			async.waterfall(tasks, (err: any, result: any[]) => {
+			async.waterfall(tasks, (err: any, result: any) => {
 				if (err) {
 					self.logger.error("Error occured during issue update", err);	
 				} else {
+					result = self.convertIssue(result);
 				}
 
-				self.jsonResponse(err);
+				self.jsonResponse(err, result);
 			});
 		}
 	}
@@ -357,7 +365,7 @@ class IssuesController extends abstractController {
 			if (err) {
 				self.logger.error("Error occured during issue create", err);	
 			} else {
-				//self.logger.debug(result);
+				result = self.convertIssue(result);
 			}
 
 			self.jsonResponse(err, result);
@@ -367,63 +375,74 @@ class IssuesController extends abstractController {
 	transformIssues(labels: labelsModel.IndexResult, allIssues: any[], results: any, forcePhase: string = null) {
 		for (var i = 0; i < allIssues.length; i++) {
 			var issue = allIssues[i];
-			var category = configuration.defaultCategoryName;
-			var phase = forcePhase || configuration.phaseNames.backlog;
-			var type: labelsModel.Label = null;
 
-			for (var j = 0; j < issue.labels.length; j++) {
-				var label = issue.labels[j];
-				var categoryMatch = configuration.categoryRegEx.exec(label.name);
-				var phaseMatch = configuration.phaseRegEx.exec(label.name);
+			var convertedIssue = this.convertIssue(issue, forcePhase);	
 
-				if (categoryMatch !== null) {
-					category = label.name;
-				} else if (phaseMatch !== null) {
-					if (forcePhase === null) {
-						phase = label.name;
-					}
-				} else if (type === null) {
-					type = label;
-					type.id = label.name;
-				}
-			}
-
-			this.logger.debug("Transforming issue #%d to '%s'/'%s' [%s]", issue.number, category, phase, type === null ? "" : type.id);
-
-			var categorizedIssues = results.filter((x: any) => { return x.id === category; })[0];
+			var categorizedIssues = results.filter((x: any) => { return x.id === convertedIssue.categoryId; })[0];
 
 			if (categorizedIssues.phases.length === 0) {
 				categorizedIssues.phases = JSON.parse(JSON.stringify(labels.phases)); 
 				categorizedIssues.phases.map((x: any) => { x.issues = []; return x; });
-			}
+			}	
 
-			var convertedIssue: any = {
-				title: issue.title,
-				type: type || { name: null, id: null, color: null },
-				number: issue.number,
-				description: issue.body || "",
-				branch: { name: null, url: null },
-				assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null },
-				estimate: null
-			};
-
-			var bodyParts = convertedIssue.description.split(configuration.bodyFieldsSeparator);
-
-			if (bodyParts.length === 2) {
-				convertedIssue.description = bodyParts[1].trim();
-				var input = bodyParts[0] + configuration.bodyFieldsSeparator;
-				var fields: any = null;
-				while ( (fields = configuration.bodyFieldsRegEx.exec(input)) !== null) {
-					var name = fields[1].trim().toLowerCase();
-					name = name.split(" ").map((val: string, index: number) => { return index === 0 ? val : (val[0].toUpperCase() + val.substring(1)); }).join("");
-
-					convertedIssue[name] = fields[2].trim();
-				}
-			}
-
-			var phasedIssue = categorizedIssues.phases.filter((x: any) => { return x.id === phase; })[0];
+			var phasedIssue = categorizedIssues.phases.filter((x: any) => { return x.id === convertedIssue.phaseId; })[0];
 			phasedIssue.issues.push(convertedIssue); 
 		}
+	}
+
+	private convertIssue(issue: any, forcePhase: string = null): any {
+		var category = configuration.defaultCategoryName;
+		var phase = forcePhase || configuration.phaseNames.backlog;
+		var type: labelsModel.Label = null;
+		var labels = issue.labels || [];
+
+		for (var j = 0; j < labels.length; j++) {
+			var label = labels[j];
+			var categoryMatch = configuration.categoryRegEx.exec(label.name);
+			var phaseMatch = configuration.phaseRegEx.exec(label.name);
+
+			if (categoryMatch !== null) {
+				category = label.name;
+			} else if (phaseMatch !== null) {
+				if (forcePhase === null) {
+					phase = label.name;
+				}
+			} else if (type === null) {
+				type = label;
+				type.id = label.name;
+			}
+		}
+
+		this.logger.debug("Transforming issue #%d to '%s'/'%s' [%s]", issue.number, category, phase, type === null ? "" : type.id);
+
+		var convertedIssue: any = {
+			title: issue.title,
+			categoryId: category,
+			phaseId: phase,
+			type: type || { name: null, id: null, color: null },
+			number: issue.number,
+			description: issue.body || "",
+			branch: issue.branch || { name: null, url: null },
+			assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null },
+			estimate: null
+		};
+
+		var bodyParts = convertedIssue.description.split(configuration.bodyFieldsSeparator);
+
+		if (bodyParts.length === 2) {
+			convertedIssue.description = bodyParts[1].trim();
+			var input = bodyParts[0] + configuration.bodyFieldsSeparator;
+			var fields: any = null;
+			while ( (fields = configuration.bodyFieldsRegEx.exec(input)) !== null) {
+				var name = fields[1].trim().toLowerCase();
+				name = name.split(" ").map((val: string, index: number) => { return index === 0 ? val : (val[0].toUpperCase() + val.substring(1)); }).join("");
+
+				convertedIssue[name] = fields[2].trim();
+			}
+		}
+
+		return convertedIssue;
+
 	}
 }
 

@@ -83,31 +83,20 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 						logger.debug("Updating data as: " + lastIndexUrl);
 						sessionStorage.setItem(lastIndexUrl, nextItem.updatedData);
 
-						if (o.refreshAfterUpdate) {
-							// Try to reload data from server and merge 
-							logger.debug("Refreshing item " + nextItem.id + " from server");
-							o.loadingCount(o.loadingCount() + 1);
+						var item = o.findById(target, nextItem.id);
 
-							$.get(nextItem.url, nextItem.data, (freshItemData: any) => {
-								var item = o.findById(target, nextItem.id);
+						if (item !== null) {
+							knockout_mapping.fromJS(data.result, item);
 
-								if (item !== null) {
-									knockout_mapping.fromJS(freshItemData.result, item);
+							// And finally merge and store updated object
 
-									// And finally merge and store updated object
+							var wholeSet = knockout_mapping.fromJSON(nextItem.updatedData, o.mapping);
+							var oldItem = o.findById(wholeSet, nextItem.id);
 
-									var wholeSet = knockout_mapping.fromJSON(nextItem.updatedData, o.mapping);
-									var oldItem = o.findById(wholeSet, nextItem.id);
+							knockout_mapping.fromJS(data.result, oldItem);
 
-									knockout_mapping.fromJS(freshItemData.result, oldItem);
-
-									var newSet = knockout_mapping.toJSON(wholeSet);
-									sessionStorage.setItem(lastIndexUrl, newSet);
-								}
-
-							}).always(() => {
-								o.loadingCount(o.loadingCount() - 1);
-							});
+							var newSet = knockout_mapping.toJSON(wholeSet);
+							sessionStorage.setItem(lastIndexUrl, newSet);
 						}
 					}
 

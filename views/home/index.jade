@@ -21,8 +21,8 @@ block head
 
 	script#milestone-template(type="text/html")
 		li(data-bind="css: { active: $root.selectedMilestone() === $data.number() }")
-			a(href="#")
-				<!-- span.badge.pull-right(data-bind="text: (id === '*' || id === 'none') ? '' : open_issues") -->
+			a(href="javascript:void(0)")
+				<!-- span.badge.pull-right(data-bind="text: (id === null || id === 'none') ? '' : open_issues") -->
 				span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data.number())") 
 
 	script#issue-phase-header-template(type="text/html")
@@ -40,7 +40,7 @@ block head
 						strong(data-bind="text: title")
 					span.badge.pull-right(data-bind="text: estimate")
 
-				.panel-body(data-bind="css: { hide: description().length === 0 && $parent.id() === '#closed' }")
+				.panel-body(data-bind="css: { hide: (description() === null || description().length === 0) && $parent.id() === '#closed' }")
 					img.avatar(data-bind="attr: { src: assignee().avatar_url() }, visible: assignee().avatar_url() !== null")
 					span.type.label.label-default(data-bind="text: type().name, style: { 'background-color': '#' + type().color() }")
 					.actions.btn-group.btn-group-sm.pull-right
@@ -106,11 +106,13 @@ block body
 							label(for="type") Issue type:
 							br
 							.btn-group.btn-group-sm(data-bind="foreach: labelsViewModel.labels().types")
-								button.btn.btn-default(type="button", data-bind="text: name, css: { 'btn-primary': id() === $parent.typeId() }, click: $root.changeDetailIssueType.bind($root, $data)")
-							
+								button.btn.btn-default(type="button", data-bind="text: name, css: { 'btn-primary': id() === $parent.typeId() }, click: $root.changeDetailIssueType.bind($root, $data)")		
 						.form-data
 							label(for="category") Category:
 							select#category.form-control(data-bind="options: labelsViewModel.labels().categories, optionsText: 'name', optionsValue: 'id', value: categoryId") 
+						.form-data
+							label(for="milestone") Milestone:
+							select#milestone.form-control(data-bind="options: $root.issueMilestones, optionsText: 'title', optionsValue: 'number', value: milestone") 
 						.default(data-bind="visible: typeId() === null")
 							include ../partials/default
 						.feature(data-bind="visible: typeId() === 'feature'")

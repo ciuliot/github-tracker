@@ -26,8 +26,14 @@ export class Issue {
 
 	assigneeTooltip: KnockoutComputed<string>;
 
-	constructor(public mainLabelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, public phase: Phase, data: string) {
-		knockout_mapping.fromJS(data || { assignee: null, branch: null, type: null, environment: null, expectedBehavior: null }, {
+	constructor(public mainLabelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, public phase: Phase, data: any = {}) {
+		data.assignee = data.assignee || null;
+		data.branch = data.branch || null;
+		data.type = data.type || null;
+		data.environment = data.environment || null;
+		data.expectedBehavior = data.expectedBehavior || null;
+
+		knockout_mapping.fromJS(data, {
 			'assignee': {
 				create: (options: any) => {
 					return ko.observable(knockout_mapping.fromJS(options.data || { login: null, avatar_url: null, estimate: null, description: null }));
@@ -119,6 +125,7 @@ export class Issue {
 export class IssueDetail extends Issue {
 	categoryId: KnockoutObservable<string>;
 	typeId: KnockoutObservable<string>;
+	milestone: KnockoutObservable<string>;
 }
 
 

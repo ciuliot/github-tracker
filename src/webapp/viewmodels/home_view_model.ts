@@ -28,6 +28,7 @@ class HomeViewModel {
 	repositories: KnockoutObservableArray<repositoryModel>;
 	labelsViewModel: labelsViewModel.LabelsViewModel;
 	milestones: KnockoutObservableArray<milestoneModel>;
+	issueMilestones: KnockoutComputed<milestoneModel[]>;
 	collaborators: KnockoutObservableArray<collaboratorModel>;
 	issuesViewModel: issuesViewModel.IssuesViewModel;
 	issueDetail: KnockoutObservable<issuesViewModel.IssueDetail>;
@@ -43,8 +44,7 @@ class HomeViewModel {
 
 	url: KnockoutComputed<string>;
 
-	allMilestonesItem: milestoneModel = knockout_mapping.fromJS ({ number: "*", title: "All milestones" });
-	selectedMilestone: KnockoutObservable<string> = ko.observable("*");
+	selectedMilestone: KnockoutObservable<string> = ko.observable("none");
 	selectedMilestoneTitle: KnockoutComputed<string>;
 	issuesColumnWidth: KnockoutComputed<string>;
 
@@ -54,11 +54,8 @@ class HomeViewModel {
 	savingCount: KnockoutObservable<number> = ko.observable(0);
 	logger: log4js.Logger = utilities.getLogger("HomeViewModel");
 
-	emptyIssue: any = { number: null, estimate: "XS", description: null, title: null,
+	emptyIssue: any = { number: null, estimate: null, description: null, title: null, milestone: null, branch: null,
 						type: null, environment: null, expectedBehavior: null, categoryId: null, typeId: null };
-
-	constructor() { 
-	}
 
 	start() {
 		var self = this;
@@ -82,10 +79,15 @@ class HomeViewModel {
 				savingCount: self.savingCount,
 				loadOnStart: false,
 				indexDone: () => {
-					self.milestones.unshift(knockout_mapping.fromJS ({ number: "none", title: "No milestone" }));
-					self.milestones.unshift(self.allMilestonesItem);
+					self.milestones.push(knockout_mapping.fromJS ({ number: "none", title: "Product backlog" }));
 				}
 			}
+		});
+
+		this.issueMilestones = ko.computed(() => {
+			return ko.utils.arrayFilter(self.milestones(), x => {
+				return x.number().toString() !== "*";
+			})
 		});
 
 		this.collaborators = knockout_mapping.fromJS([]).extend({ 
@@ -128,7 +130,7 @@ class HomeViewModel {
 		this.issueDetail = knockout_mapping.fromJS(this.emptyIssue, {
 			create: (options: any) => {
 				var res = ko.observable(knockout_mapping.fromJS(options.data));
-				res().labelsViewModel = this.labelsViewModel;
+				res().labelsViewModel = self.labelsViewModel;
 
 				return res;
 			}
@@ -136,10 +138,10 @@ class HomeViewModel {
 
 		this.selectedMilestoneTitle = ko.computed(() => {
 			var milestone = ko.utils.arrayFirst(self.milestones(), (x: milestoneModel) => {
-				return x.number().toString() === self.selectedMilestone();
+				return x.number().toString() === self.selectedMilestone().toString();
 			});
 
-			return null === milestone ? self.allMilestonesItem.title() : milestone.title();
+			return null === milestone ? "" : milestone.title();
 		});
 
 		this.users = ko.computed(() => {
@@ -150,7 +152,7 @@ class HomeViewModel {
 		});
 
 		this.userRepositories = ko.computed(() => {
-			var filter = ko.utils.arrayFilter(this.repositories(), (x: repositoryModel) => {
+			var filter = ko.utils.arrayFilter(self.repositories(), (x: repositoryModel) => {
 				return x.name().indexOf(self.selectedUser() + "/") === 0;
 			});
 
@@ -196,7 +198,7 @@ class HomeViewModel {
 
 				var user = variables.length > 2 ? variables[2] : "";
 				var repository = variables.length > 3 ? variables[3] : null;
-				var milestone = variables.length > 4 ? variables[4] : "*";
+				var milestone = variables.length > 4 ? variables[4] : "none";
 
 				if (user.length === 0 && self.users().length > 0) {
 					user = self.users()[0];
@@ -249,7 +251,7 @@ class HomeViewModel {
 		this.logger.info("Selecting repository: ", repository);
 
 		this.loadIssues(false, () => {
-			self.selectMilestone("*", false);
+			self.selectMilestone("none", false);
 		});
 	}
 
@@ -367,7 +369,7 @@ class HomeViewModel {
 		var rawData = knockout_mapping.toJSON(issue);
 		knockout_mapping.fromJS(this.emptyIssue, this.issueDetail); // Cleanup fields
 		knockout_mapping.fromJSON(rawData, this.issueDetail);
-
+		this.issueDetail().milestone(this.selectedMilestone());
 
 		this.issueDetail().mainLabelsViewModel = this.labelsViewModel;
 		this.issueDetail().categoryId(issue.phase.category.id());
@@ -383,16 +385,21 @@ class HomeViewModel {
 			title: this.issueDetail().title()
 		};
 
-		var rawData = knockout_mapping.toJSON(this.issueDetail());
-		
+		var rawData = knockout_mapping.toJS(this.issueDetail());
 
 		if (id === null) {
 			args.milestone = (this.selectedMilestone() === "*" || this.selectedMilestone() === "none") ? undefined : this.selectedMilestone();
 
-			this.issuesViewModel.categories.createItem(this.issueDetail(), args);
+			var category = this.issuesViewModel.categories().filter(x => { return x.id() === this.issueDetail().categoryId() } )[0];
+			var phase = category.phases()[0];
+
+			var newIssue = new issuesViewModel.Issue(category.viewModel.labelsViewModel	, category.viewModel.collaborators, phase, rawData);
+			phase.issues.push(newIssue);
+
+			this.issuesViewModel.categories.createItem(newIssue, args);
 		} else {
 			var originalIssue = this.issuesViewModel.findIssue(id);
-			knockout_mapping.fromJSON(rawData, originalIssue);
+			knockout_mapping.fromJS(rawData, originalIssue);
 
 			var originalIssue = this.issuesViewModel.findIssue(id);
 			originalIssue.moveToCategory(this.issueDetail().categoryId());
@@ -407,6 +414,7 @@ class HomeViewModel {
 
 	issueAdd(issue: issuesViewModel.Issue): void {
 		knockout_mapping.fromJS(this.emptyIssue, this.issueDetail); // Cleanup fields
+		this.issueDetail().milestone(this.selectedMilestone());
 		this.issueDetail().mainLabelsViewModel = this.labelsViewModel;
 	}
 
