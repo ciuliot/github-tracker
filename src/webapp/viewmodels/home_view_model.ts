@@ -55,11 +55,18 @@ class HomeViewModel {
 	savingCount: KnockoutObservable<number> = ko.observable(0);
 	logger: log4js.Logger = utilities.getLogger("HomeViewModel");
 
-	emptyIssue: any = { number: null, estimate: null, description: null, title: null, milestone: null, branch: null,
-						type: null, environment: null, expectedBehavior: null, categoryId: null, typeId: null };
+	emptyIssue: any;
 
 	start() {
 		var self = this;
+		this.emptyIssue = { number: null, estimate: null, description: null, title: null, milestone: null, 
+						assignee: { login: null },
+						branch: null,
+						type: { id: null }, 
+						category: { id: null },
+						phase: { id: null },
+						environment: null, expectedBehavior: null };
+
 		this.repositories = knockout_mapping.fromJS([]).extend({ 
 			mapToJsonResource: { 
 				url: "/repositories", 
@@ -144,10 +151,7 @@ class HomeViewModel {
 
 		this.issueDetail = knockout_mapping.fromJS(this.emptyIssue, {
 			create: (options: any) => {
-				var res = ko.observable(knockout_mapping.fromJS(options.data));
-				res().labelsViewModel = self.labelsViewModel;
-
-				return res;
+				return ko.observable(new issuesViewModel.Issue(self.labelsViewModel, self.collaborators, self.emptyIssue));
 			}
 		})
 
@@ -324,7 +328,7 @@ class HomeViewModel {
 	private updateIssue(issue: issuesViewModel.Issue, body: any): void {
 		body.user = this.selectedUser();
 		body.repository = this.selectedRepository();
-		this.issuesViewModel.categories.updateItem(issue.number(), undefined, body);
+		this.issuesViewModel.issuesData.updateItem(issue.number(), issue, body);
 	}
 
 	private updateIssuePhase(issue: issuesViewModel.Issue, newPhase: string): void {
@@ -399,14 +403,9 @@ class HomeViewModel {
 
 	issueOpen(issue: issuesViewModel.Issue): void {
 		var rawData = knockout_mapping.toJSON(issue);
-		knockout_mapping.fromJS(this.emptyIssue, this.issueDetail); // Cleanup fields
-		knockout_mapping.fromJSON(rawData, this.issueDetail);
+		knockout_mapping.fromJS(this.emptyIssue, this.issueDetail()); // Cleanup fields
+		knockout_mapping.fromJSON(rawData, this.issueDetail());
 		this.issueDetail().milestone(this.selectedMilestone());
-
-		this.issueDetail().mainLabelsViewModel = this.labelsViewModel;
-		
-		//this.issueDetail().categoryId(issue.phase.category.id());
-		//this.issueDetail().typeId(issue.type() === null ? null : issue.type().id());
 	}
 
 	issueSave():void {
@@ -420,11 +419,14 @@ class HomeViewModel {
 
 		var rawData = knockout_mapping.toJS(this.issueDetail());
 
+		//var newCategory = this.issuesViewModel.categories().filter(x => { return x.id() === this.issueDetail().categoryId() } )[0];
+		//var newPhase = this.issuesViewModel.phases().filter(x => { return x.id() === this.issueDetail().phaseId() } )[0];
+
 		if (id === null) {
 			args.milestone = (this.selectedMilestone() === "*" || this.selectedMilestone() === "none") ? undefined : this.selectedMilestone();
 
-			var category = this.issuesViewModel.categories().filter(x => { return x.id() === this.issueDetail().categoryId() } )[0];
-			var phase = category.phases()[0];
+			
+			//var phase = category.phases()[0];
 
 			//var newIssue = new issuesViewModel.Issue(category.viewModel.labelsViewModel, category.viewModel.collaborators, phase, rawData);
 			//phase.issues.push(newIssue);
@@ -435,9 +437,9 @@ class HomeViewModel {
 			knockout_mapping.fromJS(rawData, originalIssue);
 
 			var originalIssue = this.issuesViewModel.findIssue(id);
-			originalIssue.moveToCategory(this.issueDetail().categoryId());
+			originalIssue.moveToCategory(this.issueDetail().category().id());
 
-			var newType = this.labelsViewModel.labels().types().filter(x => x.id () === self.issueDetail().typeId());
+			var newType = this.labelsViewModel.labels().types().filter(x => x.id () === self.issueDetail().type().id());
 			var newTypeJSON = knockout_mapping.toJSON(newType.length > 0 ? newType[0] : labelsViewModel.Label.empty);
 			knockout_mapping.fromJSON(newTypeJSON, originalIssue.type);
 
@@ -452,7 +454,7 @@ class HomeViewModel {
 	}
 
 	changeDetailIssueType(type: labelsViewModel.Label) {
-		this.issueDetail().typeId(type.id());
+		this.issueDetail().type().id(type.id());
 	}
 }
 

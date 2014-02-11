@@ -64,38 +64,73 @@ export class Issue {
 			}
 		}, this);
 		var self = this;
-		var phases = mainLabelsViewModel.labels().declaration.phases;
+		
 
 		this.canStart = ko.computed(() => {
-			return self.phase().id() === phases.backlog() || self.phase().id() === phases.onhold();
+			if (self.mainLabelsViewModel.labels().declaration) {
+				var phases = self.mainLabelsViewModel.labels().declaration.phases;
+				return self.phase().id() === phases.backlog() || self.phase().id() === phases.onhold();
+			} else {
+				return false;
+			}
 		}, this);
 
 		this.canAssign = ko.computed(() => {
-			return self.phase().id() !== phases.closed();
+			if (self.mainLabelsViewModel.labels().declaration) {
+				var phases = self.mainLabelsViewModel.labels().declaration.phases;
+				return self.phase().id() !== phases.closed();
+				} else {
+				return false;
+			}
 		}, this);
 
 		this.canPause = ko.computed(() => {
-			return self.phase().id() === phases.inprogress();
+			if (self.mainLabelsViewModel.labels().declaration) {
+				var phases = self.mainLabelsViewModel.labels().declaration.phases;
+				return self.phase().id() === phases.inprogress();
+			} else {
+				return false;
+			}
 		}, this);
 
 		this.canStop = ko.computed(() => {
-			return self.phase().id() !== phases.closed();
+			if (self.mainLabelsViewModel.labels().declaration) {
+				var phases = self.mainLabelsViewModel.labels().declaration.phases;
+				return self.phase().id() !== phases.closed();
+			} else {
+				return false;
+			}
 		}, this);
 
 		this.canComplete = ko.computed(() => {
-			return self.phase().id() === phases.inprogress();
+			if (self.mainLabelsViewModel.labels().declaration) {
+				var phases = self.mainLabelsViewModel.labels().declaration.phases;
+				return self.phase().id() === phases.inprogress();
+			} else {
+				return false;
+			}
 		}, this);
 
 		this.canAccept = ko.computed(() => {
-			return self.phase().id() === phases.implemented();
+			if (self.mainLabelsViewModel.labels().declaration) {
+				var phases = self.mainLabelsViewModel.labels().declaration.phases;
+				return self.phase().id() === phases.implemented();
+			} else {
+				return false;
+			}
 		}, this);
 
 		this.canReject = ko.computed(() => {
-			return self.phase().id() === phases.implemented();
+			if (self.mainLabelsViewModel.labels().declaration) {
+				var phases = self.mainLabelsViewModel.labels().declaration.phases;
+				return self.phase().id() === phases.implemented();
+			} else {
+				return false;
+			}
 		}, this);
 
 		this.haveBranch = ko.computed(() => {
-			return self.branch().name() !== null;
+			return self.branch() !== null && self.branch().name() !== null;
 		}, this);
 
 		this.assigneeTooltip = ko.computed(() => {
@@ -103,39 +138,26 @@ export class Issue {
 		});
 
 		this.checkoutCommand = ko.computed(() => {
-			return "git checkout " + self.branch().name();
+			return self.branch() === null ? "" : ("git checkout " + self.branch().name());
 		});
 	}
 
 	moveToPhase(newPhaseId: string): void {
-		/*var self = this;
-		self.phase.issues.remove(self);
-
-		var newPhase = self.phase.category.phases().filter(x => { return x.id() == newPhaseId; });
-
-		newPhase[0].issues.push(self);
-		self.phase = newPhase[0];
-		self.phaseId(newPhase[0].id());*/
+		var newPhase = this.mainLabelsViewModel.labels().phases().filter(x => { return x.id() == newPhaseId; })[0];
+		var rawData = knockout_mapping.toJS(newPhase);
+		
+		knockout_mapping.fromJS(rawData, this.phase());
 	}
 
 	moveToCategory(newCategoryId: string): void {
-		/*var self = this;
-		var currentPhaseId = self.phase.id();
-
-		self.phase.issues.remove(self);
-
-		var newCategory: Category = self.phase.category.viewModel.categories().filter(x => { return x.id() == newCategoryId; })[0];
-		var newPhase = newCategory.phases().filter(x => { return x.id() == currentPhaseId; })[0];
-
-		newPhase.issues.push(self);
-		self.phase = newPhase;
-		self.phaseId(newPhase.id());*/
+		var newCategory = this.mainLabelsViewModel.labels().categories().filter(x => { return x.id() == newCategoryId; })[0];
+		var rawData = knockout_mapping.toJS(newCategory);
+		
+		knockout_mapping.fromJS(rawData, this.category());
 	}
 }
 
 export class IssueDetail extends Issue {
-	categoryId: KnockoutObservable<string>;
-	typeId: KnockoutObservable<string>;
 	milestone: KnockoutObservable<string>;
 }
 

@@ -36,7 +36,7 @@ block head
 			.panel.panel-default.issue
 				.panel-heading(data-bind="style: { background: $parents[1].color() }")
 					strong(data-bind="text: ('#' + number() + ' '), tooltip: { title: $parents[1].name() }")
-					a(data-bind="click: $root.issueOpen.bind($root, $data)", data-toggle="modal", data-target="#issue-modal")
+					a.title(data-bind="click: $root.issueOpen.bind($root, $data)", data-toggle="modal", data-target="#issue-modal")
 						strong(data-bind="text: title")
 					span.badge.pull-right(data-bind="text: estimate")
 
@@ -122,19 +122,19 @@ block body
 						.form-data
 							label(for="type") Issue type:
 							br
-							.btn-group.btn-group-sm(data-bind="foreach: labelsViewModel.labels().types")
-								button.btn.btn-default(type="button", data-bind="text: name, css: { 'btn-primary': id() === $parent.typeId() }, click: $root.changeDetailIssueType.bind($root, $data)")		
+							.btn-group.btn-group-sm(data-bind="foreach: mainLabelsViewModel.labels().types")
+								button.btn.btn-default(type="button", data-bind="text: name, css: { 'btn-primary': id() === $parent.type().id() }, click: $root.changeDetailIssueType.bind($root, $data)")		
 						.form-data
 							label(for="category") Category:
-							select#category.form-control(data-bind="options: labelsViewModel.labels().categories, optionsText: 'name', optionsValue: 'id', value: categoryId") 
+							select#category.form-control(data-bind="options: mainLabelsViewModel.labels().categories, optionsText: 'name', optionsValue: 'id', value: category().id") 
 						.form-data
 							label(for="milestone") Milestone:
 							select#milestone.form-control(data-bind="options: $root.issueMilestones, optionsText: 'title', optionsValue: 'number', value: milestone") 
-						.default(data-bind="visible: typeId() === null")
+						.default(data-bind="visible: type().id() === null")
 							include ../partials/default
-						.feature(data-bind="visible: typeId() === 'feature'")
+						.feature(data-bind="visible: type().id() === 'feature'")
 							include ../partials/feature
-						.bug(data-bind="visible: typeId() === 'bug'")
+						.bug(data-bind="visible: type().id() === 'bug'")
 							include ../partials/bug	
 				.modal-footer
 					button.btn.btn-default(type="button", data-dismiss="modal") Close

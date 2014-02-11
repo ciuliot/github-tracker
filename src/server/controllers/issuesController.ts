@@ -112,8 +112,7 @@ class IssuesController extends abstractController {
 			},
 			retrieveStep,
 			(labels: labelsModel.IndexResult, allIssues: any[], assignOpenIssuesCompleted: Function) => {
-				var results: any[] = []; // JSON.parse(JSON.stringify(labels.categories)); // Clone categories
-				//results = results.map((x: any) => { x.phases = []; return x; });
+				var results: any[] = []; 
 				self.logger.debug("Transforming %d open issues", allIssues.length);
 
 				self.transformIssues(labels, allIssues, results);
@@ -124,20 +123,16 @@ class IssuesController extends abstractController {
 
 		steps = steps.concat(additionalLoadSteps);
 
-		/*steps.push(
+		steps.push(
 			(result: any[], getIssueBranchesCompleted: Function) => {
 				var issuesToRetrieve: any[] = [];
 				self.logger.debug("Looking for issue branches");
 
 				for (var i = 0; i < result.length; i++) {
-					var category: any = result[i];
+					var issue: any = result[i];
 
-					for (var j = 0; j < category.phases.length; j++) {
-						var phase = category.phases[j];
-
-						if (phase.id === configuration.phaseNames.onhold || phase.id === configuration.phaseNames.inprogress) {
-							issuesToRetrieve = issuesToRetrieve.concat(phase.issues);
-						}
+					if (issue.phase.id === configuration.phaseNames.onhold || issue.phase.id === configuration.phaseNames.inprogress) {
+						issuesToRetrieve = issuesToRetrieve.concat(issue);
 					}
 				}
 
@@ -162,7 +157,7 @@ class IssuesController extends abstractController {
 				}, (err: any) => { 
 					getIssueBranchesCompleted(err, result); 
 				});
-		});*/
+		});
 
 		if (transformFunction !== null) {
 			steps.push(transformFunction);
@@ -172,13 +167,7 @@ class IssuesController extends abstractController {
 			(err: any, result: any[]) => {
 				if (err) {
 					self.logger.error("Error occured during issues retrieval", err);	
-				} 
-
-				/*result["meta"] = {
-					estimateSizes: configuration.estimateSizes,
-					branchNameFormat: configuration.branchNameFormat,
-					priorityType: configuration.priorityType
-				};*/
+				}
 
 				self.jsonResponse(err, {
 					meta: {
@@ -242,7 +231,6 @@ class IssuesController extends abstractController {
 						repo: repository,
 						ref: branchName
 					}, (err: any, result: any) => {
-						self.logger.debug(result);
 						if (err) {
 							self.logger.debug("Issue branch doesn't exists, trying to create new branch %s for issue %d", branchName, number);
 							async.waterfall([
@@ -307,7 +295,7 @@ class IssuesController extends abstractController {
 
 			tasks = [
 				(templateExistsCompleted: (err: ErrnoException, data: any) => void) => {
-					var type: string = body.type.name || "default";
+					var type: string = body.type.id || "default";
 					
 					if (!fs.existsSync(path.resolve(templateDir, type))) {
 						type = "default";
@@ -331,8 +319,8 @@ class IssuesController extends abstractController {
 					message.labels = issue.labels.map((x: any) => { return x.name });
 					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) !== null; }); // Keep only phase labels
 
-					message.labels.push(body.categoryId);
-					message.labels.push(body.typeId);
+					message.labels.push(body.category.id);
+					message.labels.push(body.type.id);
 					message.body = formattedBody;
 					message.title = body.title;
 
@@ -386,11 +374,11 @@ class IssuesController extends abstractController {
 			},
 			(labels: labelsModel.IndexResult, createIssueCompleted: Function) => {
 				message.labels = [];
-				if (body.categoryId) {
-					message.labels.push(body.categoryId);
+				if (body.category.id) {
+					message.labels.push(body.category.id);
 				}
-				if (body.typeId) {
-					message.labels.push(body.typeId);
+				if (body.type.id) {
+					message.labels.push(body.type.id);
 				}
 
 				self.getGitHubClient().issues.create(message, (err: any, issue: any) => {
@@ -412,19 +400,7 @@ class IssuesController extends abstractController {
 
 	transformIssues(labels: labelsModel.IndexResult, allIssues: any[], results: any, forcePhase: string = null) {
 		for (var i = 0; i < allIssues.length; i++) {
-			var issue = allIssues[i];
-
-			var convertedIssue = this.convertIssue(issue, labels, forcePhase);	
-
-			/*var categorizedIssues = results.filter((x: any) => { return x.id === convertedIssue.categoryId; })[0];
-
-			if (categorizedIssues.phases.length === 0) {
-				categorizedIssues.phases = JSON.parse(JSON.stringify(labels.phases)); 
-				categorizedIssues.phases.map((x: any) => { x.issues = []; return x; });
-			}	
-
-			var phasedIssue = categorizedIssues.phases.filter((x: any) => { return x.id === convertedIssue.phaseId; })[0];*/
-			results.push(convertedIssue); 
+			results.push(this.convertIssue(allIssues[i], labels, forcePhase)); 
 		}
 	}
 

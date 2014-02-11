@@ -9,7 +9,7 @@ export class Label {
 	color: KnockoutObservable<string>;
 	id: KnockoutObservable<string>;
 
-	static empty: any = { name: null, color: null };
+	static empty: any = { id: null, name: null, color: null };
 };
 
 export interface PhasesDeclaration {
