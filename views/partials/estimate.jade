@@ -4,5 +4,5 @@
 	#estimate.btn-group.btn-group-sm
 		each val in [ { id: null, name: "N/A" }, { id: "XS" }, { id: "S" }, { id: "M" }, { id: "L" }, { id: "XL" }]
 			- var realVal = val.id === null ? "null" : ("'" + val.id + "'")
-			- var dataBind = "css: { 'btn-primary': estimate() === " + realVal + " }, click: $data.estimate(" + realVal + ")";
+			- var dataBind = "css: { 'btn-primary': estimate() === " + realVal + " }, click: $data.setEstimate.bind($data, " + realVal + ")";
 			button.btn.btn-default(type="button", data-bind=dataBind)= (val.name || val.id)

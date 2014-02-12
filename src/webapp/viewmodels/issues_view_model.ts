@@ -24,6 +24,8 @@ export class Issue {
 	phase: KnockoutObservable<labelsViewModel.Label>;
 	category: KnockoutObservable<labelsViewModel.Label>;
 	title: KnockoutObservable<string>;
+	estimate: KnockoutObservable<string>;
+	description: KnockoutObservable<string>;
 	type: KnockoutObservable<labelsViewModel.Label>;
 
 	assigneeTooltip: KnockoutComputed<string>;
@@ -73,8 +75,7 @@ export class Issue {
 				}
 			}
 		}, this);
-		var self = this;
-		
+		var self = this;	
 
 		this.canStart = ko.computed(() => {
 			if (self.mainLabelsViewModel.labels().declaration) {
@@ -150,6 +151,10 @@ export class Issue {
 		this.checkoutCommand = ko.computed(() => {
 			return self.branch() === null ? "" : ("git checkout " + self.branch().name());
 		});
+	}
+
+	setEstimate(newEstimate: string): void {
+		this.estimate(newEstimate);
 	}
 
 	moveToPhase(newPhaseId: string): void {
