@@ -49,6 +49,8 @@ class HomeViewModel {
 	selectedMilestoneTitle: KnockoutComputed<string>;
 	issuesColumnWidth: KnockoutComputed<string>;
 
+	closedIssuesVisible: KnockoutObservable<boolean> = ko.observable(true);
+
 	newBranchIssueNumber: KnockoutObservable<number> = ko.observable(0);
 	
 	loadingCount: KnockoutObservable<number> = ko.observable(0);
@@ -110,7 +112,7 @@ class HomeViewModel {
 			}
 		});
 
-		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount);
+		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount, this.closedIssuesVisible);
 
 		this.impediment = knockout_mapping.fromJS({ issue_id: null, description: null }, {
 			create: (options: any) => {
@@ -190,9 +192,14 @@ class HomeViewModel {
 				}
 
 				var url = parts.join("/");
+				var queryString = ["showClosedIssues=" + self.closedIssuesVisible()];
 
 				if (self.issuesViewModel.filter().length > 0) {
-					url += "?q=" + self.issuesViewModel.filter();
+					queryString.push("q=" + self.issuesViewModel.filter());
+				}
+
+				if (queryString.length > 0) {
+					url += "?" + queryString.join("&");
 				}
 
 				if (self.url) {
@@ -230,6 +237,9 @@ class HomeViewModel {
 							var key = parts[0], value = parts[1];
 							if (key === "q") {
 								self.issuesViewModel.filter(value);
+							}
+							else if (key === "showClosedIssues") {
+								self.closedIssuesVisible.filter(value);
 							}
 						}
 					}
@@ -446,6 +456,10 @@ class HomeViewModel {
 
 	changeDetailIssueType(type: labelsViewModel.Label) {
 		this.issueDetail().type().id(type.id());
+	}
+
+	toggleClosedIssuesVisibility(): void {
+		this.closedIssuesVisible(!this.closedIssuesVisible());
 	}
 }
 

@@ -25,14 +25,19 @@ block head
 				<!-- span.badge.pull-right(data-bind="text: (id === null || id === 'none') ? '' : open_issues") -->
 				span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data.number())") 
 
+	- var columnCss = "css: { 'col-lg-2': $root.closedIssuesVisible, 'col-lg-3': !$root.closedIssuesVisible(),";
+	- columnCss +=    " 'col-lg-offset-1': ($root.closedIssuesVisible() && $index() === 0) }, visible: isColumnVisible";
+
 	script#issue-phase-header-template(type="text/html")
-		th.swimlane(data-bind="text: name, attr: { width: $root.issuesColumnWidth }")
+		- var headerDataBind = "text: name, " + columnCss;
+		.phase-header(data-bind=headerDataBind)
 
 	script#issue-category-header-template(type="text/html")
 		li: a(data-bind="text: name, attr: { href: id() }")
 
 	script#issue-phase-template(type="text/html")
-		td.swimlane(data-bind="foreach: filteredIssues, attr: { width: $root.issuesColumnWidth }")
+		- var columnDataBind = "foreach: filteredIssues, " + columnCss
+		.col-lg-2(data-bind=columnDataBind)
 			.panel.panel-default.issue
 				.panel-heading(data-bind="style: { background: $parents[1].color() }")
 					strong(data-bind="text: ('#' + number() + ' '), tooltip: { title: $parents[1].name() }")
@@ -173,6 +178,8 @@ block body
 			ul.nav.navbar-nav.navbar-right
 				li: p.saving-indicator.navbar-text(data-bind="css: { invisible: savingCount() == 0 }")
 				li: p.loading-indicator.navbar-text(data-bind="css: { invisible: loadingCount() == 0 }")
+				li: button.btn.btn-default.navbar-btn(type="button", data-bind="tooltip: { title: $root.closedIssuesVisible() ? 'Hide closed issues' : 'Show closed issues', container: 'body', placement: 'bottom' }, click: $root.toggleClosedIssuesVisibility.bind($root)")
+					span.glyphicon(data-bind="css: { 'glyphicon-eye-open': !$root.closedIssuesVisible(), 'glyphicon-eye-close': $root.closedIssuesVisible() }")
 				li
 					form.navbar-form(role="form")
 						.form-group
@@ -200,17 +207,13 @@ block body
 		strong 
 			span New branch was created. Please see issue branch details.
 
-	table.table.phases
-		thead
-			tr(data-bind="template: { name: 'issue-phase-header-template', foreach: labelsViewModel.labels().phases }")
-
-
-	.issues(data-spy="scroll", data-target="#issues-navbar")
-		table.table
-			tbody
-				<!-- ko foreach: issuesViewModel.categories() -->
-				tr(data-bind="template: { name: 'issue-phase-template', foreach: phases }")
-				<!-- /ko -->
+	.container-fluid.visible-lg(data-bind="with: issuesViewModel.categories()[0]")
+		.row.phases(data-bind="template: { name: 'issue-phase-header-template', foreach: phases }")
+	.container-fluid
+		<!-- ko foreach: issuesViewModel.categories() -->
+		.row(data-bind="template: { name: 'issue-phase-template', foreach: phases }")
+		<!-- /ko -->
+				
 				
 		
 

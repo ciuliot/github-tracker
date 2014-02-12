@@ -180,6 +180,7 @@ export class IssueDetail extends Issue {
 export class Phase extends labelsViewModel.Label {
 	issues: KnockoutComputed<Issue[]>;
 	filteredIssues: KnockoutComputed<Issue[]>;
+	isColumnVisible: KnockoutComputed<boolean>;
 
 	constructor(public category: Category, private filter: KnockoutObservable<string>, data: string) {
 		super();
@@ -204,6 +205,15 @@ export class Phase extends labelsViewModel.Label {
 					|| (self.name().toLowerCase().indexOf(filterValue) >= 0)
 					|| (x.assignee().login() !== null && x.assignee().login().toLowerCase().indexOf(filterValue) >= 0);
 			});
+		});
+
+		this.isColumnVisible = ko.computed(() => {
+			if (self.category.viewModel.labelsViewModel.labels().declaration) {
+				var phases = self.category.viewModel.labelsViewModel.labels().declaration.phases;
+				return self.id() !== phases.closed() ||
+					(self.category.viewModel.closedIssuesVisible() && self.id() === phases.closed());
+			}
+			return true;
 		});
 	}
 }
@@ -248,7 +258,7 @@ export class IssuesViewModel {
 	lastTemporaryId: number = 0;
 
 	constructor(public labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
-		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>) {
+		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>, public closedIssuesVisible: KnockoutObservable<boolean>) {
 		var self = this;
 		var mapping = {
 			create: (options: any) => {
