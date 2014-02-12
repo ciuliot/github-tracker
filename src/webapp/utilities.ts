@@ -97,6 +97,8 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 
 							var newSet = knockout_mapping.toJSON(wholeSet);
 							sessionStorage.setItem(lastIndexUrl, newSet);
+						} else {
+							logger.warn("Item with id " + nextItem.id + " not found, skipping update");
 						}
 					}
 

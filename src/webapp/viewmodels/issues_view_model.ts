@@ -5,6 +5,7 @@ import knockout_mapping = require("knockout.mapping");
 import labelsViewModel = require("./labels_view_model");
 import collaboratorModel = require("../models/collaborator_model");
 import ko = require("knockout");
+import $ = require("jquery");
 
 export class Issue {
 	canStart: KnockoutComputed<boolean>;
@@ -27,39 +28,48 @@ export class Issue {
 
 	assigneeTooltip: KnockoutComputed<string>;
 
+	static empty: any = {
+		number: null,
+		description: null,
+		title: null,
+		milestone: null,
+		estimate: null,
+		assignee: { login: null, avatar_url: null, estimate: null },
+		branch: { name: null },
+		type: $.extend({}, labelsViewModel.Label.empty ),
+		environment: null,
+		expectedBehavior: null,
+		phase: $.extend({}, labelsViewModel.Label.empty ),
+		category: $.extend({}, labelsViewModel.Label.empty )
+	};
+
 	constructor(public mainLabelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, data: any = {}) {
-		data.assignee = data.assignee || null;
-		data.branch = data.branch || null;
-		data.type = data.type || null;
-		data.environment = data.environment || null;
-		data.expectedBehavior = data.expectedBehavior || null;
-		data.phase = data.phase || null;
-		data.category = data.category || null;
+		data = $.extend(true, {}, Issue.empty, data);
 
 		knockout_mapping.fromJS(data, {
 			'assignee': {
 				create: (options: any) => {
-					return ko.observable(knockout_mapping.fromJS(options.data || { login: null, avatar_url: null, estimate: null, description: null }));
+					return ko.observable(knockout_mapping.fromJS(options.data));
 				}
 			},
 			'branch': {
 				create: (options: any) => {
-					return ko.observable(knockout_mapping.fromJS(options.data || { name: null }));
+					return ko.observable(knockout_mapping.fromJS(options.data));
 				}
 			},
 			'type': {
 				create: (options: any) => {
-					return ko.observable(knockout_mapping.fromJS(options.data || labelsViewModel.Label.empty));
+					return ko.observable(knockout_mapping.fromJS(options.data));
 				}
 			},
 			'phase': {
 				create: (options: any) => {
-					return ko.observable(knockout_mapping.fromJS(options.data || labelsViewModel.Label.empty));
+					return ko.observable(knockout_mapping.fromJS(options.data));
 				}
 			},
 			'category': {
 				create: (options: any) => {
-					return ko.observable(knockout_mapping.fromJS(options.data || labelsViewModel.Label.empty));
+					return ko.observable(knockout_mapping.fromJS(options.data));
 				}
 			}
 		}, this);
@@ -235,20 +245,17 @@ export class IssuesViewModel {
 	constructor(public labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
 		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>) {
 		var self = this;
-		this.issuesData = knockout_mapping.fromJS({ issues: [], meta: null }, {
+		var mapping = {
 			create: (options: any) => {
 				return ko.observable(new IssuesData(self, options.data)); 
 			}
-		});
+		};
+		this.issuesData = knockout_mapping.fromJS({ issues: [], meta: null }, mapping);
 
 		this.issuesData.extend({ 
 			mapToJsonResource: { 
 				url: "/issues",
-				mapping: {
-					create: (options: any) => {
-						return new IssuesData(self, options.data); 
-					}
-				},
+				mapping: mapping,
 				loadingCount: loadingCount,
 				savingCount: savingCount,
 				loadOnStart: false,
@@ -278,10 +285,10 @@ export class IssuesViewModel {
 	}
 
 	private findIssueOnCollection(where: any, number: number): Issue {
-		return ko.utils.arrayFirst(where(), (x: Issue) => { return x.number() === number });
+		return ko.utils.arrayFirst(where().issues(), (x: Issue) => { return x.number() === number });
 	}
 
 	findIssue(number: number): Issue {
-		return this.findIssueOnCollection(this.issuesData().issues, number);
+		return this.findIssueOnCollection(this.issuesData, number);
 	}
 }

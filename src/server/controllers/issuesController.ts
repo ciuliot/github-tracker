@@ -138,22 +138,11 @@ class IssuesController extends abstractController {
 
 				self.logger.debug("Found %d issues for branch retrieval", issuesToRetrieve.length);
 
-				async.forEach(issuesToRetrieve, (issue: any, cb: Function) => {		
-					var branch = util.format("heads/" + configuration.branchNameFormat, issue.number);
-					self.logger.debug("Looking for branch %s", branch);
-					self.getGitHubClient().gitdata.getReference({
-						user: user,
-						repo: repository,
-						ref: branch
-					}, (err:any, data: any) => {
-						if (err) {
-							cb(err.code === 404 ? null : err); // Branch not found
-						} else {
-							issue.branch = self.convertBranchInfo(data);
-							cb();
-						}
+				async.forEach(issuesToRetrieve, (issue: any, cb: Function) => {
+					self.getIssueBranchInfo(issue.number, user, repository, (err: any, result: any) => {
+						issue.branch = result;
+						cb();
 					});
-
 				}, (err: any) => { 
 					getIssueBranchesCompleted(err, result); 
 				});
@@ -188,6 +177,26 @@ class IssuesController extends abstractController {
 		};
 	}
 
+	private getIssueBranchInfo(number: number, user: string, repository: string, callback: Function) {
+		var self = this;
+		var branchName = util.format("heads/" + configuration.branchNameFormat, number);
+		self.logger.info("Trying to get branch %s for issue %d", branchName, number);
+
+		self.getGitHubClient().gitdata.getReference({
+			user: user,
+			repo: repository,
+			ref: branchName
+		}, (err: any, result: any) => {
+			if (err) {
+				self.logger.debug("Branch %s not found", branchName);
+				callback(err.code === 404 ? null : err); // Branch not found
+			} else {
+				self.logger.debug("Branch %s found", branchName);
+				callback(null, self.convertBranchInfo(result));
+			}		
+		});
+	}
+
 	update(): void {
 		var self = this;
 
@@ -215,7 +224,7 @@ class IssuesController extends abstractController {
 				self.getGitHubClient().issues.edit(message, updateIssueCompleted);
 			});
 
-			self.getGitHubClient().issues.edit(message, (err: any, result: any) => { self.jsonResponse(err, result); });
+
 		} else if (phase !== undefined) {
 			self.logger.info("Updating issue %s - updating phase to %s", number, phase);
 			tasks = [];
@@ -226,12 +235,8 @@ class IssuesController extends abstractController {
 				self.logger.debug("Trying to get branch %s for issue %d", branchName, number);
 
 				tasks.push((getBranchCompleted: Function) => {
-					self.getGitHubClient().gitdata.getReference({
-						user: user,
-						repo: repository,
-						ref: branchName
-					}, (err: any, result: any) => {
-						if (err) {
+					self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
+						if (!result) {
 							self.logger.debug("Issue branch doesn't exists, trying to create new branch %s for issue %d", branchName, number);
 							async.waterfall([
 								(getMasterBranchCompleted: Function) => {
@@ -252,16 +257,15 @@ class IssuesController extends abstractController {
 									}, createBranchCompleted);
 								}
 								], (err: any, result: any) => { 
-									getBranchCompleted(err, result); 
+									getBranchCompleted(err, self.convertBranchInfo(result)); 
 								});
-						} else
-						{
+						} else {
 							getBranchCompleted(err, result);
 						}				
 					});
 				});
 
-				tasks.push((result: any, storeBranchCompleted: Function) => {
+				tasks.push((result: any, storeBranchCompleted: Function) => {		
 					branchInfo = result;
 					storeBranchCompleted();
 				});
@@ -281,9 +285,8 @@ class IssuesController extends abstractController {
 				}
 
 				self.getGitHubClient().issues.edit(message, (err: any, result: any) => {
-					if (branchInfo) {
-						result.branch = self.convertBranchInfo(branchInfo);
-					}
+					result.branch = branchInfo;
+					
 					updateIssueCompleted(err, result);
 				});
 			});
@@ -336,6 +339,16 @@ class IssuesController extends abstractController {
 				labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
 					getLabelsCompleted(err, issue, labels);
 				});
+			});
+			tasks.push((issue: any, labels: labelsModel.IndexResult, getBranchCompleted: Function) => {
+				if (issue.branch) {
+					getBranchCompleted(null, issue, labels);
+				} else {
+					self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
+						issue.branch = result;
+						getBranchCompleted(null, issue, labels);
+					});
+				}
 			});
 			tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
 				convertIssueCompleted(null, self.convertIssue(issue, labels));
@@ -406,7 +419,7 @@ class IssuesController extends abstractController {
 
 	private convertIssue(issue: any, labels: labelsModel.IndexResult, forcePhase: string = null): any {
 		var category = configuration.defaultCategoryName;
-		var phase = forcePhase || configuration.phaseNames.backlog;
+		var phase = forcePhase || (issue.state === "closed" ? configuration.phaseNames.closed :	configuration.phaseNames.backlog);
 		var type: labelsModel.Label = null;
 		var issueLabels = issue.labels || [];
 
@@ -427,7 +440,7 @@ class IssuesController extends abstractController {
 			}
 		}
 
-		this.logger.debug("Transforming issue #%d to '%s'/'%s' [%s]", issue.number, category, phase, type === null ? "" : type.id);
+		this.logger.info("Transforming issue #%d to '%s'/'%s' [%s]", issue.number, category, phase, type === null ? "" : type.id);
 
 		var convertedIssue: any = {
 			title: issue.title,

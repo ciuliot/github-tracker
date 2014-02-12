@@ -111,7 +111,7 @@ block body
 					button.btn.btn-default(type="button", data-dismiss="modal") Close
 					button.btn.btn-primary(type="button", data-dismiss="modal", data-bind="click: $root.issueReject.bind($root, $data)") Save changes
 
-	#issue-modal.modal.fade(data-bind="with: issueDetail")
+	#issue-modal.modal.fade(data-bind="with: $root.issueDetail")
 		.modal-dialog
 			.modal-content
 				.modal-header

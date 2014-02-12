@@ -43,10 +43,7 @@ export class LabelsViewModel {
 			mapToJsonResource: { 
 				url: "/labels",
 				loadingCount: loadingCount,
-				loadOnStart: false,
-				indexDone: () => {
-					console.log(this);
-				}
+				loadOnStart: false
 			}
 		});
 	}
