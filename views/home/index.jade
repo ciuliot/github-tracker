@@ -69,8 +69,10 @@ block head
 								
 						button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }, click: $root.issueStart.bind($root, $data), tooltip: { title: 'Start work', container: 'body' }")
 							span.glyphicon.glyphicon-play
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canComplete() }, click: $root.issueComplete.bind($root, $data), tooltip: { title: 'Complete work', container: 'body' }")
+						a.btn.btn-default(target="_blank", data-bind="attr: { href: compareUrl() === null ? 'javascript:void(0)' : compareUrl() }, css: { hide: !canComplete() }, tooltip: { title: 'Complete work', container: 'body' }")
 							span.glyphicon.glyphicon-ok
+						button.btn.btn-default(type="button", data-bind="css: { hide: !canReview() }, click: $root.issueReview.bind($root, $data), tooltip: { title: 'Review work', container: 'body' }")
+							span.glyphicon.glyphicon-screenshot
 						button.btn.btn-default(type="button", data-toggle="modal" data-target="#impediment-modal"
 							data-bind="css: { hide: !canPause() }, click: $root.issuePauseOpen.bind($root, $data), tooltip: { title: 'Put work on hold', container: 'body' }")
 							span.glyphicon.glyphicon-pause

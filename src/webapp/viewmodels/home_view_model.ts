@@ -396,6 +396,10 @@ class HomeViewModel {
 		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.implemented());
 	}
 
+	issueReview(issue: issuesViewModel.Issue): void {
+		//this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.implemented());
+	}
+
 	issueStop(issue: issuesViewModel.Issue): void {
 		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.closed());
 	}

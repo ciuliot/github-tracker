@@ -14,6 +14,7 @@ export class Issue {
 	canStop: KnockoutComputed<boolean>;
 	canAccept: KnockoutComputed<boolean>;
 	canReject: KnockoutComputed<boolean>;
+	canReview: KnockoutComputed<boolean>;
 	canComplete: KnockoutComputed<boolean>;
 	haveBranch: KnockoutComputed<boolean>;
 	checkoutCommand: KnockoutComputed<string>;
@@ -26,6 +27,7 @@ export class Issue {
 	title: KnockoutObservable<string>;
 	estimate: KnockoutObservable<string>;
 	description: KnockoutObservable<string>;
+	compareUrl: KnockoutObservable<string>;
 	type: KnockoutObservable<labelsViewModel.Label>;
 
 	assigneeTooltip: KnockoutComputed<string>;
@@ -40,6 +42,7 @@ export class Issue {
 		branch: { name: null },
 		type: $.extend({}, labelsViewModel.Label.empty ),
 		environment: null,
+		compareUrl: null,
 		expectedBehavior: null,
 		phase: $.extend({}, labelsViewModel.Label.empty ),
 		category: $.extend({}, labelsViewModel.Label.empty )
@@ -114,6 +117,15 @@ export class Issue {
 		}, this);
 
 		this.canComplete = ko.computed(() => {
+			if (self.mainLabelsViewModel.labels().declaration) {
+				var phases = self.mainLabelsViewModel.labels().declaration.phases;
+				return self.phase().id() === phases.inprogress();
+			} else {
+				return false;
+			}
+		}, this);
+
+		this.canReview = ko.computed(() => {
 			if (self.mainLabelsViewModel.labels().declaration) {
 				var phases = self.mainLabelsViewModel.labels().declaration.phases;
 				return self.phase().id() === phases.inprogress();

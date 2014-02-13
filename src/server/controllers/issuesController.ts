@@ -53,7 +53,7 @@ class IssuesController extends abstractController {
 			},
 			(labels: labelsModel.IndexResult, results: any, allIssues: any[], assignClosedIssuesCompleted: Function) => {
 				self.logger.debug("Transforming %d closed issues", allIssues.length);
-				self.transformIssues(labels, allIssues, results, configuration.phaseNames.closed);
+				self.transformIssues(user, repository, labels, allIssues, results, configuration.phaseNames.closed);
 				assignClosedIssuesCompleted(null, results);
 			}
 		];
@@ -115,7 +115,7 @@ class IssuesController extends abstractController {
 				var results: any[] = []; 
 				self.logger.debug("Transforming %d open issues", allIssues.length);
 
-				self.transformIssues(labels, allIssues, results);
+				self.transformIssues(user, repository, labels, allIssues, results);
 
 				assignOpenIssuesCompleted(null, labels, results);
 			}
@@ -141,6 +141,7 @@ class IssuesController extends abstractController {
 				async.forEach(issuesToRetrieve, (issue: any, cb: Function) => {
 					self.getIssueBranchInfo(issue.number, user, repository, (err: any, result: any) => {
 						issue.branch = result;
+						issue.compareUrl = self.getCompareUrl(user, repository, issue.phase.id, issue.branch);
 						cb();
 					});
 				}, (err: any) => { 
@@ -339,7 +340,7 @@ class IssuesController extends abstractController {
 				}
 			});
 			tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
-				convertIssueCompleted(null, self.convertIssue(issue, labels));
+				convertIssueCompleted(null, self.convertIssue(issue, user, repository, labels));
 			});
 
 			async.waterfall(tasks, (err: any, result: any) => {
@@ -422,7 +423,7 @@ class IssuesController extends abstractController {
 				});
 			},
 			(issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
-				convertIssueCompleted(null, self.convertIssue(issue, labels));
+				convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
 			}
 		], (err: any, result: any) => {
 			if (err) {
@@ -434,13 +435,18 @@ class IssuesController extends abstractController {
 		});
 	}
 
-	transformIssues(labels: labelsModel.IndexResult, allIssues: any[], results: any, forcePhase: string = null) {
+	transformIssues(user: string, repository: string, labels: labelsModel.IndexResult, allIssues: any[], results: any, forcePhase: string = null) {
 		for (var i = 0; i < allIssues.length; i++) {
-			results.push(this.convertIssue(allIssues[i], labels, forcePhase)); 
+			results.push(this.convertIssue(user, repository, allIssues[i], labels, forcePhase)); 
 		}
 	}
 
-	private convertIssue(issue: any, labels: labelsModel.IndexResult, forcePhase: string = null): any {
+	private getCompareUrl(user: string, repository: string, phase: string, branch: any) {
+		return (phase === configuration.phaseNames.inprogress && branch !== undefined) ? 
+				util.format(configuration.pullRequestCompareFormat, user, repository, branch.name) : null;
+	}
+
+	private convertIssue(user: string, repository: string, issue: any, labels: labelsModel.IndexResult, forcePhase: string = null): any {
 		var category = configuration.defaultCategoryName;
 		var phase = forcePhase || (issue.state === "closed" ? configuration.phaseNames.closed :	configuration.phaseNames.backlog);
 		var type: labelsModel.Label = null;
@@ -471,6 +477,7 @@ class IssuesController extends abstractController {
 			phase: labels.phases.filter(x => x.id === phase)[0],
 			type: type || { name: null, id: null, color: null },
 			number: issue.number,
+			compareUrl: this.getCompareUrl(user, repository, phase, issue.branch),
 			description: issue.body || "",
 			branch: issue.branch || { name: null, url: null },
 			assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null },

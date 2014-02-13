@@ -63,6 +63,8 @@ class Configuration {
     // Prefix /refs/heads is added automatically
     static branchNameFormat: string = "issue/%d";
 
+    static pullRequestCompareFormat: string = "https://github.com/%s/%s/compare/master...%s"
+
     static estimateSizes: any = {
         XS: 1,
         SM: 2,
