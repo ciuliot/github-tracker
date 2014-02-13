@@ -222,10 +222,10 @@ class HomeViewModel {
 				}
 
 				if (user.length > 0) {
-					self.selectUser(user);
+					self.selectUser(user, false);
 				}
 
-				self.selectRepository(repository);
+				self.selectRepository(repository, false);
 				self.selectMilestone(milestone);
 
 				if (pathParts[1]) { // Querystring
@@ -256,23 +256,25 @@ class HomeViewModel {
 		});
 	}
 
-	selectUser(user: string, pushState: boolean = true) {
+	selectUser(user: string, selectRepository: boolean = true) {
 		this.logger.info("Selecting user: " + user);
-		if (this.selectedUser() !== user) {
-			this.selectRepository(null, false);
+		if (selectRepository && this.selectedUser() !== user) {
+			this.selectRepository(null);
 		}
 
 		this.selectedUser(user);
 	}
 
-	selectRepository(repository: string, pushState: boolean = true) {
+	selectRepository(repository: string, loadIssues: boolean = true) {
 		var self = this;
 		this.selectedRepository(repository);
 		this.logger.info("Selecting repository: ", repository);
 
-		this.loadIssues(false, () => {
-			self.selectMilestone("none", false);
-		});
+		if (loadIssues) {
+			this.loadIssues(false, () => {
+				self.selectMilestone("none");
+			});
+		}
 	}
 
 	reloadIssues(forceReload: boolean = false): void {
@@ -314,7 +316,7 @@ class HomeViewModel {
 		}
 	}
 
-	selectMilestone(milestone: string, pushState: boolean = true) {
+	selectMilestone(milestone: string) {
 		var self = this;
 		this.logger.info("Selecting milestone: " + milestone);
 		this.selectedMilestone(milestone);

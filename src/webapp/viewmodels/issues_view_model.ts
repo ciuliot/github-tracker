@@ -149,7 +149,7 @@ export class Issue {
 		});
 
 		this.checkoutCommand = ko.computed(() => {
-			return self.branch() === null ? "" : ("git checkout " + self.branch().name());
+			return self.branch() === null ? "" : ("git checkout -b " + self.branch().name());
 		});
 	}
 
