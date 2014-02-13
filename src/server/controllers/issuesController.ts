@@ -323,8 +323,15 @@ class IssuesController extends abstractController {
 					message.labels = issue.labels.map((x: any) => { return x.name });
 					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) !== null; }); // Keep only phase labels
 
-					message.labels.push(body.category.id);
-					message.labels.push(body.type.id);
+					if (body.category.id !== configuration.defaultCategoryName) {
+						message.labels.push(body.category.id);
+					}
+					if (body.type.id && body.type.id.length > 0) {
+						message.labels.push(body.type.id);
+					}
+
+					self.logger.debug("Labels:", message.labels);
+
 					message.body = formattedBody;
 					message.title = body.title;
 
