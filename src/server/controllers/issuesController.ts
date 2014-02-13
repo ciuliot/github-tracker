@@ -295,40 +295,20 @@ class IssuesController extends abstractController {
 		else if (body !== undefined) {
 			self.logger.info("Updating issue %s - updating body to %o", number, body);
 
-			var templateDir = path.resolve(configuration.startupDirectory, './dist/templates');
-
 			tasks = [
-				(templateExistsCompleted: (err: ErrnoException, data: any) => void) => {
-					var type: string = body.type.id || "default";
-					
-					if (!fs.existsSync(path.resolve(templateDir, type))) {
-						type = "default";
-					}
-
-					templateExistsCompleted(null, type);
+				(renderTemplateCompleted: Function) => {
+					self.getDescriptionFromBody(body, renderTemplateCompleted);
 				},
-				(templateName: string, loadTemplateCompleted: (err: ErrnoException, data: any) => void) => {
-					self.logger.debug("Using template %s", templateName);
-					fs.readFile(path.resolve(templateDir, templateName), { encoding: 'utf8' }, loadTemplateCompleted);
-				},
-				(data: string, renderTemplateCompleted: Function) => {
-					mustache["escapeHtml"] = (text: string) => { return text; } // Disable escaping, we really just want plaintext
-					var output = mustache.render(data, body);
-
+				(output: string, getIssueCompleted: Function) => {
 					self.getGitHubClient().issues.getRepoIssue(message, (err: any, data: any) => {
-						renderTemplateCompleted(err, data, output);
+						getIssueCompleted(err, data, output);
 					});
 				},
 				(issue: any, formattedBody: string, issueSaveCompleted: Function) => {
 					message.labels = issue.labels.map((x: any) => { return x.name });
 					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) !== null; }); // Keep only phase labels
 
-					if (body.category.id !== configuration.defaultCategoryName) {
-						message.labels.push(body.category.id);
-					}
-					if (body.type.id && body.type.id.length > 0) {
-						message.labels.push(body.type.id);
-					}
+					message.labels = message.labels.concat(self.getLabelsFromBody(body));
 
 					self.logger.debug("Labels:", message.labels);
 
@@ -374,6 +354,41 @@ class IssuesController extends abstractController {
 		}
 	}
 
+	private getDescriptionFromBody(body: any, callback: Function) {
+		var templateName: string = body.type.id || "default";
+		var templateDir = path.resolve(configuration.startupDirectory, './dist/templates');
+		var self = this;
+				
+		if (!fs.existsSync(path.resolve(templateDir, templateName))) {
+			templateName = "default";
+		}
+
+		async.waterfall([
+			(loadTemplateCompleted: (err: ErrnoException, data: any) => void) => {
+				self.logger.debug("Using template %s", templateName);
+				fs.readFile(path.resolve(templateDir, templateName), { encoding: 'utf8' }, loadTemplateCompleted);
+			},
+			(data: string, renderTemplateCompleted: Function) => {
+				mustache["escapeHtml"] = (text: string) => { return text; } // Disable escaping, we really just want plaintext
+				renderTemplateCompleted(null, mustache.render(data, body));
+			}
+		], (err: any, result: any) => { 
+			callback(err, result); 
+		});
+	}
+
+	private getLabelsFromBody(body: any): string[] {
+		var labels: string[] = [];
+		if (body.category.id !== configuration.defaultCategoryName) {
+			labels.push(body.category.id);
+		}
+		if (body.type.id && body.type.id.length > 0) {
+			labels.push(body.type.id);
+		}
+
+		return labels;
+	}
+
 	create(): void {
 		var self = this;
 
@@ -393,14 +408,14 @@ class IssuesController extends abstractController {
 			(getLabelsCompleted: Function) => {
 				labelsController.getLabels(self, user, repository, getLabelsCompleted);
 			},
-			(labels: labelsModel.IndexResult, createIssueCompleted: Function) => {
-				message.labels = [];
-				if (body.category.id) {
-					message.labels.push(body.category.id);
-				}
-				if (body.type.id) {
-					message.labels.push(body.type.id);
-				}
+			(labels: labelsModel.IndexResult, renderTemplateCompleted: Function) => {
+				self.getDescriptionFromBody(body, (err: any, result: any) => {
+					renderTemplateCompleted(err, labels, result);
+				});
+			},
+			(labels: labelsModel.IndexResult, formattedBody: string, createIssueCompleted: Function) => {
+				message.labels = self.getLabelsFromBody(body);
+				message.body = formattedBody;
 
 				self.getGitHubClient().issues.create(message, (err: any, issue: any) => {
 					createIssueCompleted(err, issue, labels);
