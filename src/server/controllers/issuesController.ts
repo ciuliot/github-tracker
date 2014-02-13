@@ -161,7 +161,8 @@ class IssuesController extends abstractController {
 				self.jsonResponse(err, {
 					meta: {
 						estimateSizes: configuration.estimateSizes,
-						branchNameFormat: configuration.branchNameFormat
+						branchNameFormat: configuration.branchNameFormat,
+						priorityTypes: configuration.priorityTypes
 					},
 					issues: result
 				});

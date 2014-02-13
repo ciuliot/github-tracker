@@ -239,7 +239,7 @@ class HomeViewModel {
 								self.issuesViewModel.filter(value);
 							}
 							else if (key === "showClosedIssues") {
-								self.closedIssuesVisible.filter(value);
+								self.closedIssuesVisible(value === "true");
 							}
 						}
 					}

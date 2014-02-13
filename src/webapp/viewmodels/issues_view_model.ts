@@ -190,26 +190,34 @@ export class Phase extends labelsViewModel.Label {
 
 		this.issues = ko.computed(() => {
 			return ko.utils.arrayFilter(self.category.viewModel.issuesData().issues(), x => {
-				return x.phase().id() === self.id() && x.category().id() === self.category.id();
+				var meta = self.category.viewModel.issuesData().meta();
+				var isPriorityType: boolean = meta !== null && meta.priorityTypes().indexOf(x.type().id()) >= 0;
+
+				var isInPhase = x.phase().id() === self.id();
+				var isTopPriorityCategory = self.category.isTopPriority();
+
+				var isInCategory = (isTopPriorityCategory && isPriorityType) ||
+				                   (!isTopPriorityCategory && !isPriorityType && x.category().id() === self.category.id());
+
+				return isInPhase && isInCategory;
 			});
 		});
 
 		this.filteredIssues = ko.computed(() => {
 			return ko.utils.arrayFilter(self.issues(), x => {
-				var filterValue = self.filter().toLowerCase();
-
+				var filterValue: string = self.filter().toLowerCase();
 				return filterValue.length === 0 
-					|| (x.number().toString().indexOf(filterValue) >= 0)
-					|| (x.title().toLowerCase().indexOf(filterValue) >= 0)
-					|| (self.category.name().toLowerCase().indexOf(filterValue) >= 0)
-					|| (self.name().toLowerCase().indexOf(filterValue) >= 0)
-					|| (x.assignee().login() !== null && x.assignee().login().toLowerCase().indexOf(filterValue) >= 0);
+				    || (x.number().toString().indexOf(filterValue) >= 0)
+				    || (x.title().toLowerCase().indexOf(filterValue) >= 0)
+				    || (self.category.name().toLowerCase().indexOf(filterValue) >= 0)
+				    || (self.name().toLowerCase().indexOf(filterValue) >= 0)
+				    || (x.assignee().login() !== null && x.assignee().login().toLowerCase().indexOf(filterValue) >= 0);
 			});
 		});
 
 		this.isColumnVisible = ko.computed(() => {
-			if (self.category.viewModel.labelsViewModel.labels().declaration) {
-				var phases = self.category.viewModel.labelsViewModel.labels().declaration.phases;
+			if (self.category.viewModel.labelsViewModelInstance.labels().declaration) {
+				var phases = self.category.viewModel.labelsViewModelInstance.labels().declaration.phases;
 				return self.id() !== phases.closed() ||
 					(self.category.viewModel.closedIssuesVisible() && self.id() === phases.closed());
 			}
@@ -220,6 +228,8 @@ export class Phase extends labelsViewModel.Label {
 
 export class Category extends labelsViewModel.Label  {
 	phases: KnockoutComputed<Phase[]>;
+	isTopPriority: KnockoutObservable<boolean> = ko.observable(false);
+	visibleIssueCount: KnockoutComputed<number>;
 
 	constructor(public viewModel: IssuesViewModel, data: string) {
 		super();
@@ -228,9 +238,18 @@ export class Category extends labelsViewModel.Label  {
 		knockout_mapping.fromJS(data, {}, this);
 
 		self.phases = ko.computed(() => {
-			return ko.utils.arrayMap(self.viewModel.labelsViewModel.labels().phases(), phase => {
+			return ko.utils.arrayMap(self.viewModel.labelsViewModelInstance.labels().phases(), phase => {
 				return new Phase(self, viewModel.filter, knockout_mapping.toJS(phase));
 			});
+		});
+
+		self.visibleIssueCount = ko.computed(() => {
+			var result = 0;
+			for (var i=0; i< self.phases().length; i++) {
+				var phase = self.phases()[i];
+				result += phase.isColumnVisible() ? phase.filteredIssues().length : 0;
+			}
+			return result;
 		});
 	}
 }
@@ -239,12 +258,25 @@ export class IssuesData {
 	issues: KnockoutObservableArray<Issue>;
 	meta: KnockoutObservable<any>;
 
-	constructor(public viewModel: IssuesViewModel, data: string) {
+	constructor(public viewModel: IssuesViewModel, data: any) {
 		var self = this;
+		data = $.extend(true, {
+			issues: [],
+			meta: {
+				estimateSizes: null,
+				branchNameFormat: null,
+				priorityTypes: []
+			}
+		}, data);
 		knockout_mapping.fromJS(data, {
 			'issues': {
 				create: (options: any) => {
-					return new Issue(self.viewModel.labelsViewModel, self.viewModel.collaborators, options.data);
+					return new Issue(self.viewModel.labelsViewModelInstance, self.viewModel.collaborators, options.data);
+				}
+			},
+			'meta': {
+				create: (options: any) => {
+					return ko.observable(knockout_mapping.fromJS(options.data));
 				}
 			}
 		}, this);
@@ -257,7 +289,7 @@ export class IssuesViewModel {
 	filter: KnockoutObservable<string> = ko.observable("");
 	lastTemporaryId: number = 0;
 
-	constructor(public labelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
+	constructor(public labelsViewModelInstance: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
 		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>, public closedIssuesVisible: KnockoutObservable<boolean>) {
 		var self = this;
 		var mapping = {
@@ -265,7 +297,7 @@ export class IssuesViewModel {
 				return ko.observable(new IssuesData(self, options.data)); 
 			}
 		};
-		this.issuesData = knockout_mapping.fromJS({ issues: [], meta: null }, mapping);
+		this.issuesData = knockout_mapping.fromJS(undefined, mapping);
 
 		this.issuesData.extend({ 
 			mapToJsonResource: { 
@@ -283,9 +315,15 @@ export class IssuesViewModel {
 		});
 
 		this.categories = ko.computed(() => {
-			return ko.utils.arrayMap(self.labelsViewModel.labels().categories(), category => {
+			var result = ko.utils.arrayMap(self.labelsViewModelInstance.labels().categories(), category => {
 				return new Category(self, knockout_mapping.toJS(category));
 			});
+
+			var highPriorityCategory = new Category(self, labelsViewModel.Label.empty);
+			highPriorityCategory.isTopPriority(true);
+			result.unshift(highPriorityCategory);
+
+			return result;
 		});
 
 		$(document).on('click', '.checkout-command', function (e) { e.stopPropagation(); });

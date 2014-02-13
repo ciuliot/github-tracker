@@ -71,7 +71,7 @@ class Configuration {
         XL: 8
     };
 
-    static priorityTypeId: string = "bug";
+    static priorityTypes: string[] = ["bug"];
 
     static impedimentsFile: string = "impediments.md";
 

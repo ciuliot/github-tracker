@@ -39,8 +39,8 @@ block head
 		- var columnDataBind = "foreach: filteredIssues, " + columnCss
 		.col-lg-2(data-bind=columnDataBind)
 			.panel.panel-default.issue
-				.panel-heading(data-bind="style: { background: $parents[1].color() }")
-					strong(data-bind="text: ('#' + number() + ' '), tooltip: { title: $parents[1].name() }")
+				.panel-heading(data-bind="style: { background: category().color() }")
+					strong(data-bind="text: ('#' + number() + ' '), tooltip: { title: category().name() }")
 					a.title(data-bind="click: $root.issueOpen.bind($root, $data)", data-toggle="modal", data-target="#issue-modal")
 						strong(data-bind="text: title")
 					span.badge.pull-right(data-bind="text: estimate")
@@ -211,7 +211,8 @@ block body
 		.row.phases(data-bind="template: { name: 'issue-phase-header-template', foreach: phases }")
 	.container-fluid
 		<!-- ko foreach: issuesViewModel.categories() -->
-		.row(data-bind="template: { name: 'issue-phase-template', foreach: phases }")
+		div(data-bind="visible: visibleIssueCount() > 0, attr: { href: visibleIssueCount() }")
+			.row.phase(data-bind="template: { name: 'issue-phase-template', foreach: phases} , css: { 'top-priority': isTopPriority }")
 		<!-- /ko -->
 				
 				
