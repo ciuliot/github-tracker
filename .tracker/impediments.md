@@ -4,7 +4,9 @@ __#28 - [Milestone indicator in query string always turns to none after reload](
 
 * 2014-02-13 - 21313123
 * 2014-02-13 - 3243245234
-
 __#15 - [4](https://github.com/ciuliot/github-tracker/issues/15)__
 
 * 2014-02-13 - testing, testing
+__#24 - [hehe](https://github.com/ciuliot/github-tracker/issues/24)__
+
+* 2014-02-13 - test2
