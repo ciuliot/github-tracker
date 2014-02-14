@@ -184,11 +184,18 @@ class IssuesController extends abstractController {
 		var branchName = util.format("heads/" + configuration.branchNameFormat, number);
 		self.logger.info("Trying to get branch %s for issue %d", branchName, number);
 
-		self.getGitHubClient().gitdata.getReference({
-			user: user,
-			repo: repository,
-			ref: branchName
-		}, (err: any, result: any) => {
+		async.waterfall([
+			(getBranchInfoCompleted: Function) => {
+				self.getGitHubClient().gitdata.getReference({
+					user: user,
+					repo: repository,
+					ref: branchName
+				}, getBranchInfoCompleted);
+			},
+			(branchInfo: any, getPullRequestCompleted: Function) => {
+				getPullRequestCompleted(null, branchInfo);
+			}
+		], (err: any, result: any) => {
 			if (err) {
 				self.logger.debug("Branch %s not found", branchName);
 				callback(err.code === 404 ? null : err); // Branch not found
@@ -225,8 +232,6 @@ class IssuesController extends abstractController {
 			tasks.push((updateIssueCompleted: Function) => {
 				self.getGitHubClient().issues.edit(message, updateIssueCompleted);
 			});
-
-
 		} else if (phase !== undefined) {
 			self.logger.info("Updating issue %s - updating phase to %s", number, phase);
 			tasks = [];
@@ -311,8 +316,6 @@ class IssuesController extends abstractController {
 
 					message.labels = message.labels.concat(self.getLabelsFromBody(body));
 
-					self.logger.debug("Labels:", message.labels);
-
 					message.body = formattedBody;
 					message.title = body.title;
 
@@ -325,6 +328,7 @@ class IssuesController extends abstractController {
 			self.jsonResponse("Operation not allowed");
 		} else {
 			tasks.push((issue: any, getLabelsCompleted: Function) => {
+				self.logger.debug(issue);
 				labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
 					getLabelsCompleted(err, issue, labels);
 				});
@@ -340,7 +344,7 @@ class IssuesController extends abstractController {
 				}
 			});
 			tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
-				convertIssueCompleted(null, self.convertIssue(issue, user, repository, labels));
+				convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
 			});
 
 			async.waterfall(tasks, (err: any, result: any) => {
@@ -357,17 +361,16 @@ class IssuesController extends abstractController {
 
 	private getDescriptionFromBody(body: any, callback: Function) {
 		var templateName: string = body.type.id || "default";
-		var templateDir = path.resolve(configuration.startupDirectory, './dist/templates');
 		var self = this;
 				
-		if (!fs.existsSync(path.resolve(templateDir, templateName))) {
+		if (!fs.existsSync(path.resolve(configuration.templatesDir(), templateName))) {
 			templateName = "default";
 		}
 
 		async.waterfall([
 			(loadTemplateCompleted: (err: ErrnoException, data: any) => void) => {
 				self.logger.debug("Using template %s", templateName);
-				fs.readFile(path.resolve(templateDir, templateName), { encoding: 'utf8' }, loadTemplateCompleted);
+				fs.readFile(path.resolve(configuration.templatesDir(), templateName), { encoding: 'utf8' }, loadTemplateCompleted);
 			},
 			(data: string, renderTemplateCompleted: Function) => {
 				mustache["escapeHtml"] = (text: string) => { return text; } // Disable escaping, we really just want plaintext
