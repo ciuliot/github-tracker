@@ -75,7 +75,7 @@ class Configuration {
 
     static priorityTypes: string[] = ["bug"];
 
-    static impedimentsFile: string = "impediments.md";
+    static impedimentsFile: string = ".tracker/impediments.md";
 
     static githubApplication: any = {
         clientID: process.env.GITHUB_CLIENT_ID || "39796dadb4d9d2a45354",
@@ -99,6 +99,8 @@ class Configuration {
         ***
         */
     static bodyFieldsRegEx = /__(.+?):__([\s\S]*?)(?=__|\*\*\*)/g;
+
+    static impedimentsFieldsRegEx = /(?:^## Impediments$)|(?:^__\[#(\d+)\s(?:.+)__$)|(?:^\* (|~~)(\d{4}\/\d{2}\/\d{2}) - ([^~]+?)(?:|~~)$)/gm;
 }
 
 export = Configuration;

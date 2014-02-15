@@ -42,18 +42,20 @@ class ImpedimentsController extends abstractController {
 			user: self.param("user"),
 			repo: self.param("repository"),
 			number: self.param("id"),
-			body: self.param("description")
+			body: self.param("description"),
+			path: undefined
 		};
 
 		async.waterfall([
 			(createCommentCompleted: Function) => {
 				self.logger.debug("Adding impediment comment to issue #%d", requestBody.number);
 				self.getGitHubClient().issues.createComment(requestBody, createCommentCompleted);
-			}/*, 
+			}, 
 			(comment: any, getImpedimentsFileComplete: Function) => {
 				self.logger.debug("Getting impediments file");
+				requestBody.path = configuration.impedimentsFile;
 				self.getGitHubClient().repos.getContent(requestBody, getImpedimentsFileComplete);
-			}*/
+			}
 		], (err: any, result: any) => {
 			if (err) {
 				self.logger.error("Error occured during impediments retrieval", err);	
