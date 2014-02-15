@@ -350,7 +350,7 @@ class HomeViewModel {
 	}
 
 	issueStart(issue: issuesViewModel.Issue): void {
-		var phases = this.labelsViewModel.labels().declaration.phases;
+		var phases = this.labelsViewModel.labels().declaration().phases;
 		if (issue.phase().id() === phases.backlog()) {
 			this.issueDetail().number(issue.number());
 			$("#new-branch.alert").addClass("in");
@@ -363,7 +363,7 @@ class HomeViewModel {
 	issuePause(impediment: impedimentModel): void {
 		var issue = this.issuesViewModel.findIssue(this.impediment().issue_id());
 
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases.onhold());
 		this.impediment.updateItem(issue.number(), {}, { 
 			user: this.selectedUser(), 
 			description: this.impediment().description(), 
@@ -383,7 +383,7 @@ class HomeViewModel {
 
 	issueReject(issue: issuesViewModel.Issue): void {
 		var issue = this.issuesViewModel.findIssue(this.rejectImplementation().issue_id());
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases.onhold());
 
 		this.rejectImplementation.updateItem(issue.number(), {}, { 
 			user: this.selectedUser(), 
@@ -393,7 +393,7 @@ class HomeViewModel {
 	}
 
 	issueComplete(issue: issuesViewModel.Issue): void {
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.implemented());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases.implemented());
 	}
 
 	issueReview(issue: issuesViewModel.Issue): void {
@@ -401,11 +401,11 @@ class HomeViewModel {
 	}
 
 	issueStop(issue: issuesViewModel.Issue): void {
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.closed());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases.closed());
 	}
 
 	issueAccept(issue: issuesViewModel.Issue): void {
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.closed());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases.closed());
 	}
 
 	issueOpen(issue: issuesViewModel.Issue): void {

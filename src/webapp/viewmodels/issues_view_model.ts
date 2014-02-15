@@ -81,72 +81,72 @@ export class Issue {
 		var self = this;	
 
 		this.canStart = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() === phases.backlog() || self.phase().id() === phases.onhold();
+			var declaration = self.mainLabelsViewModel.labels().declaration();
+			if (declaration !== null) {
+				return self.phase().id() === declaration.phases.backlog() || self.phase().id() === declaration.phases.onhold();
 			} else {
 				return false;
 			}
 		}, this);
 
 		this.canAssign = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() !== phases.closed();
-				} else {
+			var declaration = self.mainLabelsViewModel.labels().declaration();
+			if (declaration !== null) {
+				return self.phase().id() !== declaration.phases.closed();
+			} else {
 				return false;
 			}
 		}, this);
 
 		this.canPause = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() === phases.inprogress();
+			var declaration = self.mainLabelsViewModel.labels().declaration();
+			if (declaration !== null) {
+				return self.phase().id() === declaration.phases.inprogress();
 			} else {
 				return false;
 			}
 		}, this);
 
 		this.canStop = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() !== phases.closed();
+			var declaration = self.mainLabelsViewModel.labels().declaration();
+			if (declaration !== null) {
+				return self.phase().id() !== declaration.phases.closed();
 			} else {
 				return false;
 			}
 		}, this);
 
 		this.canComplete = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() === phases.inprogress();
+			var declaration = self.mainLabelsViewModel.labels().declaration();
+			if (declaration !== null) {
+				return self.phase().id() === declaration.phases.inprogress();
 			} else {
 				return false;
 			}
 		}, this);
 
 		this.canReview = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() === phases.inprogress();
+			var declaration = self.mainLabelsViewModel.labels().declaration();
+			if (declaration !== null) {
+				return self.phase().id() === declaration.phases.inprogress();
 			} else {
 				return false;
 			}
 		}, this);
 
 		this.canAccept = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() === phases.implemented();
+			var declaration = self.mainLabelsViewModel.labels().declaration();
+			if (declaration !== null) {
+				return self.phase().id() === declaration.phases.implemented();
 			} else {
 				return false;
 			}
 		}, this);
 
 		this.canReject = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() === phases.implemented();
+			var declaration = self.mainLabelsViewModel.labels().declaration();
+			if (declaration !== null) {
+				return self.phase().id() === declaration.phases.implemented();
 			} else {
 				return false;
 			}
@@ -228,10 +228,12 @@ export class Phase extends labelsViewModel.Label {
 		});
 
 		this.isColumnVisible = ko.computed(() => {
-			if (self.category.viewModel.labelsViewModelInstance.labels().declaration) {
-				var phases = self.category.viewModel.labelsViewModelInstance.labels().declaration.phases;
-				return self.id() !== phases.closed() ||
-					(self.category.viewModel.closedIssuesVisible() && self.id() === phases.closed());
+			var declaration = self.category.viewModel.labelsViewModelInstance.labels().declaration();
+			var closedIssuesVisible = self.category.viewModel.closedIssuesVisible();
+			var id = self.id();
+			if (declaration) {
+				return id !== declaration.phases.closed() ||
+					(closedIssuesVisible && id === declaration.phases.closed());
 			}
 			return true;
 		});
