@@ -14,6 +14,7 @@ export class Issue {
 	canStop: KnockoutComputed<boolean>;
 	canAccept: KnockoutComputed<boolean>;
 	canReject: KnockoutComputed<boolean>;
+	canReview: KnockoutComputed<boolean>;
 	canComplete: KnockoutComputed<boolean>;
 	haveBranch: KnockoutComputed<boolean>;
 	checkoutCommand: KnockoutComputed<string>;
@@ -26,6 +27,7 @@ export class Issue {
 	title: KnockoutObservable<string>;
 	estimate: KnockoutObservable<string>;
 	description: KnockoutObservable<string>;
+	compareUrl: KnockoutObservable<string>;
 	type: KnockoutObservable<labelsViewModel.Label>;
 
 	assigneeTooltip: KnockoutComputed<string>;
@@ -40,6 +42,7 @@ export class Issue {
 		branch: { name: null },
 		type: $.extend({}, labelsViewModel.Label.empty ),
 		environment: null,
+		compareUrl: null,
 		expectedBehavior: null,
 		phase: $.extend({}, labelsViewModel.Label.empty ),
 		category: $.extend({}, labelsViewModel.Label.empty )
@@ -76,65 +79,68 @@ export class Issue {
 			}
 		}, this);
 		var self = this;	
+		var phases = self.mainLabelsViewModel.labels().declaration().phases;
 
 		this.canStart = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() === phases.backlog() || self.phase().id() === phases.onhold();
+			if (phases() !== null) {
+				return self.phase().id() === phases().backlog() || self.phase().id() === phases().onhold();
 			} else {
 				return false;
 			}
 		}, this);
 
 		this.canAssign = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() !== phases.closed();
-				} else {
+			if (phases() !== null) {
+				return self.phase().id() !== phases().closed();
+			} else {
 				return false;
 			}
 		}, this);
 
 		this.canPause = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() === phases.inprogress();
+			if (phases() !== null) {
+				return self.phase().id() === phases().inprogress();
 			} else {
 				return false;
 			}
 		}, this);
 
 		this.canStop = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() !== phases.closed();
+			if (phases() !== null) {
+				return self.phase().id() !== phases().closed();
 			} else {
 				return false;
 			}
 		}, this);
 
 		this.canComplete = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() === phases.inprogress();
+			if (phases() !== null) {
+				return self.phase().id() === phases().inprogress();
+			} else {
+				return false;
+			}
+		}, this);
+
+		this.canReview = ko.computed(() => {
+			if (phases() !== null) {
+				return self.phase().id() === phases().inprogress();
 			} else {
 				return false;
 			}
 		}, this);
 
 		this.canAccept = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() === phases.implemented();
+			if (phases() !== null) {
+				return self.phase().id() === phases().implemented();
 			} else {
 				return false;
 			}
 		}, this);
 
 		this.canReject = ko.computed(() => {
-			if (self.mainLabelsViewModel.labels().declaration) {
-				var phases = self.mainLabelsViewModel.labels().declaration.phases;
-				return self.phase().id() === phases.implemented();
+			
+			if (phases() !== null) {
+				return self.phase().id() === phases().implemented();
 			} else {
 				return false;
 			}
@@ -149,7 +155,7 @@ export class Issue {
 		});
 
 		this.checkoutCommand = ko.computed(() => {
-			return self.branch() === null ? "" : ("git checkout " + self.branch().name());
+			return self.branch() === null ? "" : ("git checkout -b " + self.branch().name());
 		});
 	}
 
@@ -216,10 +222,12 @@ export class Phase extends labelsViewModel.Label {
 		});
 
 		this.isColumnVisible = ko.computed(() => {
-			if (self.category.viewModel.labelsViewModelInstance.labels().declaration) {
-				var phases = self.category.viewModel.labelsViewModelInstance.labels().declaration.phases;
-				return self.id() !== phases.closed() ||
-					(self.category.viewModel.closedIssuesVisible() && self.id() === phases.closed());
+			var phases = self.category.viewModel.labelsViewModelInstance.labels().declaration().phases;
+			var closedIssuesVisible = self.category.viewModel.closedIssuesVisible();
+			var id = self.id();
+			if (phases() !== null) {
+				return id !== phases().closed() ||
+					(closedIssuesVisible && id === phases().closed());
 			}
 			return true;
 		});

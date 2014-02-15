@@ -222,10 +222,10 @@ class HomeViewModel {
 				}
 
 				if (user.length > 0) {
-					self.selectUser(user);
+					self.selectUser(user, false);
 				}
 
-				self.selectRepository(repository);
+				self.selectRepository(repository, false);
 				self.selectMilestone(milestone);
 
 				if (pathParts[1]) { // Querystring
@@ -256,23 +256,25 @@ class HomeViewModel {
 		});
 	}
 
-	selectUser(user: string, pushState: boolean = true) {
+	selectUser(user: string, selectRepository: boolean = true) {
 		this.logger.info("Selecting user: " + user);
-		if (this.selectedUser() !== user) {
-			this.selectRepository(null, false);
+		if (selectRepository && this.selectedUser() !== user) {
+			this.selectRepository(null);
 		}
 
 		this.selectedUser(user);
 	}
 
-	selectRepository(repository: string, pushState: boolean = true) {
+	selectRepository(repository: string, loadIssues: boolean = true) {
 		var self = this;
 		this.selectedRepository(repository);
 		this.logger.info("Selecting repository: ", repository);
 
-		this.loadIssues(false, () => {
-			self.selectMilestone("none", false);
-		});
+		if (loadIssues) {
+			this.loadIssues(false, () => {
+				self.selectMilestone("none");
+			});
+		}
 	}
 
 	reloadIssues(forceReload: boolean = false): void {
@@ -314,7 +316,7 @@ class HomeViewModel {
 		}
 	}
 
-	selectMilestone(milestone: string, pushState: boolean = true) {
+	selectMilestone(milestone: string) {
 		var self = this;
 		this.logger.info("Selecting milestone: " + milestone);
 		this.selectedMilestone(milestone);
@@ -348,20 +350,20 @@ class HomeViewModel {
 	}
 
 	issueStart(issue: issuesViewModel.Issue): void {
-		var phases = this.labelsViewModel.labels().declaration.phases;
-		if (issue.phase().id() === phases.backlog()) {
+		var phases = this.labelsViewModel.labels().declaration().phases;
+		if (issue.phase().id() === phases().backlog()) {
 			this.issueDetail().number(issue.number());
 			$("#new-branch.alert").addClass("in");
 		}
 
-		this.updateIssuePhase(issue, phases.inprogress());
+		this.updateIssuePhase(issue, phases().inprogress());
 		this.assignIssue(issue, this.user());
 	}
 
 	issuePause(impediment: impedimentModel): void {
 		var issue = this.issuesViewModel.findIssue(this.impediment().issue_id());
 
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases().onhold());
 		this.impediment.updateItem(issue.number(), {}, { 
 			user: this.selectedUser(), 
 			description: this.impediment().description(), 
@@ -381,7 +383,7 @@ class HomeViewModel {
 
 	issueReject(issue: issuesViewModel.Issue): void {
 		var issue = this.issuesViewModel.findIssue(this.rejectImplementation().issue_id());
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.onhold());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases().onhold());
 
 		this.rejectImplementation.updateItem(issue.number(), {}, { 
 			user: this.selectedUser(), 
@@ -391,15 +393,19 @@ class HomeViewModel {
 	}
 
 	issueComplete(issue: issuesViewModel.Issue): void {
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.implemented());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases().implemented());
+	}
+
+	issueReview(issue: issuesViewModel.Issue): void {
+		//this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.implemented());
 	}
 
 	issueStop(issue: issuesViewModel.Issue): void {
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.closed());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases().closed());
 	}
 
 	issueAccept(issue: issuesViewModel.Issue): void {
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration.phases.closed());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases().closed());
 	}
 
 	issueOpen(issue: issuesViewModel.Issue): void {

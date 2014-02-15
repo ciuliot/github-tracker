@@ -2,6 +2,7 @@
 /// <reference path='../../../interfaces/node/node.d.ts'/>
 
 import log4js = require("log4js");
+import path = require("path");
 
 class Configuration {
     /** 
@@ -39,6 +40,11 @@ class Configuration {
     * @type {String}
     */
     static databaseName: string = "mongodb://localhost/github-tracker";
+
+    static templatesDir(): string {
+        return path.resolve(Configuration.startupDirectory, './dist/templates');
+    }
+
     /** 
      * Defines root-level logger. 
      * @property logger
@@ -63,6 +69,8 @@ class Configuration {
     // Prefix /refs/heads is added automatically
     static branchNameFormat: string = "issue/%d";
 
+    static pullRequestCompareFormat: string = "https://github.com/%s/%s/compare/master...%s"
+
     static estimateSizes: any = {
         XS: 1,
         SM: 2,
@@ -73,7 +81,7 @@ class Configuration {
 
     static priorityTypes: string[] = ["bug"];
 
-    static impedimentsFile: string = "impediments.md";
+    static impedimentsFile: string = ".tracker/impediments.md";
 
     static githubApplication: any = {
         clientID: process.env.GITHUB_CLIENT_ID || "39796dadb4d9d2a45354",
@@ -97,6 +105,10 @@ class Configuration {
         ***
         */
     static bodyFieldsRegEx = /__(.+?):__([\s\S]*?)(?=__|\*\*\*)/g;
+
+    static dateFormat = "YYYY-MM-DD"
+
+    static impedimentsFieldsRegEx = /(?:^## Impediments$)|(?:^__#(\d+) - \[(.+)\]\((.+)\)__$)|(?:\* (|~~)(\d{4}-\d{2}-\d{2}) - ([^~]+?)(?:|~~)$)/gm;
 }
 
 export = Configuration;

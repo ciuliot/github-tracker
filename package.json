@@ -28,7 +28,7 @@
     "grunt-contrib-stylus": "*"
   },
   "dependencies": {
-    "moment": "*",
+    "moment": "~2.5.1",
     "mustache": "*",
     "locomotive": "*",
     "jade": "*",

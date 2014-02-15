@@ -3,6 +3,7 @@
 
 import ko = require("knockout");
 import knockout_mapping = require("knockout.mapping");
+import $ = require("jquery");
 
 export class Label {
 	name: KnockoutObservable<string>;
@@ -21,23 +22,40 @@ export interface PhasesDeclaration {
 }
 
 export interface LabelsDeclaration {
-	phases: PhasesDeclaration;
+	phases: KnockoutObservable<PhasesDeclaration>;
 }
 
 export interface Labels {
 	phases: KnockoutObservableArray<Label>;
 	categories: KnockoutObservableArray<Label>;
 	types: KnockoutObservableArray<Label>;
-	declaration: LabelsDeclaration;
+	declaration: KnockoutObservable<LabelsDeclaration>;
 }
 
 export class LabelsViewModel {
 	labels: KnockoutObservable<Labels>;
 
 	constructor(data: string, loadingCount: KnockoutObservable<number>) {
-		this.labels = knockout_mapping.fromJS({ phases: [], categories: [], types: [] }, {
+		data = $.extend(true, {}, { 
+			phases: [], 
+			categories: [], 
+			types: [],
+			declaration: {
+				phases: null,
+				types: [],
+				categories: []
+			} 
+		}, data);
+
+		this.labels = knockout_mapping.fromJS(data, {
 				create: (options: any) => {
-					return ko.observable(knockout_mapping.fromJS(options.data));
+					return ko.observable(knockout_mapping.fromJS(options.data, {
+						declaration: {
+							create: (options: any) => {
+								return ko.observable(knockout_mapping.fromJS(options.data));
+							}
+						}
+					}));
 				}
 			}).extend({ 
 			mapToJsonResource: { 
