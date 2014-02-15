@@ -316,8 +316,6 @@ class IssuesController extends abstractController {
 
 					message.labels = message.labels.concat(self.getLabelsFromBody(body));
 
-					self.logger.debug("Labels:", message.labels);
-
 					message.body = formattedBody;
 					message.title = body.title;
 
@@ -363,17 +361,16 @@ class IssuesController extends abstractController {
 
 	private getDescriptionFromBody(body: any, callback: Function) {
 		var templateName: string = body.type.id || "default";
-		var templateDir = path.resolve(configuration.startupDirectory, './dist/templates');
 		var self = this;
 				
-		if (!fs.existsSync(path.resolve(templateDir, templateName))) {
+		if (!fs.existsSync(path.resolve(configuration.templatesDir(), templateName))) {
 			templateName = "default";
 		}
 
 		async.waterfall([
 			(loadTemplateCompleted: (err: ErrnoException, data: any) => void) => {
 				self.logger.debug("Using template %s", templateName);
-				fs.readFile(path.resolve(templateDir, templateName), { encoding: 'utf8' }, loadTemplateCompleted);
+				fs.readFile(path.resolve(configuration.templatesDir(), templateName), { encoding: 'utf8' }, loadTemplateCompleted);
 			},
 			(data: string, renderTemplateCompleted: Function) => {
 				mustache["escapeHtml"] = (text: string) => { return text; } // Disable escaping, we really just want plaintext

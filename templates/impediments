@@ -1,1 +1,10 @@
 ## Impediments
+
+{{#issues}}
+__#{{issueData.number}} - [{{{issueData.title}}}]({{{issueData.html_url}}})__
+
+{{#impediments}}
+* {{date}} - {{{comment}}}
+{{/impediments}}
+
+{{/issues}}
