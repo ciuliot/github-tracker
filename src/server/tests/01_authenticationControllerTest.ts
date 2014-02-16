@@ -7,29 +7,14 @@ import assert = require("assert");
 import http = require("http");
 import should = require("should");
 import async = require("async");
-//import process = require("process");
 
-import server = require("../server");
 import testApi = require("./test_api");
 
-import abstractController = require("../controllers/abstractController");
-import configuration = require("../config/configuration");
-
 var vows = require('vows');
-var nodemock = require("nodemock");
 
 vows.describe("AuthenticationController").addBatch({
 	"Server": {
-		topic: function() {
-			console.log("Starting server ...");
-			configuration.loginStrategy = "basic";
-			configuration.environment = "unittest";
-
-			var self = this;
-			new server().start((err?:any, server?:server) => {
-				self.callback(err);
-			});
-		},
+		topic: testApi.startServerTopic(),
 		"starts": (err: any) => {
 			should.not.exist(err);
 		},
@@ -39,10 +24,10 @@ vows.describe("AuthenticationController").addBatch({
 				var endpoints = ["/", "/index/test" ,"/user", "/labels", "/milestones", "/collaborators", "/issues"];
 
 				async.forEachSeries(endpoints, (endpoint, callback) => {
-					testApi.get(endpoint, (err: any, client: http.ClientResponse) => {
+					testApi.httpGet(endpoint, (err: any, response: http.ClientResponse) => {
 						should.not.exist(err);
-	    				should.exist(client);
-	    				client.should.have.status(401);
+	    				should.exist(response);
+	    				response.should.have.status(401);
 				
 	    				callback(null, null);
 	    				
@@ -54,28 +39,28 @@ vows.describe("AuthenticationController").addBatch({
 			}
 		},
 		"authenticate": {
-			topic: testApi.getTest("/auth"),
-			"is succesfull": function (err: any, client: http.ClientResponse) {
+			topic: testApi.httpGetTopic("/auth"),
+			"is succesfull": function (err: any, response: http.ClientResponse) {
 				should.not.exist(err);
-		    	should.exist(client);
-		    	client.should.have.status(200);
+		    	should.exist(response);
+		    	response.should.have.status(200);
 			}
 		},
 		"home page": {
-			topic: testApi.getTest("/"),
-			"is returned correctly": function (err: any, client: http.ClientResponse) {
+			topic: testApi.httpGetTopic("/"),
+			"is returned correctly": function (err: any, response: http.ClientResponse) {
 				should.not.exist(err);
-		    	should.exist(client);
-		    	client.should.have.status(200);
+		    	should.exist(response);
+		    	response.should.have.status(200);
 			}
 		},
 		"Verify credentials": {
-			topic: testApi.getTest("/user"),
+			topic: testApi.httpGetTopic("/user"),
 		
-			"is returned correctly": function (err: any, client: http.ClientResponse) {
+			"is returned correctly": function (err: any, response: http.ClientResponse) {
 				should.not.exist(err);
-		    	should.exist(client);
-		    	client.should.have.status(200);
+		    	should.exist(response);
+		    	response.should.have.status(200);
 			}
 
 		}

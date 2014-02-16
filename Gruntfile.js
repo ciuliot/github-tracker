@@ -101,7 +101,7 @@ module.exports = function (grunt) {
         },
         vows: {
             server: {
-                src: "dist/tests/*.js",
+                src: ["dist/tests/*.js", "!dist/tests/test_api.ts"],
                 options : {
                   reporter : "spec"
                 }

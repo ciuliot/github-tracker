@@ -62,7 +62,6 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
     }
 
     passport.serializeUser(function(user: any, done: Function) {
-        logger.debug(user);
         done(null, user);
     });
 

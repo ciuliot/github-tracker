@@ -37,7 +37,6 @@ class UserController extends abstractController {
 						avatar_url: user.avatar_url
 					};
 				}
-				controller.logger.debug(user);
 				controller.jsonResponse(err, user);
 			}
 		);
