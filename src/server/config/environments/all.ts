@@ -7,7 +7,8 @@ import configuration = require("../configuration");
 var poweredBy = require('connect-powered-by')
     , util = require('util')
     , nib = require('nib')
-    , stylus = require('stylus');
+    , stylus = require('stylus')    
+    , GitHubApi = require("github");
 
 function initialize() {
     // Warn of version mismatch between global "lcm" binary and local installation
@@ -76,6 +77,18 @@ function initialize() {
     this.use(express.static(publicDir));
     this.use(express.bodyParser());
     this.use(express.methodOverride());
+
+    config.dataFactory = (): any => { 
+        return new GitHubApi ({
+            // required
+            version: "3.0.0",
+            // optional
+            debug: false,
+            protocol: "https",
+            host: "api.github.com",
+            timeout: 5000
+        });
+    };
 }
 
 export = initialize;

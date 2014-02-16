@@ -109,6 +109,10 @@ class Configuration {
     static dateFormat = "YYYY-MM-DD"
 
     static impedimentsFieldsRegEx = /(?:^## Impediments$)|(?:^__#(\d+) - \[(.+)\]\((.+)\)__$)|(?:\* (|~~)(\d{4}-\d{2}-\d{2}) - ([^~]+?)(?:|~~)$)/gm;
+
+    static loginStrategy = "github";
+
+    static dataFactory: Function = null;
 }
 
 export = Configuration;

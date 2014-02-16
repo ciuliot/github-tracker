@@ -25,10 +25,12 @@
     "grunt-vows-runner": "*",
     "vows": "*",
     "should": "*",
-    "grunt-contrib-stylus": "*"
+    "grunt-contrib-stylus": "*",
+    "nodemock": "*",
+    "grunt-node-inspector": "~0.1.2"
   },
   "dependencies": {
-    "moment": "~2.5.1",
+    "moment": "*",
     "mustache": "*",
     "locomotive": "*",
     "jade": "*",
@@ -43,11 +45,12 @@
     "underscore": "*",
     "connect-mongodb": "*",
     "passport": "*",
-    "passport-local": "*",
+    "passport-local": "~0.1.6",
     "bootable": "0.2.x",
     "bootable-environment": "0.2.x",
     "passport-github": "*",
     "connect-ensure-login": "*",
-    "github": "*"
+    "github": "*",
+    "passport-http": "~0.2.2"
   }
 }

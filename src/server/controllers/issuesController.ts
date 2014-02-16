@@ -239,14 +239,14 @@ class IssuesController extends abstractController {
 
 			if (phase === configuration.phaseNames.inprogress) {
 				var branchName = util.format("heads/" + configuration.branchNameFormat, number);
-				self.logger.debug("Trying to get branch %s for issue %d", branchName, number);
 
 				tasks.push((getBranchCompleted: Function) => {
 					self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
 						if (!result) {
-							self.logger.debug("Issue branch doesn't exists, trying to create new branch %s for issue %d", branchName, number);
+							self.logger.info("Issue branch doesn't exists, trying to create new branch %s for issue %d", branchName, number);
 							async.waterfall([
 								(getMasterBranchCompleted: Function) => {
+									self.logger.info("Getting master branch for repo %s/%s", user, repository);
 									self.getGitHubClient().gitdata.getReference({
 										user: user,
 										repo: repository,
@@ -256,6 +256,7 @@ class IssuesController extends abstractController {
 									});	
 								}, 
 								(masterBranch: any, createBranchCompleted: Function) => {
+									self.logger.info("Creating new branch %s for repo %s/%s", branchName, user, repository);
 									self.getGitHubClient().gitdata.createReference({
 										user: user,
 										repo: repository,
@@ -264,7 +265,7 @@ class IssuesController extends abstractController {
 									}, createBranchCompleted);
 								}
 								], (err: any, result: any) => { 
-									getBranchCompleted(err, self.convertBranchInfo(result)); 
+									getBranchCompleted(err, err ? null : self.convertBranchInfo(result)); 
 								});
 						} else {
 							getBranchCompleted(err, result);
@@ -292,7 +293,9 @@ class IssuesController extends abstractController {
 				}
 
 				self.getGitHubClient().issues.edit(message, (err: any, result: any) => {
-					result.branch = branchInfo;
+					if (!err) {
+						result.branch = branchInfo;
+					}
 					
 					updateIssueCompleted(err, result);
 				});
@@ -328,7 +331,6 @@ class IssuesController extends abstractController {
 			self.jsonResponse("Operation not allowed");
 		} else {
 			tasks.push((issue: any, getLabelsCompleted: Function) => {
-				self.logger.debug(issue);
 				labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
 					getLabelsCompleted(err, issue, labels);
 				});
