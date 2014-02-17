@@ -41,18 +41,14 @@ class CollaboratorsController extends abstractController {
 					}, getAllCollaboratorsCompleted); 
 				},
 				(collaborators: any[], transformCollaboratorsCompleted: Function) => {
-					if (util.isArray(collaborators)) {
-						var result = collaborators.map((x: any) => {
-							return {
-								id: x.id,
-								login: x.login,
-								avatar_url: x.avatar_url
-							};
-						});
-					} else {
-						result = [];
-					}
-
+					var result = collaborators.map((x: any) => {
+						return {
+							id: x.id,
+							login: x.login,
+							avatar_url: x.avatar_url
+						};
+					});
+				
 					result.unshift({ id: null, login: null, avatar_url: null });
 					transformCollaboratorsCompleted(null, result);
 				}

@@ -11,6 +11,9 @@ class TestDataFactory {
 	};
 	repos = {
 		getCollaborators(data: any, callback: Function) { TestDataFactory.get(testModels.ReposGetCollaboratorsModel, data, callback); }
+	};
+	issues = {
+		getAllMilestones(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetAllMilestonesModel, data, callback); }
 	}
 
 	constructor() { }

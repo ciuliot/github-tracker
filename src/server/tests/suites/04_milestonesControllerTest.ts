@@ -12,16 +12,11 @@ import testApi = require("../test_api");
 
 var vows = require('vows');
 
-function testCurrentUserMarker(result: any[]) {
-	result[0].should.eql({ id: null, login: null, avatar_url: null });
-
-}
-
-vows.describe("CollaboratorsController").addBatch({
+vows.describe("MilestonesController").addBatch({
 	"Server": {
 		topic: testApi.startServerTopic(),
 		"Index without user and repository": {
-			topic: testApi.httpGetTopic("/collaborators"),
+			topic: testApi.httpGetTopic("/milestones"),
 
 			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyErrorJsonResponse(err, response, textBody);
@@ -30,7 +25,7 @@ vows.describe("CollaboratorsController").addBatch({
 			}
 		},
 		"Index without user": {
-			topic: testApi.httpGetTopic("/collaborators?repository=repo"),
+			topic: testApi.httpGetTopic("/milestones?repository=repo"),
 
 			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyErrorJsonResponse(err, response, textBody);
@@ -39,7 +34,7 @@ vows.describe("CollaboratorsController").addBatch({
 			}
 		},
 		"Index without repository": {
-			topic: testApi.httpGetTopic("/collaborators?user=test"),
+			topic: testApi.httpGetTopic("/milestones?user=test"),
 
 			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyErrorJsonResponse(err, response, textBody);
@@ -48,26 +43,23 @@ vows.describe("CollaboratorsController").addBatch({
 			}
 		},
 		"Invalid user and repository": {
-			topic: testApi.httpGetTopic("/collaborators?user=foo&repository=bar"),
+			topic: testApi.httpGetTopic("/milestones?user=foo&repository=bar"),
 		
-			"returns only marker for logged in user": (err: any, response: http.ClientResponse, textBody: string) => {
+			"returns empty array": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyJsonResponse(err, response, textBody);
 
-				result.length.should.eql(1);
-				testCurrentUserMarker(result);
+				result.length.should.eql(0);
 			}
 		},
 		"Valid user and repository": {
-			topic: testApi.httpGetTopic("/collaborators?user=utester&repository=tracker"),
+			topic: testApi.httpGetTopic("/milestones?user=utester&repository=tracker"),
 		
-			"returns collaborators and marker for logged in user": (err: any, response: http.ClientResponse, textBody: string) => {
+			"returns milestones": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyJsonResponse(err, response, textBody);
 
-				result.length.should.eql(3);
-				testCurrentUserMarker(result);
-
-				result[1].should.eql({ id: 1, login: "octocat", avatar_url: "https://github.com/images/error/octocat_happy.gif" });
-				result[2].should.eql({ id: 2, login: "octodog", avatar_url: "https://github.com/images/error/octocat_sad.gif" });
+				result.length.should.eql(2);
+				result[0].should.eql({ number: 1, state: "closed", title: "v1.0", open_issues: 0, closed_issues: 15 });
+				result[1].should.eql({ number: 2, state: "open", title: "v2.0", open_issues: 10, closed_issues: 5 });
 			}
 
 		}
