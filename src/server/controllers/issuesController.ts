@@ -162,6 +162,7 @@ class IssuesController extends abstractController {
 
 			async.waterfall(steps, 
 				(err: any, result: any[]) => {
+					/* istanbul ignore if */ 
 					if (err) {
 						self.logger.error("Error occured during issues retrieval", err);	
 					}

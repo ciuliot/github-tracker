@@ -85,7 +85,7 @@ var model = [
 		    "number": 1348,
 		    "state": "open",
 		    "title": "Issue in progress",
-		    "body": "I'm working on it.",
+		    "body": "__Estimate:__ XL\n***\nI'm working on it.",
 		    "user": {
 		      "login": "octocat",
 		      "id": 1,
@@ -115,9 +115,9 @@ var model = [
 		    	"name": "@frontend",
 		    	"color": "ff0000"
 		      }, {
-		    	"url": "https://api.github.com/repos/octocat/Hello-World/labels/bug",
-			    "name": "bug",
-			    "color": "f29513"
+		    	"url": "https://api.github.com/repos/octocat/Hello-World/labels/feature",
+		    	"name": "feature",
+		    	"color": "0000ff"
 		      }
 		    ],
 		    "assignee": {

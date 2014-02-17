@@ -94,13 +94,13 @@ vows.describe("IssuesController").addBatch({
 						title: 'Issue in progress', 
 				        category: { color: "#ff0000", id: '@frontend', name: 'frontend' }, 
 						phase: { color: "#000001", id: '#inprogress', name: 'inprogress' }, 
-				        type: { color: '#f29513', name: 'bug', id: 'bug' }, 
+				        type: { color: '#0000ff', name: 'feature', id: 'feature' }, 
 				        number: 1348, 
 				        compareUrl: null, 
 				        description: 'I\'m working on it.', 
 				        branch: { name: null, url: null }, 
 				        assignee: { login: 'octocat', avatar_url: 'https://github.com/images/error/octocat_happy.gif' }, 
-				        estimate: null
+				        estimate: "XL"
 					}],
 					meta: {
 						estimateSizes: { XS: 1, SM: 2, M: 3, L: 5, XL: 8 },
