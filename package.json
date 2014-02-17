@@ -4,7 +4,7 @@
   "description": "Issue tracking",
   "main": "dist/app.js",
   "scripts": {
-    "test": "node node_modules/istanbul/lib/cli.js cover grunt tests"
+    "test": "node node_modules/istanbul/lib/cli.js cover grunt tests --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "repository": {
     "type": "git",
@@ -51,6 +51,7 @@
     "connect-ensure-login": "*",
     "github": "*",
     "passport-http": "*",
-    "request": "*"
+    "request": "*",
+    "coveralls": "~2.8.0"
   }
 }
