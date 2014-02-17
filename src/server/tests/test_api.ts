@@ -62,6 +62,7 @@ class TestApi {
         var body = TestApi.verifyErrorJsonResponse(err, response, textBody);
 
         should.not.exist(body.error);
+        should.exist(body.result);
 
         return body.result;
     }

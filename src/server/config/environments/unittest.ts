@@ -13,10 +13,13 @@ class TestDataFactory {
 		getCollaborators(data: any, callback: Function) { TestDataFactory.get(testModels.ReposGetCollaboratorsModel, data, callback); }
 	};
 	issues = {
-		getAllMilestones(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetAllMilestonesModel, data, callback); }
-	}
+		getAllMilestones(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetAllMilestonesModel, data, callback); },
+		getLabels(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetLabelsModel, data, callback); }
+	};
 
-	constructor() { }
+	constructor() { 
+		TestDataFactory.logger.info("Data factory started");
+	}
 
 	authenticate(data: any) {
 		TestDataFactory.logger.info("Authenticating with %s: %s", data.type, data.token);

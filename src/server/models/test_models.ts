@@ -23,3 +23,11 @@ var IssuesGetAllMilestonesSchema = mongoose.Schema({
 });
 
 export var IssuesGetAllMilestonesModel = mongoose.model('IssuesGetAllMilestones', IssuesGetAllMilestonesSchema);
+
+var IssuesGetLabelsSchema = mongoose.Schema({
+	user: String,
+	repo: String,
+    result: mongoose.Schema.Types.Mixed
+});
+
+export var IssuesGetLabelsModel = mongoose.model('IssuesGetLabels', IssuesGetLabelsSchema);
