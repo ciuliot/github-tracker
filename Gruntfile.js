@@ -1,5 +1,7 @@
+/* istanbul ignore next */
 module.exports = function (grunt) {
     var util = require("util");
+    var istanbul = require("istanbul");
     var revision = "";
 
     // Project configuration.
@@ -27,7 +29,7 @@ module.exports = function (grunt) {
                 }
             },
             server_tests: {
-                src: ['src/server/tests/*.ts'],
+                src: ['src/server/tests/**/*.ts'],
                 dest: './dist',
                 options: {
                     module: 'commonjs', //or commonjs
@@ -101,11 +103,21 @@ module.exports = function (grunt) {
         },
         vows: {
             server: {
-                src: ["dist/tests/*.js", "!dist/tests/test_api.ts"],
+                src: ["dist/tests/suites/*.js"],
                 options : {
                   reporter : "spec"
                 }
             }
+        },
+        instrument : {
+          files : "dist/**/*.js",
+          options : {
+            lazy : true,
+            basePath : 'dist/instrument/'
+          }
+        },
+        reloadTasks : {
+            rootPath : 'dist/instrument/dist'
         }
     });
 
@@ -136,10 +148,20 @@ module.exports = function (grunt) {
         });
     });
 
+    grunt.registerTask('run-istanbul', 'Get revision.', function () {
+        var done = this.async();
+
+        var cli = require("istanbul/lib/cli");
+
+        console.log(cli);
+
+        cli.runToCompletion(["cover", "vows"], done);
+    });
+
     // Default task(s).
     grunt.registerTask('default', ['typescript:server', 'typescript:webapp' , 'copy:dist', 'stylus']);
     grunt.registerTask('build', ['clean', 'get-revision', 'bumpup', 'default', 'copy:build', 'compress:build']);
     grunt.registerTask('docs', ['yuidoc', 'copy:docs', 'compress:docs']);
-    grunt.registerTask('tests', ['default', 'typescript:server_tests', 'vows:server']);
+    grunt.registerTask('tests', ['clean', 'default', 'typescript:server_tests', 'vows:server']);
 };
 

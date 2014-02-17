@@ -17,7 +17,11 @@ class TestApi {
     static logger = log4js.getLogger("TestApi");
 
     static startServer(callback: Function) {
-        serverStartupCallbacks.push(callback);
+        if (serverStartupCallbacks !== null) {
+            serverStartupCallbacks.push(callback);
+        } else {
+            callback();
+        }
 
         if (!isServerStarting) {
             isServerStarting = true;
@@ -30,6 +34,8 @@ class TestApi {
                 for(var i=0; i < serverStartupCallbacks.length; i++) {
                     serverStartupCallbacks[i](err);
                 }
+
+                serverStartupCallbacks = null;
 
             });
         } else {

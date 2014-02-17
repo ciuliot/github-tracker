@@ -1,14 +1,14 @@
-/// <reference path='../../../interfaces/node/node.d.ts'/>
-/// <reference path='../../../interfaces/locomotive/locomotive.d.ts'/>
-/// <reference path='../../../interfaces/should/should.d.ts'/>
-/// <reference path='../../../interfaces/async/async.d.ts'/>
+/// <reference path='../../../../interfaces/node/node.d.ts'/>
+/// <reference path='../../../../interfaces/locomotive/locomotive.d.ts'/>
+/// <reference path='../../../../interfaces/should/should.d.ts'/>
+/// <reference path='../../../../interfaces/async/async.d.ts'/>
 
 import assert = require("assert");
 import http = require("http");
 import should = require("should");
 import async = require("async");
 
-import testApi = require("./test_api");
+import testApi = require("../test_api");
 
 var vows = require('vows');
 

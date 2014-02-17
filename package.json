@@ -4,7 +4,7 @@
   "description": "Issue tracking",
   "main": "dist/app.js",
   "scripts": {
-    "test": "grunt tests"
+    "test": "node node_modules/istanbul/lib/cli.js cover grunt tests"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,8 @@
     "grunt-vows-runner": "*",
     "vows": "*",
     "should": "*",
-    "grunt-contrib-stylus": "*"
+    "grunt-contrib-stylus": "*",
+    "istanbul": "*"
   },
   "dependencies": {
     "moment": "*",
@@ -50,6 +51,6 @@
     "connect-ensure-login": "*",
     "github": "*",
     "passport-http": "*",
-    "request": "~2.33.0"
+    "request": "*"
   }
 }
