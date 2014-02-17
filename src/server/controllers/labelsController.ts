@@ -79,11 +79,12 @@ class LabelsController extends abstractController {
 						}
 						convertLabelsCompleted(null, result);
 					} catch (ex) {
+						/* istanbul ignore next */ 
 						convertLabelsCompleted(ex);
 					}
 				}
 				], (err: any, result: any) => {
-					controller.logger.debug(err, result);
+					/* istanbul ignore if */ 
 					if (err) {
 						controller.logger.error("Error occured during labels retrieval");
 					} 
