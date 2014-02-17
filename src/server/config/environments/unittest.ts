@@ -14,15 +14,15 @@ class TestDataFactory {
 	};
 	issues = {
 		getAllMilestones(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetAllMilestonesModel, data, callback); },
-		getLabels(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetLabelsModel, data, callback); }
+		getLabels(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetLabelsModel, data, callback); },
+		repoIssues(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesRepoIssuesModel, data, callback); }
 	};
-
-	constructor() { 
-		TestDataFactory.logger.info("Data factory started");
+	gitdata = {
+		getReference(data: any, callback: Function) { TestDataFactory.getOneWithErrorIfNone(testModels.GitDataGetReferenceModel, data, callback); }
 	}
 
 	authenticate(data: any) {
-		TestDataFactory.logger.info("Authenticating with %s: %s", data.type, data.token);
+		//TestDataFactory.logger.info("Authenticating with %s: %s", data.type, data.token);
 	}
 
 	static get(model: mongoose.IMongooseSearchable, args: any, callback: Function) {
@@ -39,8 +39,20 @@ class TestDataFactory {
 		model.findOne(args, (err:any, data:any) => {
 			/* istanbul ignore else */
 			if (!err) {
-				data = data.result;
+				data = data ? data.result : undefined;
 			}
+			callback(err, data);
+		});
+	}
+
+	static getOneWithErrorIfNone(model: mongoose.IMongooseSearchable, args: any, callback: Function) {
+		model.findOne(args, (err:any, data:any) => {
+			/* istanbul ignore else */
+			if (!err) {
+				data = data ? data.result : undefined;
+				err = data ? data : "No record found";
+			}
+			TestDataFactory.logger.debug(err, data);
 			callback(err, data);
 		});
 	}

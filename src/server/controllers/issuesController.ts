@@ -27,8 +27,6 @@ class IssuesController extends abstractController {
 		var repository = self.param("repository");
 		var milestone = self.param("milestone");
 
-		this.logger.info("Loading issues for repository '%s/%s' @ milestone '%s'", user, repository, milestone);
-
 		var requestBody = {
 			user: user,
 			state: "open",
@@ -97,86 +95,96 @@ class IssuesController extends abstractController {
 		var repository = self.param("repository");
 		var milestone = self.param("milestone");
 
-		self.logger.info("Loading issues for repository '%s/%s' @ milestone '%s'", user, repository, milestone);
+		if (!user) {
+			self.jsonResponse("Parameter 'user' was not provided");
+		} else if (!repository) {
+			self.jsonResponse("Parameter 'repository' was not provided");
+		} else if (!milestone) {
+			self.jsonResponse("Parameter 'milestone' was not provided");
+		} else {
+			self.logger.info("Loading issues for repository '%s/%s' @ milestone '%s'", user, repository, milestone);
 
-		var requestBody = {
-			user: user,
-			state: "open",
-			repo: repository,
-			milestone: milestone
-		};
+			var requestBody = {
+				user: user,
+				state: "open",
+				repo: repository,
+				milestone: milestone
+			};
 
-		var steps: Function[] = [
-			(getLabelsCompleted: Function) => {
-				labelsController.getLabels(self, user, repository, getLabelsCompleted);
-			},
-			retrieveStep,
-			(labels: labelsModel.IndexResult, allIssues: any[], assignOpenIssuesCompleted: Function) => {
-				var results: any[] = []; 
-				self.logger.debug("Transforming %d open issues", allIssues.length);
+			var steps: Function[] = [
+				(getLabelsCompleted: Function) => {
+					labelsController.getLabels(self, user, repository, getLabelsCompleted);
+				},
+				retrieveStep,
+				(labels: labelsModel.IndexResult, allIssues: any[], assignOpenIssuesCompleted: Function) => {
+					var results: any[] = []; 
+					self.logger.debug("Transforming %d open issues", allIssues.length);
 
-				self.transformIssues(user, repository, labels, allIssues, results);
+					self.transformIssues(user, repository, labels, allIssues, results);
 
-				assignOpenIssuesCompleted(null, labels, results);
-			}
-		];
+					assignOpenIssuesCompleted(null, labels, results);
+				}
+			];
 
-		steps = steps.concat(additionalLoadSteps);
+			steps = steps.concat(additionalLoadSteps);
 
-		steps.push(
-			(result: any[], getIssueBranchesCompleted: Function) => {
-				var issuesToRetrieve: any[] = [];
-				self.logger.debug("Looking for issue branches");
+			steps.push(
+				(result: any[], getIssueBranchesCompleted: Function) => {
+					var issuesToRetrieve: any[] = [];
+					self.logger.debug("Looking for issue branches");
 
-				for (var i = 0; i < result.length; i++) {
-					var issue: any = result[i];
+					for (var i = 0; i < result.length; i++) {
+						var issue: any = result[i];
 
-					if (issue.phase.id === configuration.phaseNames.onhold || issue.phase.id === configuration.phaseNames.inprogress) {
-						issuesToRetrieve = issuesToRetrieve.concat(issue);
+						if (issue.phase.id === configuration.phaseNames.onhold || issue.phase.id === configuration.phaseNames.inprogress) {
+							issuesToRetrieve = issuesToRetrieve.concat(issue);
+						} else {
+							issue.branch = self.convertBranchInfo();
+						}
 					}
-				}
 
-				self.logger.debug("Found %d issues for branch retrieval", issuesToRetrieve.length);
+					self.logger.debug("Found %d issues for branch retrieval", issuesToRetrieve.length);
 
-				async.forEach(issuesToRetrieve, (issue: any, cb: Function) => {
-					self.getIssueBranchInfo(issue.number, user, repository, (err: any, result: any) => {
-						issue.branch = result;
-						issue.compareUrl = self.getCompareUrl(user, repository, issue.phase.id, issue.branch);
-						cb();
+					async.forEach(issuesToRetrieve, (issue: any, cb: Function) => {
+						self.getIssueBranchInfo(issue.number, user, repository, (err: any, result: any) => {
+							issue.branch = result;
+							issue.compareUrl = self.getCompareUrl(user, repository, issue.phase.id, issue.branch);
+							cb();
+						});
+					}, (err: any) => { 
+						getIssueBranchesCompleted(err, result); 
 					});
-				}, (err: any) => { 
-					getIssueBranchesCompleted(err, result); 
-				});
-		});
+			});
 
-		if (transformFunction !== null) {
-			steps.push(transformFunction);
-		}
-
-		async.waterfall(steps, 
-			(err: any, result: any[]) => {
-				if (err) {
-					self.logger.error("Error occured during issues retrieval", err);	
-				}
-
-				self.jsonResponse(err, {
-					meta: {
-						estimateSizes: configuration.estimateSizes,
-						branchNameFormat: configuration.branchNameFormat,
-						priorityTypes: configuration.priorityTypes
-					},
-					issues: result
-				});
+			if (transformFunction !== null) {
+				steps.push(transformFunction);
 			}
-		);
+
+			async.waterfall(steps, 
+				(err: any, result: any[]) => {
+					if (err) {
+						self.logger.error("Error occured during issues retrieval", err);	
+					}
+
+					self.jsonResponse(err, {
+						meta: {
+							estimateSizes: configuration.estimateSizes,
+							branchNameFormat: configuration.branchNameFormat,
+							priorityTypes: configuration.priorityTypes
+						},
+						issues: result
+					});
+				}
+			);
+		}
 	}
 
-	private convertBranchInfo(data: any): any {
-		return {
+	private convertBranchInfo(data?: any): any {
+		return data ? {
 			ref: data.ref,
 			name: data.ref.replace("refs/heads/", ""),
 			url: data.url 
-		};
+		} : { name: null, url: null };
 	}
 
 	private getIssueBranchInfo(number: number, user: string, repository: string, callback: Function) {
@@ -198,11 +206,12 @@ class IssuesController extends abstractController {
 		], (err: any, result: any) => {
 			if (err) {
 				self.logger.debug("Branch %s not found", branchName);
-				callback(err.code === 404 ? null : err); // Branch not found
+				err = err.code === 404 ? null : err; // Branch not found
 			} else {
 				self.logger.debug("Branch %s found", branchName);
-				callback(null, self.convertBranchInfo(result));
-			}		
+			}	
+
+			callback(err, self.convertBranchInfo(result));	
 		});
 	}
 
@@ -265,10 +274,10 @@ class IssuesController extends abstractController {
 									}, createBranchCompleted);
 								}
 								], (err: any, result: any) => { 
-									getBranchCompleted(err, err ? null : self.convertBranchInfo(result)); 
+									getBranchCompleted(err, result); 
 								});
 						} else {
-							getBranchCompleted(err, result);
+							getBranchCompleted(err, self.convertBranchInfo(result));
 						}				
 					});
 				});
@@ -352,10 +361,7 @@ class IssuesController extends abstractController {
 			async.waterfall(tasks, (err: any, result: any) => {
 				if (err) {
 					self.logger.error("Error occured during issue update", err);	
-				} else {
-					
-				}
-
+				} 
 				self.jsonResponse(err, result);
 			});
 		}
@@ -447,14 +453,14 @@ class IssuesController extends abstractController {
 	}
 
 	private getCompareUrl(user: string, repository: string, phase: string, branch: any) {
-		return (phase === configuration.phaseNames.inprogress && branch !== undefined) ? 
+		return (phase === configuration.phaseNames.inprogress && branch != undefined && branch.name !== null) ? 
 				util.format(configuration.pullRequestCompareFormat, user, repository, branch.name) : null;
 	}
 
 	private convertIssue(user: string, repository: string, issue: any, labels: labelsModel.IndexResult, forcePhase: string = null): any {
 		var category = configuration.defaultCategoryName;
 		var phase = forcePhase || (issue.state === "closed" ? configuration.phaseNames.closed :	configuration.phaseNames.backlog);
-		var type: labelsModel.Label = null;
+		var typeName: string = null; 
 		var issueLabels = issue.labels || [];
 
 		for (var j = 0; j < issueLabels.length; j++) {
@@ -468,12 +474,12 @@ class IssuesController extends abstractController {
 				if (forcePhase === null) {
 					phase = label.name;
 				}
-			} else if (type === null) {
-				type = label;
-				type.id = label.name;
+			} else if (typeName === null) {
+				typeName = label.name;
 			}
 		}
 
+		var type = typeName === null ? null : labels.types.filter(x => x.id === typeName)[0];
 		this.logger.info("Transforming issue #%d to '%s'/'%s' [%s]", issue.number, category, phase, type === null ? "" : type.id);
 
 		var convertedIssue: any = {
@@ -484,7 +490,7 @@ class IssuesController extends abstractController {
 			number: issue.number,
 			compareUrl: this.getCompareUrl(user, repository, phase, issue.branch),
 			description: issue.body || "",
-			branch: issue.branch || { name: null, url: null },
+			branch: issue.branch,
 			assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null },
 			estimate: null
 		};

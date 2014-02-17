@@ -28,6 +28,7 @@ class Server {
     constructor() {
         this.logger = log4js.getLogger('Server');
 
+        /* istanbul ignore if */
         if (!fs.existsSync("logs")) {
             fs.mkdirSync("logs");
         }
@@ -92,6 +93,7 @@ class Server {
 
         locomotive.boot(configuration.environment, (err: String) => {
             this.logger.debug("Server initialized at : %s:%d", configuration.http_address, configuration.http_port);
+            
             /* istanbul ignore else */
             if (!err) {
                 locomotive.use(locomotive.router);

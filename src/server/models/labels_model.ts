@@ -2,6 +2,7 @@ export interface Label {
 	name?: string;
 	color?: string;
 	id: string;
+	url?: string;
 };
 
 export interface IndexResult {
