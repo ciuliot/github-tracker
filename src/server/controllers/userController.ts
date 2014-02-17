@@ -29,6 +29,7 @@ class UserController extends abstractController {
 				controller.getGitHubClient().user.get({ }, getUserCompleted); 
 			}
 			], (err: any, user: any) => {
+				/* istanbul ignore else */ 
 				if (!err) {
 					user = {
 						id: user.id,
@@ -37,7 +38,7 @@ class UserController extends abstractController {
 						avatar_url: user.avatar_url
 					};
 				}
-				controller.jsonResponse(err, user);
+				callback(err, user);
 			}
 		);
 	}

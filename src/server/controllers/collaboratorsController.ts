@@ -25,7 +25,7 @@ class CollaboratorsController extends abstractController {
 	}
 
 	getCollaborators(controller: abstractController, user:string, repository: string, 
-					 callback: (err: any, result?: any) => void = (err: any, result?: any): void => {}) {
+					 callback: (err: any, result?: any) => void) {
 		if (!user) {
 			callback("Parameter 'user' was not provided");
 		} else if (!repository) {

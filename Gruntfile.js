@@ -1,7 +1,6 @@
 /* istanbul ignore next */
 module.exports = function (grunt) {
     var util = require("util");
-    var istanbul = require("istanbul");
     var revision = "";
 
     // Project configuration.
@@ -15,7 +14,8 @@ module.exports = function (grunt) {
                     module: 'commonjs', //or commonjs
                     target: 'es5', //or es3
                     base_path: 'src/server',
-                    noImplicitAny: true
+                    noImplicitAny: true,
+                    comments: true
                 }
             },
             webapp: {

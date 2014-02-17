@@ -22,11 +22,13 @@ class AuthenticationController extends abstractController {
 	authenticate() {
 		passport.authenticate(configuration.loginStrategy);
 
+		/* istanbul ignore else */ 
 		if (configuration.loginStrategy === "basic") {
 			this.jsonResponse(null, null);
 		}
 	}
 
+	/* istanbul ignore next */ 
 	callback() {
 		this.redirect('/');
 	}

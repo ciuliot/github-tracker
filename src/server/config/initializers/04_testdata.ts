@@ -20,6 +20,7 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
 
         try {
             mongoose.connection.db.executeDbCommand({ dropDatabase: 1 }, function(err: any) {
+            	/* istanbul ignore if */
                 if (err) {
                     logger.error("Error occured during database drop", err);
                 } else {
@@ -27,6 +28,7 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
                 }
             });
         } catch (ex) {
+        	/* istanbul ignore next */
             logger.error("Exception occured during MongoDb initialization", ex);
         }
 
@@ -41,6 +43,7 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
 	    var modelObjects: any[] = [];
 
 	    diveSync(datastoreDir, function(err: Error, filePath: string) {
+	    	/* istanbul ignore if */
 	        if (exception) {
 	            logger.error("Exception occured during data initialization", exception);
 	            done();
@@ -63,6 +66,7 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
 	        	key.save(callback);
 	    	}
 	    }, (err, results) => {
+	    	/* istanbul ignore if */
             if (err) {
                 logger.error("Exception occured during data initialization", err);
             } else {
@@ -72,10 +76,9 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
         });
 
 	} else {
+		/* istanbul ignore next */
 		done();
 	}
-	
-
 }
 
 function initialize(done: (result?: any) => void) {

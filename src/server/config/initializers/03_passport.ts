@@ -17,10 +17,11 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
 
     logger.info("Using strategy %s", configuration.loginStrategy);
 
-    switch(configuration.loginStrategy) {
-      case "basic": {
+    /* istanbul ignore else */
+    if (configuration.loginStrategy === "basic") {
         passport.use(new BasicStrategy(
           function(username: any, password: any, done: Function) {
+            /* istanbul ignore else */
             if (username === "tester" && password === "123") {
               return done(null, {
                 displayName: "uTester",
@@ -31,9 +32,8 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
             }
           }
         ));
-        break;
-      }
-      case "github": {
+    }
+    else if (configuration.loginStrategy === "github") { // Unit tests doesn't cover GitHub integration
         var dnsName = configuration.githubApplication.dnsName || util.format("%s:%d", configuration.http_address, configuration.http_port);
         var callbackURL = util.format("http://%s/auth/callback", dnsName);
         logger.info("Setting up authentication using ID %s, secret %s and callback URL %s",
@@ -57,14 +57,13 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
             });
           }
         ));
-        break;
-      }
     }
 
     passport.serializeUser(function(user: any, done: Function) {
         done(null, user);
     });
 
+    /* istanbul ignore next */
     passport.deserializeUser(function(obj: any, done: Function) {
       done(null, obj);
     });

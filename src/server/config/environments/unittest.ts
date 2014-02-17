@@ -24,6 +24,7 @@ class TestDataFactory {
 
 	static get(model: mongoose.IMongooseSearchable, args: any, callback: Function) {
 		model.find(args, (err:any, data:any[]) => {
+			/* istanbul ignore else */
 			if (!err) {
 				data = data.map( (x: any) => { return x.result });
 			}
@@ -33,6 +34,7 @@ class TestDataFactory {
 
 	static getOne(model: mongoose.IMongooseSearchable, args: any, callback: Function) {
 		model.findOne(args, (err:any, data:any) => {
+			/* istanbul ignore else */
 			if (!err) {
 				data = data.result;
 			}
