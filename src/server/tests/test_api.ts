@@ -59,15 +59,21 @@ class TestApi {
     }
 
     static verifyJsonResponse(err: any, response: http.ClientResponse, textBody: string): any {
+        var body = TestApi.verifyErrorJsonResponse(err, response, textBody);
+
+        should.not.exist(body.error);
+
+        return body.result;
+    }
+
+    static verifyErrorJsonResponse(err: any, response: http.ClientResponse, textBody: string): any {
         should.not.exist(err);
         response.should.have.status(200);
         should.exist(textBody);
 
         var body = JSON.parse(textBody);
 
-        should.not.exist(body.err);
-
-        return body.result;
+        return body;
     }
 
     static httpGet(path: string, callback: Function, auth: any = { user: "tester", pass: "123", }, args?: any) :void {

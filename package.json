@@ -52,6 +52,6 @@
     "github": "*",
     "passport-http": "*",
     "request": "*",
-    "coveralls": "~2.8.0"
+    "coveralls": "*"
   }
 }

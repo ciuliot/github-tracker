@@ -5,19 +5,31 @@ import log4js = require('log4js');
 import testModels = require('../../models/test_models');
 
 class TestDataFactory {
-	logger = log4js.getLogger("TestData");
+	static logger = log4js.getLogger("TestData");
 	user = {
 		get(data: any, callback: Function) { TestDataFactory.getOne(testModels.UserGetModel, data, callback); }
 	};
+	repos = {
+		getCollaborators(data: any, callback: Function) { TestDataFactory.get(testModels.ReposGetCollaboratorsModel, data, callback); }
+	}
 
 	constructor() { }
 
 	authenticate(data: any) {
-		this.logger.info("Authenticating with %s: %s", data.type, data.token);
+		TestDataFactory.logger.info("Authenticating with %s: %s", data.type, data.token);
 	}
 
-	static getOne(model: mongoose.IMongooseSearchable, data: any, callback: Function) {
-		model.findOne(data, (err:any, data:any) => {
+	static get(model: mongoose.IMongooseSearchable, args: any, callback: Function) {
+		model.find(args, (err:any, data:any[]) => {
+			if (!err) {
+				data = data.map( (x: any) => { return x.result });
+			}
+			callback(err, data);
+		});
+	}
+
+	static getOne(model: mongoose.IMongooseSearchable, args: any, callback: Function) {
+		model.findOne(args, (err:any, data:any) => {
 			if (!err) {
 				data = data.result;
 			}

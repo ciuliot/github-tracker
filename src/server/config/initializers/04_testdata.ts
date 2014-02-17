@@ -6,6 +6,7 @@ import express = require("express");
 import mongoose = require('mongoose');
 import log4js = require('log4js');
 import path = require('path');
+import util = require('util');
 import configuration = require('../configuration');
 import async = require('async');
 
@@ -37,7 +38,7 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
 
 		var exts = ['js'];
 	    var exception: any;
-	    var modelObjects: mongoose.MongooseSchema[] = [];
+	    var modelObjects: any[] = [];
 
 	    diveSync(datastoreDir, function(err: Error, filePath: string) {
 	        if (exception) {
@@ -55,8 +56,12 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
 
 	    logger.info("Storing %d models into database", modelObjects.length);
 
-	    async.map(modelObjects, (key: mongoose.MongooseSchema, callback: (err: any, result?: any) => void) => {
-	        key.save(callback);
+	    async.map(modelObjects, (key: any, callback: (err: any, result?: any) => void) => {
+	    	if (util.isArray(key)) {
+	    		async.forEachSeries(key, (x: any, cb: Function) => { x.save(cb); }, callback);
+	    	} else {
+	        	key.save(callback);
+	    	}
 	    }, (err, results) => {
             if (err) {
                 logger.error("Exception occured during data initialization", err);

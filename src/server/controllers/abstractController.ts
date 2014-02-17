@@ -57,7 +57,9 @@ class AbstractController extends locomotive.Controller {
     }
 
     ensureLogin(path: string): void {
-        this.before(path, passport.authenticate(configuration.loginStrategy));
+        if (configuration.loginStrategy === "basic") {
+            this.before(path, passport.authenticate(configuration.loginStrategy));
+        }
         this.before(path, connectEnsureLogin.ensureLoggedIn("/login"));
     }
 }
