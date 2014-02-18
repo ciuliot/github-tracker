@@ -119,6 +119,17 @@ vows.describe("IssuesController").addBatch({
 				        estimate: "S",
 				        expectedBehavior: 'Works correctly', 
 				        environment: 'Browser'
+					}, {
+						title: 'Completed task', 
+				        category: { color: '#00ff00', id: '@backend', name: 'backend' },
+						phase: { color: null, id: '#closed', name: 'closed' }, 
+				        type: { name: null, id: null, color: null }, 
+				        number: 1350, 
+				        compareUrl: null, 
+				        description: 'Refactor', 
+				        branch: { name: null, url: null }, 
+				        assignee: { login: 'octocat', avatar_url: 'https://github.com/images/error/octocat_happy.gif' }, 
+				        estimate: null
 					}],
 					meta: {
 						estimateSizes: { XS: 1, SM: 2, M: 3, L: 5, XL: 8 },
