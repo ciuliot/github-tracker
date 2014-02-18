@@ -50,3 +50,12 @@ var GitDataGetReferenceSchema = mongoose.Schema({
 });
 
 export var GitDataGetReferenceModel = mongoose.model('GitDataGetReference', GitDataGetReferenceSchema);
+
+var IssueCommentSchema = mongoose.Schema({
+	user: String,
+	repo: String,
+	number: Number,
+    result: mongoose.Schema.Types.Mixed
+});
+
+export var IssueCommentModel = mongoose.model('IssueComment', IssueCommentSchema);

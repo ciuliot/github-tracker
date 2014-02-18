@@ -58,6 +58,22 @@ class TestApi {
         };
     }
 
+    static httpPostTopic(path: string, args?: any, auth?: string) : Function {
+        return function () {
+            var self = this;
+
+            TestApi.httpPost(path, this.callback, args, auth);
+        };
+    }
+
+    static httpPutTopic(path: string, args?: any, auth?: string) : Function {
+        return function () {
+            var self = this;
+
+            TestApi.httpPut(path, this.callback, args, auth);
+        };
+    }
+
     static verifyJsonResponse(err: any, response: http.ClientResponse, textBody: string): any {
         var body = TestApi.verifyErrorJsonResponse(err, response, textBody);
 
@@ -86,6 +102,28 @@ class TestApi {
         };
         
 		request.get(options, callback);
+    }
+
+    static httpPost(path: string, callback: Function, args?: any, auth: any = { user: "tester", pass: "123", }) :void {
+        var options = {
+            url: util.format("http://%s:%d%s", configuration.http_address, configuration.http_port, path),
+            method: "POST",
+            auth: auth,
+            form: args
+        };
+        
+        request.get(options, callback);
+    }
+
+    static httpPut(path: string, callback: Function, args?: any, auth: any = { user: "tester", pass: "123", }) :void {
+        var options = {
+            url: util.format("http://%s:%d%s", configuration.http_address, configuration.http_port, path),
+            method: "PUT",
+            auth: auth,
+            form: args
+        };
+        
+        request.get(options, callback);
     }
 };
 

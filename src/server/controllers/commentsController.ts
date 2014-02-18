@@ -22,21 +22,27 @@ class CommentsController extends abstractController {
 			body: self.param("description")
 		};
 
-		async.waterfall([
-			(createCommentCompleted: Function) => {
-				self.logger.debug("Adding comment to issue #%d", requestBody.number);
-				self.getGitHubClient().issues.createComment(requestBody, createCommentCompleted);
-			}
-		], (err: any, result: any) => {
-			if (err) {
-				self.logger.error("Error occured during impediments retrieval", err);	
-			} else {
-				self.logger.debug(result);
-			}
+		if (!requestBody.user) {
+			self.jsonResponse("Parameter 'user' was not provided");
+		} else if (!requestBody.repo) {
+			self.jsonResponse("Parameter 'repository' was not provided");
+		} else if (!requestBody.body) {
+			self.jsonResponse("Parameter 'description' was not provided");
+		} else {
+			async.waterfall([
+				(createCommentCompleted: Function) => {
+					self.logger.debug("Adding comment to issue #%d", requestBody.number);
+					self.getGitHubClient().issues.createComment(requestBody, createCommentCompleted);
+				}
+			], (err: any, result: any) => {
+				/* istanbul ignore next */ 
+				if (err) {
+					self.logger.error("Error occured during impediments retrieval", err);	
+				} 
 
-			self.jsonResponse(err);
-		});	
-
+				self.jsonResponse(err, result);
+			});	
+		}
 	}
 }
 

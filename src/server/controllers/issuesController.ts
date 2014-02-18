@@ -59,7 +59,7 @@ class IssuesController extends abstractController {
 		this.getIssues(loadStep, additionalSteps);
 	}
 
-	show() {
+	/*show() {
 		var self = this;
 		var requestBody = {
 			user: self.param("user"),
@@ -86,7 +86,7 @@ class IssuesController extends abstractController {
 			}
 			transformCompleted(null, issue); 
 		});
-	}
+	}*/
 
 	private getIssues(retrieveStep: Function, additionalLoadSteps: Function[] = [(labels: any, results:any, cb:Function) => { cb(null, results); } ], transformFunction: Function = null) {
 		var self = this;
@@ -136,7 +136,7 @@ class IssuesController extends abstractController {
 					for (var i = 0; i < result.length; i++) {
 						var issue: any = result[i];
 
-						if (issue.phase.id === configuration.phaseNames.onhold || issue.phase.id === configuration.phaseNames.inprogress) {
+						if (issue.phase.id !== configuration.phaseNames.backlog && issue.phase.id !== configuration.phaseNames.closed) {
 							issuesToRetrieve = issuesToRetrieve.concat(issue);
 						} else {
 							issue.branch = self.convertBranchInfo();
@@ -200,10 +200,10 @@ class IssuesController extends abstractController {
 					repo: repository,
 					ref: branchName
 				}, getBranchInfoCompleted);
-			},
+			}/*,
 			(branchInfo: any, getPullRequestCompleted: Function) => {
 				getPullRequestCompleted(null, branchInfo);
-			}
+			}*/
 		], (err: any, result: any) => {
 			if (err) {
 				self.logger.debug("Branch %s not found", branchName);

@@ -18,12 +18,12 @@ vows.describe("AuthenticationController").addBatch({
 		"starts": (err: any) => {
 			should.not.exist(err);
 		},
-		"Verify index authentication": {
+		"Verify GET authentication": {
 			topic: function() {
 				var self = this;
-				var endpoints = ["/", "/index/test" ,"/user", "/labels", "/milestones", "/collaborators", "/issues"];
+				var getEndpoints = ["/", "/index/test" ,"/user", "/labels", "/milestones", "/collaborators", "/issues"];
 
-				async.forEachSeries(endpoints, (endpoint, callback) => {
+				async.forEachSeries(getEndpoints, (endpoint, callback) => {
 					testApi.httpGet(endpoint, (err: any, response: http.ClientResponse) => {
 						should.not.exist(err);
 	    				should.exist(response);
@@ -32,6 +32,26 @@ vows.describe("AuthenticationController").addBatch({
 	    				callback(null, null);
 	    				
 					}, null);
+				}, self.callback);
+			},
+			"passed": (err: any) => {
+				should.not.exist(err);
+			}
+		},
+		"Verify PUT authentication": {
+			topic: function() {
+				var self = this;
+				var putEndpoints = ["/comments/0", "/impediments/0", "/issues/0"];
+
+				async.forEachSeries(putEndpoints, (endpoint, callback) => {
+					testApi.httpPut(endpoint, (err: any, response: http.ClientResponse) => {
+						should.not.exist(err);
+	    				should.exist(response);
+	    				response.should.have.status(401);
+				
+	    				callback(null, null);
+	    				
+					}, undefined, null);
 				}, self.callback);
 			},
 			"passed": (err: any) => {
