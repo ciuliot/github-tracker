@@ -77,6 +77,7 @@ vows.describe("IssuesController").addBatch({
 		
 			"returns milestones": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyJsonResponse(err, response, textBody);
+				//console.log(JSON.stringify(result));
 
 				result.should.eql({
 					issues: [{
@@ -96,11 +97,28 @@ vows.describe("IssuesController").addBatch({
 						phase: { color: "#000001", id: '#inprogress', name: 'inprogress' }, 
 				        type: { color: '#0000ff', name: 'feature', id: 'feature' }, 
 				        number: 1348, 
-				        compareUrl: null, 
+				        compareUrl: 'https://github.com/utester/tracker/compare/master...issue/1348', 
 				        description: 'I\'m working on it.', 
-				        branch: { name: null, url: null }, 
+				        branch: { 
+				        	ref: 'refs/heads/issue/1348', 
+				        	name: 'issue/1348', 
+				        	url: 'https://api.github.com/repos/octocat/Hello-World/git/refs/heads/issue/1348' 
+				        },
 				        assignee: { login: 'octocat', avatar_url: 'https://github.com/images/error/octocat_happy.gif' }, 
 				        estimate: "XL"
+					}, {
+						title: 'Implemented bug', 
+				        category: { color: '#00ff00', id: '@backend', name: 'backend' },
+						phase: { color: '#000002', id: '#implemented', name: 'implemented' }, 
+				        type: { color: '#f29513', id: 'bug', name: 'bug' }, 
+				        number: 1349, 
+				        compareUrl: null, 
+				        description: '1. Doesn\'t really work\n2. And crashes', 
+				        branch: { name: null, url: null }, 
+				        assignee: { login: 'octocat', avatar_url: 'https://github.com/images/error/octocat_happy.gif' }, 
+				        estimate: "S",
+				        expectedBehavior: 'Works correctly', 
+				        environment: 'Browser'
 					}],
 					meta: {
 						estimateSizes: { XS: 1, SM: 2, M: 3, L: 5, XL: 8 },

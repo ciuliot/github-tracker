@@ -25,6 +25,7 @@ module.exports = function (grunt) {
                     module: 'amd', //or commonjs
                     target: 'es5', //or es3
                     base_path: 'src/webapp',
+                    sourcemap: true,
                     noImplicitAny: true
                 }
             },

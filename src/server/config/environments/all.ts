@@ -52,7 +52,10 @@ function initialize() {
     this.use(express.logger());
     this.use(express.favicon());
     this.use(express["cookieParser"]());
+
+    this.use("/src", express.static(path.resolve(config.startupDirectory, "./src")));
     this.use(express.static(publicDir));
+
     this.use(express.bodyParser());
     this.use(express.methodOverride());
 
