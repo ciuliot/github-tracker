@@ -369,7 +369,8 @@ class IssuesController extends abstractController {
 	}
 
 	private getDescriptionFromBody(body: any, callback: Function) {
-		var templateName: string = body.type.id || "default";
+		var templateName: string = body.type ? body.type.id : undefined;
+		templateName = templateName || "default";
 		var self = this;
 				
 		if (!fs.existsSync(path.resolve(configuration.templatesDir(), templateName))) {
@@ -382,7 +383,6 @@ class IssuesController extends abstractController {
 				fs.readFile(path.resolve(configuration.templatesDir(), templateName), { encoding: 'utf8' }, loadTemplateCompleted);
 			},
 			(data: string, renderTemplateCompleted: Function) => {
-				mustache["escapeHtml"] = (text: string) => { return text; } // Disable escaping, we really just want plaintext
 				renderTemplateCompleted(null, mustache.render(data, body));
 			}
 		], (err: any, result: any) => { 
@@ -392,11 +392,18 @@ class IssuesController extends abstractController {
 
 	private getLabelsFromBody(body: any): string[] {
 		var labels: string[] = [];
-		if (body.category.id !== configuration.defaultCategoryName) {
-			labels.push(body.category.id);
+		var categoryId = body.category ? body.category.id : undefined;
+		categoryId = categoryId || configuration.defaultCategoryName;
+
+		if (categoryId !== configuration.defaultCategoryName) {
+			labels.push(categoryId);
 		}
-		if (body.type.id && body.type.id.length > 0) {
-			labels.push(body.type.id);
+
+		var typeId = body.type ? body.type.id : undefined;
+		typeId = typeId || "";
+
+		if (typeId.length > 0) {
+			labels.push(typeId);
 		}
 
 		return labels;
@@ -407,44 +414,67 @@ class IssuesController extends abstractController {
 
 		var user = self.param("user");
 		var repository = self.param("repository");
-
 		var body = self.param("body");
+		var title = self.param("title");
 
-		var message: any = {				
-			user: user,
-			repo: repository,
-			milestone: self.param("milestone"),
-			title: self.param("title")
-		};
+		if (!user) {
+			self.jsonResponse("Parameter 'user' was not provided");
+		} else if (!repository) {
+			self.jsonResponse("Parameter 'repository' was not provided");
+		} else if (!body) {
+			self.jsonResponse("Parameter 'body' was not provided");
+		} else if (!title) {
+			self.jsonResponse("Parameter 'title' was not provided");
+		} else {
+			var message: any = {				
+				user: user,
+				repo: repository,
+				milestone: self.param("milestone"),
+				title: title
+			};
 
-		async.waterfall([
-			(getLabelsCompleted: Function) => {
-				labelsController.getLabels(self, user, repository, getLabelsCompleted);
-			},
-			(labels: labelsModel.IndexResult, renderTemplateCompleted: Function) => {
-				self.getDescriptionFromBody(body, (err: any, result: any) => {
-					renderTemplateCompleted(err, labels, result);
-				});
-			},
-			(labels: labelsModel.IndexResult, formattedBody: string, createIssueCompleted: Function) => {
-				message.labels = self.getLabelsFromBody(body);
-				message.body = formattedBody;
+			self.logger.info("Creating new issue at %s/%s/%s [%s]", user, repository, message.milestone, title);
+			self.logger.info(body);
 
-				self.getGitHubClient().issues.create(message, (err: any, issue: any) => {
-					createIssueCompleted(err, issue, labels);
-				});
-			},
-			(issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
-				convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
-			}
-		], (err: any, result: any) => {
-			if (err) {
-				self.logger.error("Error occured during issue create", err);	
-			} else {
-			}
+			var labels: labelsModel.IndexResult;
 
-			self.jsonResponse(err, result);
-		});
+			async.waterfall([
+				(getLabelsCompleted: Function) => {
+					labelsController.getLabels(self, user, repository, getLabelsCompleted);
+				},
+				(result: labelsModel.IndexResult, renderTemplateCompleted: Function) => {
+					labels = result;
+					self.getDescriptionFromBody(body, renderTemplateCompleted);
+				},
+				(formattedBody: string, createIssueCompleted: Function) => {
+					try {
+						message.labels = self.getLabelsFromBody(body);
+						message.body = formattedBody;
+
+						self.getGitHubClient().issues.create(message, createIssueCompleted);
+					}
+					catch (ex) {
+						/* istanbul ignore next */ 
+						createIssueCompleted(ex);
+					}
+				},
+				(issue: any, convertIssueCompleted: Function) => {
+					try {
+						convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
+					} catch (ex) {
+						/* istanbul ignore next */ 
+						convertIssueCompleted(ex);	
+					}
+				}
+			], (err: any, result: any) => {
+				/* istanbul ignore next */ 
+				if (err) {
+					self.logger.error("Error occured during issue create", err);	
+				}
+
+				self.jsonResponse(err, result);
+			});
+		}
 	}
 
 	transformIssues(user: string, repository: string, labels: labelsModel.IndexResult, allIssues: any[], results: any, forcePhase: string = null) {
@@ -492,8 +522,7 @@ class IssuesController extends abstractController {
 			compareUrl: this.getCompareUrl(user, repository, phase, issue.branch),
 			description: issue.body || "",
 			branch: issue.branch,
-			assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null },
-			estimate: null
+			assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null }
 		};
 
 		var bodyParts = convertedIssue.description.split(configuration.bodyFieldsSeparator);

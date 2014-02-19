@@ -32,7 +32,7 @@ var IssuesGetLabelsSchema = mongoose.Schema({
 
 export var IssuesGetLabelsModel = mongoose.model('IssuesGetLabels', IssuesGetLabelsSchema);
 
-var IssuesRepoIssuesSchema = mongoose.Schema({
+var IssuesSchema = mongoose.Schema({
 	user: String,
 	repo: String,
 	milestone: String,
@@ -40,7 +40,7 @@ var IssuesRepoIssuesSchema = mongoose.Schema({
     result: mongoose.Schema.Types.Mixed
 });
 
-export var IssuesRepoIssuesModel = mongoose.model('IssuesRepoIssues', IssuesRepoIssuesSchema);
+export var IssuesModel = mongoose.model('Issues', IssuesSchema);
 
 var GitDataGetReferenceSchema = mongoose.Schema({
 	user: String,

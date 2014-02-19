@@ -1,7 +1,7 @@
 import testModels = require('../../../models/test_models');
 
 var model = [
-	new testModels.IssuesRepoIssuesModel({
+	new testModels.IssuesModel({
 		user: "utester",
 		repo: "tracker",
 		milestone: "1",
@@ -74,7 +74,7 @@ var model = [
 		    "updated_at": "2011-04-22T13:33:48Z"
 		}
 	}),
-	new testModels.IssuesRepoIssuesModel({
+	new testModels.IssuesModel({
 		user: "utester",
 		repo: "tracker",
 		milestone: "1",
@@ -180,7 +180,7 @@ var model = [
 		    "updated_at": "2011-04-22T13:33:48Z"
 		}
 	}),
-	new testModels.IssuesRepoIssuesModel({
+	new testModels.IssuesModel({
 		user: "utester",
 		repo: "tracker",
 		milestone: "1",
@@ -286,7 +286,7 @@ var model = [
 		    "updated_at": "2011-04-22T13:33:48Z"
 		}
 	}),
-	new testModels.IssuesRepoIssuesModel({
+	new testModels.IssuesModel({
 		user: "utester",
 		repo: "tracker",
 		milestone: "1",
