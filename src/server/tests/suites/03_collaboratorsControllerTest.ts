@@ -23,29 +23,17 @@ vows.describe("CollaboratorsController").addBatch({
 		"Index without user and repository": {
 			topic: testApi.httpGetTopic("/collaborators"),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-
-				should.exist(result.error);
-			}
+			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Index without user": {
 			topic: testApi.httpGetTopic("/collaborators?repository=repo"),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-
-				should.exist(result.error);
-			}
+			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Index without repository": {
 			topic: testApi.httpGetTopic("/collaborators?user=test"),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-
-				should.exist(result.error);
-			}
+			"returns error": testApi.verifyNoRepositoryProvidedError()
 		},
 		"Invalid user and repository": {
 			topic: testApi.httpGetTopic("/collaborators?user=foo&repository=bar"),

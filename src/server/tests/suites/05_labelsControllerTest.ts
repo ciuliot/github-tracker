@@ -18,31 +18,22 @@ vows.describe("LabelsController").addBatch({
 		"Index without user and repository": {
 			topic: testApi.httpGetTopic("/labels"),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-				should.exist(result.error);
-			}
+			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Index without user": {
 			topic: testApi.httpGetTopic("/labels?repository=repo"),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				testApi.verifyErrorJsonResponse(err, response, textBody);
-			}
+			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Index without repository": {
 			topic: testApi.httpGetTopic("/labels?user=test"),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				testApi.verifyErrorJsonResponse(err, response, textBody);
-			}
+			"returns error": testApi.verifyNoRepositoryProvidedError()
 		},
 		"Invalid user and repository": {
 			topic: testApi.httpGetTopic("/labels?user=foo&repository=bar"),
 		
-			"returns empty array": (err: any, response: http.ClientResponse, textBody: string) => {
-				testApi.verifyErrorJsonResponse(err, response, textBody);
-			}
+			"returns empty array": testApi.verifyAccessDeniedError()
 		},
 		"Valid user and repository": {
 			topic: testApi.httpGetTopic("/labels?user=utester&repository=tracker"),

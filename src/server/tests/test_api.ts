@@ -75,7 +75,10 @@ class TestApi {
     }
 
     static verifyJsonResponse(err: any, response: http.ClientResponse, textBody: string): any {
-        var body = TestApi.verifyErrorJsonResponse(err, response, textBody);
+        should.not.exist(err);
+        response.should.have.status(200);
+        should.exist(textBody);
+        var body = JSON.parse(textBody);
 
         should.not.exist(body.error);
         should.exist(body);
@@ -84,14 +87,34 @@ class TestApi {
         return body.result;
     }
 
-    static verifyErrorJsonResponse(err: any, response: http.ClientResponse, textBody: string): any {
-        should.not.exist(err);
-        response.should.have.status(200);
-        should.exist(textBody);
+    static verifyErrorJsonResponse(errorText: string): any {
+        return (err: any, response: http.ClientResponse, textBody: string) => {
+            should.not.exist(err);
+            response.should.have.status(200);
+            should.exist(textBody);
 
-        var body = JSON.parse(textBody);
+            var body = JSON.parse(textBody);
+            should.exist(body.error);
+            body.error.should.eql(errorText);
 
-        return body;
+            return body;
+        }
+    }
+
+    static verifyAccessDeniedError(): any {
+        return TestApi.verifyErrorJsonResponse("Access denied");
+    }
+
+    static verifyNoParameterProvidedError(parameterName: string): any {
+        return TestApi.verifyErrorJsonResponse("Parameter '" + parameterName + "' was not provided");
+    }
+
+    static verifyNoUserProvidedError(): any {
+        return TestApi.verifyNoParameterProvidedError("user");
+    }
+
+    static verifyNoRepositoryProvidedError(): any {
+        return TestApi.verifyNoParameterProvidedError("repository");
     }
 
     static httpGet(path: string, callback: Function, auth: any = { user: "tester", pass: "123", }, args?: any) :void {

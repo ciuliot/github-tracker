@@ -18,29 +18,17 @@ vows.describe("MilestonesController").addBatch({
 		"Index without user and repository": {
 			topic: testApi.httpGetTopic("/milestones"),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-
-				should.exist(result.error);
-			}
+			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Index without user": {
 			topic: testApi.httpGetTopic("/milestones?repository=repo"),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-
-				should.exist(result.error);
-			}
+			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Index without repository": {
 			topic: testApi.httpGetTopic("/milestones?user=test"),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-
-				should.exist(result.error);
-			}
+			"returns error": testApi.verifyNoRepositoryProvidedError()
 		},
 		"Invalid user and repository": {
 			topic: testApi.httpGetTopic("/milestones?user=foo&repository=bar"),

@@ -18,31 +18,22 @@ vows.describe("CommentsController").addBatch({
 		"Update without parameters": {
 			topic: testApi.httpPutTopic("/comments/0"),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-				should.exist(result.error);
-			}
+			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Update without user": {
 			topic: testApi.httpPutTopic("/comments/0", { repository: "repo", description: "test" }),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				testApi.verifyErrorJsonResponse(err, response, textBody);
-			}
+			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Update without repository": {
 			topic: testApi.httpPutTopic("/comments/0", { user: "test", description: "test" }),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				testApi.verifyErrorJsonResponse(err, response, textBody);
-			}
+			"returns error": testApi.verifyNoRepositoryProvidedError()
 		},
 		"Update without body": {
 			topic: testApi.httpPutTopic("/comments/0", { user: "test", repository: "repo" }),
 
-			"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-				testApi.verifyErrorJsonResponse(err, response, textBody);
-			}
+			"returns error": testApi.verifyNoParameterProvidedError("description")
 		},
 		"Valid update": {
 			topic: testApi.httpPutTopic("/comments/1", { user: "test", repository: "repo", description: "Contents" }),

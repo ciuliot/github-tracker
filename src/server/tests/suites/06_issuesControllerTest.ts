@@ -18,60 +18,40 @@ vows.describe("IssuesController").addBatch({
 		"Index": {
 			"without user, repository and milestone": {
 				topic: testApi.httpGetTopic("/issues"),
-
-				"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-					var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-					should.exist(result.error);
-				}
+				"returns error": testApi.verifyNoUserProvidedError()
 			},
 			"without user and milestone": {
 				topic: testApi.httpGetTopic("/issues?repository=repo"),
-
-				"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-					testApi.verifyErrorJsonResponse(err, response, textBody);
-				}
+				"returns error": testApi.verifyNoUserProvidedError()
 			},
 			"without repository and milestone": {
 				topic: testApi.httpGetTopic("/issues?user=test"),
-
-				"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-					testApi.verifyErrorJsonResponse(err, response, textBody);
-				}
+				"returns error": testApi.verifyNoRepositoryProvidedError()
 			},
 			"without repository": {
 				topic: testApi.httpGetTopic("/issues?user=test&milestone=*"),
 
-				"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-					testApi.verifyErrorJsonResponse(err, response, textBody);
-				}
+				"returns error": testApi.verifyNoRepositoryProvidedError()
 			},
 			"without user": {
 				topic: testApi.httpGetTopic("/issues?repository=repo&milestone=*"),
 
-				"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-					testApi.verifyErrorJsonResponse(err, response, textBody);
-				}
+				"returns error": testApi.verifyNoUserProvidedError()
 			},
 			"without milestone": {
 				topic: testApi.httpGetTopic("/issues?user=test&repository=repo"),
 
-				"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-					testApi.verifyErrorJsonResponse(err, response, textBody);
-				}
+				"returns error": testApi.verifyNoParameterProvidedError("milestone")
 			},
 			"invalid user and repository": {
 				topic: testApi.httpGetTopic("/issues?user=foo&repository=bar&milestone=*"),
 			
-				"returns empty array": (err: any, response: http.ClientResponse, textBody: string) => {
-					testApi.verifyErrorJsonResponse(err, response, textBody);
-				}
+				"returns empty array": testApi.verifyAccessDeniedError()
 			},
 			"invalid milestone": {
 				topic: testApi.httpGetTopic("/issues?user=utester&repository=tracker&milestone=99"),
 			
-				"returns empty array": (err: any, response: http.ClientResponse, textBody: string) => {
-					testApi.verifyErrorJsonResponse(err, response, textBody);
-				}
+				"returns empty array": testApi.verifyAccessDeniedError()
 			},
 			"valid user and repository": {
 				topic: testApi.httpGetTopic("/issues?user=utester&repository=tracker&milestone=1"),
@@ -143,42 +123,27 @@ vows.describe("IssuesController").addBatch({
 			"without parameters": {
 				topic: testApi.httpPostTopic("/issues"),
 
-				"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-					var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-					should.exist(result.error);
-				}
+				"returns error": testApi.verifyNoUserProvidedError()
 			},
 			"without user": {
 				topic: testApi.httpPostTopic("/issues", { repository: "repo", title: "title", body: "body" }),
 
-				"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-					var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-					should.exist(result.error);
-				}
+				"returns error": testApi.verifyNoUserProvidedError()
 			},
 			"without repository": {
 				topic: testApi.httpPostTopic("/issues", { user: "user", title: "title", body: "body" }),
 
-				"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-					var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-					should.exist(result.error);
-				}
+				"returns error": testApi.verifyNoRepositoryProvidedError()
 			},
 			"without title": {
 				topic: testApi.httpPostTopic("/issues", { user: "user", repository: "repo", body: "body" }),
 
-				"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-					var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-					should.exist(result.error);
-				}
+				"returns error": testApi.verifyNoParameterProvidedError("title")
 			},
 			"without body": {
 				topic: testApi.httpPostTopic("/issues", { user: "user", repository: "repo", title: "title" }),
 
-				"returns error": (err: any, response: http.ClientResponse, textBody: string) => {
-					var result = testApi.verifyErrorJsonResponse(err, response, textBody);
-					should.exist(result.error);
-				}
+				"returns error": testApi.verifyNoParameterProvidedError("body")
 			},
 			"without category and type": {
 				topic: testApi.httpPostTopic("/issues", { 
@@ -238,6 +203,29 @@ vows.describe("IssuesController").addBatch({
 					});
 				}
 			},
+		},
+		"Update": 
+		{
+			"without parameters": {
+				topic: testApi.httpPutTopic("/issues/0"),
+
+				"returns error": testApi.verifyNoUserProvidedError()
+			},
+			"without user": {
+				topic: testApi.httpPutTopic("/issues/0", { repository: "repo" }),
+
+				"returns error": testApi.verifyNoUserProvidedError()
+			},
+			"without repository": {
+				topic: testApi.httpPutTopic("/issues/*", { user: "user" }),
+
+				"returns error": testApi.verifyNoRepositoryProvidedError()
+			},
+			"without operation": {
+				topic: testApi.httpPutTopic("/issues/*", { user: "user", repository: "repo" }),
+
+				"returns error": testApi.verifyErrorJsonResponse("Operation not allowed")
+			}
 		}
 	}
 }).export(module);

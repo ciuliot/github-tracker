@@ -229,151 +229,158 @@ class IssuesController extends abstractController {
 		var phase = self.param("phase");
 		var body = self.param("body");
 
-		var message: any = {				
-			user: user,
-			repo: repository,
-			number: number
-		};
+		if (!user) {
+			self.jsonResponse("Parameter 'user' was not provided");
+		} else if (!repository) {
+			self.jsonResponse("Parameter 'repository' was not provided");
+		} else {
 
-		var tasks: any[] = [];
+			var message: any = {				
+				user: user,
+				repo: repository,
+				number: number
+			};
 
-		if (collaborator !== undefined) {
-			self.logger.info("Updating issue %s - assigning collaborator %s", number, collaborator);
-			message.assignee = collaborator;
+			var tasks: any[] = [];
 
-			tasks.push((updateIssueCompleted: Function) => {
-				self.getGitHubClient().issues.edit(message, updateIssueCompleted);
-			});
-		} else if (phase !== undefined) {
-			self.logger.info("Updating issue %s - updating phase to %s", number, phase);
-			tasks = [];
-			var branchInfo: any = undefined;
+			if (collaborator !== undefined) {
+				self.logger.info("Updating issue %s - assigning collaborator %s", number, collaborator);
+				message.assignee = collaborator;
 
-			if (phase === configuration.phaseNames.inprogress) {
-				var branchName = util.format("heads/" + configuration.branchNameFormat, number);
+				tasks.push((updateIssueCompleted: Function) => {
+					self.getGitHubClient().issues.edit(message, updateIssueCompleted);
+				});
+			} else if (phase !== undefined) {
+				self.logger.info("Updating issue %s - updating phase to %s", number, phase);
+				tasks = [];
+				var branchInfo: any = undefined;
 
-				tasks.push((getBranchCompleted: Function) => {
-					self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
-						if (!result) {
-							self.logger.info("Issue branch doesn't exists, trying to create new branch %s for issue %d", branchName, number);
-							async.waterfall([
-								(getMasterBranchCompleted: Function) => {
-									self.logger.info("Getting master branch for repo %s/%s", user, repository);
-									self.getGitHubClient().gitdata.getReference({
-										user: user,
-										repo: repository,
-										ref: "heads/master"
-									}, (err: any, data: any) => {
-										getMasterBranchCompleted(err, data);
-									});	
-								}, 
-								(masterBranch: any, createBranchCompleted: Function) => {
-									self.logger.info("Creating new branch %s for repo %s/%s", branchName, user, repository);
-									self.getGitHubClient().gitdata.createReference({
-										user: user,
-										repo: repository,
-										ref: "refs/" + branchName,
-										sha: masterBranch.object.sha
-									}, createBranchCompleted);
-								}
-								], (err: any, result: any) => { 
-									getBranchCompleted(err, result); 
-								});
-						} else {
-							getBranchCompleted(err, self.convertBranchInfo(result));
-						}				
+				if (phase === configuration.phaseNames.inprogress) {
+					var branchName = util.format("heads/" + configuration.branchNameFormat, number);
+
+					tasks.push((getBranchCompleted: Function) => {
+						self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
+							if (!result) {
+								self.logger.info("Issue branch doesn't exists, trying to create new branch %s for issue %d", branchName, number);
+								async.waterfall([
+									(getMasterBranchCompleted: Function) => {
+										self.logger.info("Getting master branch for repo %s/%s", user, repository);
+										self.getGitHubClient().gitdata.getReference({
+											user: user,
+											repo: repository,
+											ref: "heads/master"
+										}, (err: any, data: any) => {
+											getMasterBranchCompleted(err, data);
+										});	
+									}, 
+									(masterBranch: any, createBranchCompleted: Function) => {
+										self.logger.info("Creating new branch %s for repo %s/%s", branchName, user, repository);
+										self.getGitHubClient().gitdata.createReference({
+											user: user,
+											repo: repository,
+											ref: "refs/" + branchName,
+											sha: masterBranch.object.sha
+										}, createBranchCompleted);
+									}
+									], (err: any, result: any) => { 
+										getBranchCompleted(err, result); 
+									});
+							} else {
+								getBranchCompleted(err, self.convertBranchInfo(result));
+							}				
+						});
+					});
+
+					tasks.push((result: any, storeBranchCompleted: Function) => {		
+						branchInfo = result;
+						storeBranchCompleted();
+					});
+				}
+
+				tasks.push((getIssueCompleted: Function) => {
+					self.getGitHubClient().issues.getRepoIssue(message, getIssueCompleted);
+				});
+				tasks.push((issue: any, updateIssueCompleted: Function) => {
+					message.labels = issue.labels.map((x: any) => { return x.name });
+					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) === null; });
+
+					if (phase !== configuration.phaseNames.closed) {
+						message.labels.push(phase);
+					} else {
+						message.state = "closed";
+					}
+
+					self.getGitHubClient().issues.edit(message, (err: any, result: any) => {
+						if (!err) {
+							result.branch = branchInfo;
+						}
+						
+						updateIssueCompleted(err, result);
 					});
 				});
+			} 
+			else if (body !== undefined) {
+				self.logger.info("Updating issue %s - updating body to %o", number, body);
 
-				tasks.push((result: any, storeBranchCompleted: Function) => {		
-					branchInfo = result;
-					storeBranchCompleted();
-				});
+				tasks = [
+					(renderTemplateCompleted: Function) => {
+						self.getDescriptionFromBody(body, renderTemplateCompleted);
+					},
+					(output: string, getIssueCompleted: Function) => {
+						self.getGitHubClient().issues.getRepoIssue(message, (err: any, data: any) => {
+							getIssueCompleted(err, data, output);
+						});
+					},
+					(issue: any, formattedBody: string, issueSaveCompleted: Function) => {
+						message.labels = issue.labels.map((x: any) => { return x.name });
+						message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) !== null; }); // Keep only phase labels
+
+						message.labels = message.labels.concat(self.getLabelsFromBody(body));
+
+						message.body = formattedBody;
+						message.title = body.title;
+
+						self.getGitHubClient().issues.edit(message, issueSaveCompleted);
+					}
+				];
 			}
 
-			tasks.push((getIssueCompleted: Function) => {
-				self.getGitHubClient().issues.getRepoIssue(message, getIssueCompleted);
-			});
-			tasks.push((issue: any, updateIssueCompleted: Function) => {
-				message.labels = issue.labels.map((x: any) => { return x.name });
-				message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) === null; });
-
-				if (phase !== configuration.phaseNames.closed) {
-					message.labels.push(phase);
-				} else {
-					message.state = "closed";
-				}
-
-				self.getGitHubClient().issues.edit(message, (err: any, result: any) => {
-					if (!err) {
-						result.branch = branchInfo;
-					}
-					
-					updateIssueCompleted(err, result);
-				});
-			});
-		} 
-		else if (body !== undefined) {
-			self.logger.info("Updating issue %s - updating body to %o", number, body);
-
-			tasks = [
-				(renderTemplateCompleted: Function) => {
-					self.getDescriptionFromBody(body, renderTemplateCompleted);
-				},
-				(output: string, getIssueCompleted: Function) => {
-					self.getGitHubClient().issues.getRepoIssue(message, (err: any, data: any) => {
-						getIssueCompleted(err, data, output);
+			if (tasks.length == 0) {
+				self.jsonResponse("Operation not allowed");
+			} else {
+				tasks.push((issue: any, getLabelsCompleted: Function) => {
+					labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
+						getLabelsCompleted(err, issue, labels);
 					});
-				},
-				(issue: any, formattedBody: string, issueSaveCompleted: Function) => {
-					message.labels = issue.labels.map((x: any) => { return x.name });
-					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) !== null; }); // Keep only phase labels
-
-					message.labels = message.labels.concat(self.getLabelsFromBody(body));
-
-					message.body = formattedBody;
-					message.title = body.title;
-
-					self.getGitHubClient().issues.edit(message, issueSaveCompleted);
-				}
-			];
-		}
-
-		if (tasks.length == 0) {
-			self.jsonResponse("Operation not allowed");
-		} else {
-			tasks.push((issue: any, getLabelsCompleted: Function) => {
-				labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
-					getLabelsCompleted(err, issue, labels);
 				});
-			});
-			tasks.push((issue: any, labels: labelsModel.IndexResult, getBranchCompleted: Function) => {
-				if (issue.branch) {
-					getBranchCompleted(null, issue, labels);
-				} else {
-					self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
-						issue.branch = result;
+				tasks.push((issue: any, labels: labelsModel.IndexResult, getBranchCompleted: Function) => {
+					if (issue.branch) {
 						getBranchCompleted(null, issue, labels);
-					});
-				}
-			});
-			tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
-				convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
-			});
-			tasks.push((issue: any, sendUpdatesToClientsCompleted: Function) => {
-				self.logger.info("Sending update via sockets");
-				var sio = configuration.socketIO.sockets.in(util.format("%s/%s", user, repository));
-				sio.emit("issue-update", issue);
+					} else {
+						self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
+							issue.branch = result;
+							getBranchCompleted(null, issue, labels);
+						});
+					}
+				});
+				tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
+					convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
+				});
+				tasks.push((issue: any, sendUpdatesToClientsCompleted: Function) => {
+					self.logger.info("Sending update via sockets");
+					var sio = configuration.socketIO.sockets.in(util.format("%s/%s", user, repository));
+					sio.emit("issue-update", issue);
 
-				sendUpdatesToClientsCompleted(null, issue);
-			});
+					sendUpdatesToClientsCompleted(null, issue);
+				});
 
-			async.waterfall(tasks, (err: any, result: any) => {
-				if (err) {
-					self.logger.error("Error occured during issue update", err);	
-				} 
-				self.jsonResponse(err, result);
-			});
+				async.waterfall(tasks, (err: any, result: any) => {
+					if (err) {
+						self.logger.error("Error occured during issue update", err);	
+					} 
+					self.jsonResponse(err, result);
+				});
+			}
 		}
 	}
 
