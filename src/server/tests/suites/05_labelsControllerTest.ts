@@ -30,11 +30,12 @@ vows.describe("LabelsController").addBatch({
 
 			"returns error": testApi.verifyNoRepositoryProvidedError()
 		},
-		"Invalid user and repository": {
+		// ToDo
+		/*"Invalid user and repository": {
 			topic: testApi.httpGetTopic("/labels?user=foo&repository=bar"),
 		
 			"returns empty array": testApi.verifyAccessDeniedError()
-		},
+		},*/
 		"Valid user and repository": {
 			topic: testApi.httpGetTopic("/labels?user=utester&repository=tracker"),
 		
