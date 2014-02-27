@@ -15,6 +15,7 @@ import utilities = require("../utilities");
 import log4js = require("log4js");
 import async = require("async");
 import knockout_mapping = require("knockout.mapping");
+import io = require("socket.io");
 
 import repositoryModel = require("../models/repository_model");
 import phaseModel = require("../models/phase_model");
@@ -59,6 +60,13 @@ class HomeViewModel {
 
 	start() {
 		var self = this;
+
+		var socket = io.connect('http://localhost');
+		socket.on("test", (data:any) => {
+			console.log(data);
+		});
+
+		socket.emit("my other event", {});
 
 		this.repositories = knockout_mapping.fromJS([]).extend({ 
 			mapToJsonResource: { 

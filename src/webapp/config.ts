@@ -11,7 +11,8 @@ requirejs.config({
     "knockout.mapping": "libs/knockout.mapping",
     "knockout.bootstrap": "libs/knockout-bootstrap",
     "moment": "libs/moment.min",
-    "bootstrap": "libs/bootstrap"
+    "bootstrap": "libs/bootstrap",
+    "socket.io": "/socket.io/socket.io"
   },
   shim: {
     jquery: {
@@ -28,6 +29,9 @@ requirejs.config({
     },
     moment: {
       exports: "moment"
+    },
+    "socket.io": {
+      exports: "io"
     }
   }
 });

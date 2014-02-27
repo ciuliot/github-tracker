@@ -6,6 +6,8 @@ import mongoose = require('mongoose');
 import log4js = require('log4js');
 import configuration = require('../configuration');
 
+var mongoStore = require('connect-mongodb');
+
 function initializeDatabase(done: (result?: any) => void) {
     var logger = log4js.getLogger("MongoDb");
     logger.info("Connecting to database %s", configuration.databaseName);
@@ -22,6 +24,8 @@ function initializeDatabase(done: (result?: any) => void) {
             } else {
                 logger.info("Succesfully connected to database")
 	    	}
+
+            configuration.sessionStore.store = new mongoStore({ db: mongoose.connection.db });
 
             done(err);
         });

@@ -8,8 +8,10 @@ import path = require("path");
 
 import abstractController = require("./abstractController");
 import labelsController = require("./labelsController");
-import configuration = require('../config/configuration');
 import labelsModel = require("../models/labels_model");
+import clientModel = require("../models/client_model");
+import socketio = require('socket.io');
+import configuration = require("../config/configuration");
 
 var mustache: MustacheStatic = require("mustache");
 
@@ -27,7 +29,7 @@ class IssuesController extends abstractController {
 		var repository = self.param("repository");
 		var milestone = self.param("milestone");
 
-		this.logger.info("Loading issues for repository '%s/%s' @ milestone '%s'", user, repository, milestone);
+		//var sio = configuration.socketIO.sockets.in(this.req.sessionID);
 
 		var requestBody = {
 			user: user,
@@ -55,6 +57,18 @@ class IssuesController extends abstractController {
 				self.logger.debug("Transforming %d closed issues", allIssues.length);
 				self.transformIssues(user, repository, labels, allIssues, results, configuration.phaseNames.closed);
 				assignClosedIssuesCompleted(null, results);
+			},
+			(results: any[], saveCombinationForSocketIoCompleted: Function) => {
+				var sessionId = this.req["sessionID"];
+				self.logger.debug("Saving user preference %s/%s for %s", user, repository, sessionId);
+
+				clientModel.ClientModel({
+					sessionId: sessionId,
+					repository: repository,
+					user: user
+				}).save((err: any) => {
+					saveCombinationForSocketIoCompleted(err, results);
+				});
 			}
 		];
 
@@ -345,6 +359,20 @@ class IssuesController extends abstractController {
 			});
 			tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
 				convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
+			});
+			tasks.push((issue: any, getClientsForUpdateCompleted: Function) => {
+				clientModel.ClientModel.find({ user: user, repository: repository }, (err: any, results: any) => {
+					getClientsForUpdateCompleted(err, issue, results);
+				});
+			});
+			tasks.push((issue: any, clients: any[], sendUpdatesToClientsCompleted: Function) => {
+				for(var i = 0; i < clients.length; i++) {
+					var sessionId = clients[i].sessionId;
+					self.logger.info("Sending update to %s", sessionId)
+					var sio = configuration.socketIO.sockets.in(sessionId);
+				}
+
+				sendUpdatesToClientsCompleted(null, issue);
 			});
 
 			async.waterfall(tasks, (err: any, result: any) => {

@@ -1,6 +1,7 @@
 /// <reference path='../../interfaces/node/node.d.ts'/>
 /// <reference path='../../interfaces/locomotive/locomotive.d.ts'/>
 /// <reference path='../../interfaces/log4js/log4js.d.ts'/>
+/// <reference path='../../interfaces/socket.io/socket.io.d.ts'/>
 
 /**
  * @namespace Server
@@ -13,11 +14,15 @@ import util = require("util");
 import fs = require("fs");
 import abstractController = require("./controllers/abstractController");
 import configuration = require("./config/configuration");
+import socketio = require('socket.io');
 
 var diveSync = require('diveSync');
 var http = require('http');
 var bootable = require('bootable');
 var bootable_enviromnent = require('bootable-environment');
+var passportSocketIo = require("passport.socketio");
+var cookie = require("cookie");
+var connect = require("connect");
 
 class Server {
     private logger: log4js.Logger;
@@ -86,12 +91,55 @@ class Server {
 
     startHttpServer(): Function {
       var options: any = {};
-      
+      var self = this;
+
       return function httpServer(done: Function) {
-        http.createServer(this.express).listen(configuration.http_port, configuration.http_address, function() {
+        var app = http.createServer(this.express).listen(configuration.http_port, configuration.http_address, function() {
           var addr = this.address();
           console.info('HTTP server listening on %s:%d', addr.address, addr.port);
           return done();
+        });
+
+        self.logger.info("Starting Socket.IO");
+        configuration.socketIO = socketio.listen(app);
+
+        configuration.socketIO.configure(() => {
+            var authorization = (handshakeData: any, callback: Function) => {
+                if (handshakeData.headers.cookie) {
+                    handshakeData.cookie = cookie.parse(handshakeData.headers.cookie);
+                    var sid = handshakeData.cookie['connect.sid'];
+                    var sessionId = connect.utils.parseSignedCookie(sid, configuration.sessionStore.secret);
+
+                    self.logger.debug(sid);
+
+                    if (sessionId) {  
+                        handshakeData.sessionId = sessionId;
+
+                        configuration.sessionStore.store.get(sessionId, (err: any, data: any) => {
+                            self.logger.info("User profile:", data);
+                            if (data && data.passport && data.passport.user) {
+                                callback(null, true);
+                            } else {
+                                callback("No such user found", false);
+                            }
+                        });
+                    } else {
+                        callback("Invalid session id", false);
+                    }
+                } else {
+                    callback("No cookies provided", false);
+                }
+            };
+
+            configuration.socketIO.set("authorization", authorization);
+        });
+
+        configuration.socketIO.sockets.on('connection', (socket: any) => {
+            self.logger.debug("Socket.IO connection from %s[%s]", socket.id, socket.handshake.sessionId);
+
+            socket.on("subscribe", (data: any) => {
+                self.logger.debug("Attempt to subscribe to %s/%s", data.user, data.repository);
+            });
         });
       };
     }
@@ -135,7 +183,7 @@ class Server {
         locomotive.phase(this.startHttpServer());
 
         locomotive.boot(configuration.environment, (err: String) => {
-            this.logger.debug("Server initialized at : %s:%d", configuration.http_address, configuration.http_port);
+            self.logger.debug("Server initialized at : %s:%d", configuration.http_address, configuration.http_port);
             if (!err) {
                 locomotive.use(locomotive.router);
             }

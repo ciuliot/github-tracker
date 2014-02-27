@@ -40,6 +40,23 @@ class UserController extends abstractController {
 			}
 		);
 	}
+
+	subscribeForNotifications() {
+		var self = this;
+		var requestBody = {
+			user: self.param("user"),
+			repo: self.param("repository")
+		};
+
+		async.waterfall([
+			(getRepositoryCompleted: Function) => {
+				self.getGitHubClient().repos.get(requestBody, getRepositoryCompleted);
+			},
+			(repository: any, subscribeToRoom: Function) => {
+
+			}
+		])
+	}
 }
 
 var instance: any = new UserController();
