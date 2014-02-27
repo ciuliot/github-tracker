@@ -13,20 +13,20 @@ class AuthenticationController extends abstractController {
 		this.before("callback", passport.authenticate('github', { failureRedirect: '/login' }));
 	}
 
-	login() {
+	login(): void {
 		this.render();
 	}
 
-	authenticate() {
+	authenticate(): void {
 		passport.authenticate('github');
 	}
 
-	callback() {
+	callback(): void {
 		this.redirect('/');
 	}
 
-	logout() {
-		this.req["logout"]();
+	logout(): void {
+		this.req.logout();
   		this.redirect('/');
 	}
 }

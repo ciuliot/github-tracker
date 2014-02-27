@@ -15,7 +15,6 @@ import utilities = require("../utilities");
 import log4js = require("log4js");
 import async = require("async");
 import knockout_mapping = require("knockout.mapping");
-import io = require("socket.io");
 
 import repositoryModel = require("../models/repository_model");
 import phaseModel = require("../models/phase_model");
@@ -24,6 +23,8 @@ import collaboratorModel = require("../models/collaborator_model");
 import issuesViewModel = require("./issues_view_model");
 import labelsViewModel = require("./labels_view_model");
 import impedimentModel = require("../models/impediment_model");
+
+var socketio: any;
 
 class HomeViewModel {
 	repositories: KnockoutObservableArray<repositoryModel>;
@@ -57,16 +58,18 @@ class HomeViewModel {
 	loadingCount: KnockoutObservable<number> = ko.observable(0);
 	savingCount: KnockoutObservable<number> = ko.observable(0);
 	logger: log4js.Logger = utilities.getLogger("HomeViewModel");
+	socket: any = null;
 
 	start() {
 		var self = this;
 
-		var socket = io.connect('http://localhost');
-		socket.on("test", (data:any) => {
-			console.log(data);
+		self.socket = socketio.connect();
+		self.socket.on("issue-update", (data:any) => {
+			var issue = self.issuesViewModel.findIssue(data.number);
+			if (issue !== null) {
+				knockout_mapping.fromJS(data, issue);
+			}
 		});
-
-		socket.emit("my other event", {});
 
 		this.repositories = knockout_mapping.fromJS([]).extend({ 
 			mapToJsonResource: { 
@@ -189,10 +192,16 @@ class HomeViewModel {
 		this.url = ko.computed({
 			read: () => {
 				var origin = [window.location.protocol, "//", window.location.hostname, ":", window.location.port].join("");
-				var parts = [origin, "index", self.selectedUser()];
+				var user = self.selectedUser(), repository = self.selectedRepository();
+				var parts = [origin, "index", user];
 
-				if (self.selectedRepository() !== null) {
-					parts.push(self.selectedRepository());
+				if (repository !== null) {
+					parts.push(repository);
+
+					self.socket.emit("subscribe", {
+						user: user,
+						repository: repository
+					});
 
 					if (self.selectedMilestone() !== null) {
 						parts.push(self.selectedMilestone());
@@ -478,7 +487,8 @@ class HomeViewModel {
 }
 
 $(() => {
-	require(["bootstrap", "knockout.bootstrap"], () => {
+	require(["bootstrap", "knockout.bootstrap", "socket.io"], (bootstrap: any, ko_bootstrap: any, io: any) => {
+		socketio = io;
 		new HomeViewModel().start();
 	});
 });

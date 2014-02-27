@@ -49,8 +49,8 @@
     "passport-github": "*",
     "connect-ensure-login": "*",
     "github": "*",
-    "socket.io": "~0.9.16",
-    "cookie": "~0.1.1",
-    "connect": "~2.13.0"
+    "socket.io": "*",
+    "cookie": "*",
+    "connect": "*"
   }
 }

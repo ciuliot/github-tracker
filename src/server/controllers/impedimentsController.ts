@@ -44,7 +44,7 @@ class ImpedimentsController extends abstractController {
 
 	update() {
 		var self = this;
-		var requestBody = {
+		var requestBody: any = {
 			user: self.param("user"),
 			repo: self.param("repository"),
 			number: self.param("id"),
@@ -80,7 +80,7 @@ class ImpedimentsController extends abstractController {
 			(template:string, impediments: any, issue: any, updateImpedimentsFileComplete: Function) => {
 				var fields: RegExpExecArray = null;
 				var input = new Buffer(impediments.content, "base64").toString("utf8");
-				var definition = {
+				var definition: any = {
 					issues: []
 				};
 
@@ -103,7 +103,7 @@ class ImpedimentsController extends abstractController {
 					}
 				};
 
-				var data: any = definition.issues.filter(x => { return x.issueData.number == requestBody.number });
+				var data: any = definition.issues.filter((x: any) => { return x.issueData.number == requestBody.number });
 
 				if (data.length > 0) {
 					data = data[0];
@@ -121,8 +121,7 @@ class ImpedimentsController extends abstractController {
 				});
 
 				self.logger.debug(definition);
-
-				mustache["escapeHtml"] = (text: string) => { return text; } // Disable escaping, we really just want plaintext
+				
 				var newContent = mustache.render(template, definition);
 
 				self.logger.debug(newContent);

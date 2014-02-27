@@ -29,8 +29,6 @@ class IssuesController extends abstractController {
 		var repository = self.param("repository");
 		var milestone = self.param("milestone");
 
-		//var sio = configuration.socketIO.sockets.in(this.req.sessionID);
-
 		var requestBody = {
 			user: user,
 			state: "open",
@@ -57,18 +55,6 @@ class IssuesController extends abstractController {
 				self.logger.debug("Transforming %d closed issues", allIssues.length);
 				self.transformIssues(user, repository, labels, allIssues, results, configuration.phaseNames.closed);
 				assignClosedIssuesCompleted(null, results);
-			},
-			(results: any[], saveCombinationForSocketIoCompleted: Function) => {
-				var sessionId = this.req["sessionID"];
-				self.logger.debug("Saving user preference %s/%s for %s", user, repository, sessionId);
-
-				clientModel.ClientModel({
-					sessionId: sessionId,
-					repository: repository,
-					user: user
-				}).save((err: any) => {
-					saveCombinationForSocketIoCompleted(err, results);
-				});
 			}
 		];
 
@@ -342,7 +328,6 @@ class IssuesController extends abstractController {
 			self.jsonResponse("Operation not allowed");
 		} else {
 			tasks.push((issue: any, getLabelsCompleted: Function) => {
-				self.logger.debug(issue);
 				labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
 					getLabelsCompleted(err, issue, labels);
 				});
@@ -360,17 +345,10 @@ class IssuesController extends abstractController {
 			tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
 				convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
 			});
-			tasks.push((issue: any, getClientsForUpdateCompleted: Function) => {
-				clientModel.ClientModel.find({ user: user, repository: repository }, (err: any, results: any) => {
-					getClientsForUpdateCompleted(err, issue, results);
-				});
-			});
-			tasks.push((issue: any, clients: any[], sendUpdatesToClientsCompleted: Function) => {
-				for(var i = 0; i < clients.length; i++) {
-					var sessionId = clients[i].sessionId;
-					self.logger.info("Sending update to %s", sessionId)
-					var sio = configuration.socketIO.sockets.in(sessionId);
-				}
+			tasks.push((issue: any, sendUpdatesToClientsCompleted: Function) => {
+				self.logger.info("Sending update via sockets");
+				var sio = configuration.socketIO.sockets.in(util.format("%s/%s", user, repository));
+				sio.emit("issue-update", issue);
 
 				sendUpdatesToClientsCompleted(null, issue);
 			});
@@ -401,7 +379,6 @@ class IssuesController extends abstractController {
 				fs.readFile(path.resolve(configuration.templatesDir(), templateName), { encoding: 'utf8' }, loadTemplateCompleted);
 			},
 			(data: string, renderTemplateCompleted: Function) => {
-				mustache["escapeHtml"] = (text: string) => { return text; } // Disable escaping, we really just want plaintext
 				renderTemplateCompleted(null, mustache.render(data, body));
 			}
 		], (err: any, result: any) => { 
