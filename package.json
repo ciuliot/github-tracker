@@ -48,6 +48,9 @@
     "bootable-environment": "0.2.x",
     "passport-github": "*",
     "connect-ensure-login": "*",
-    "github": "*"
+    "github": "*",
+    "socket.io": "*",
+    "cookie": "*",
+    "connect": "*"
   }
 }

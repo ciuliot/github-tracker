@@ -26,5 +26,7 @@ declare module "locomotive" {
         redirect(to: string) : void;
 
         before(name: string, callback: (next: Function) => void): void;
+
+        logout(): void;
     }
 }

@@ -8,8 +8,10 @@ import path = require("path");
 
 import abstractController = require("./abstractController");
 import labelsController = require("./labelsController");
-import configuration = require('../config/configuration');
 import labelsModel = require("../models/labels_model");
+import clientModel = require("../models/client_model");
+import socketio = require('socket.io');
+import configuration = require("../config/configuration");
 
 var mustache: MustacheStatic = require("mustache");
 
@@ -26,8 +28,6 @@ class IssuesController extends abstractController {
 		var user = self.param("user");
 		var repository = self.param("repository");
 		var milestone = self.param("milestone");
-
-		this.logger.info("Loading issues for repository '%s/%s' @ milestone '%s'", user, repository, milestone);
 
 		var requestBody = {
 			user: user,
@@ -328,7 +328,6 @@ class IssuesController extends abstractController {
 			self.jsonResponse("Operation not allowed");
 		} else {
 			tasks.push((issue: any, getLabelsCompleted: Function) => {
-				self.logger.debug(issue);
 				labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
 					getLabelsCompleted(err, issue, labels);
 				});
@@ -345,6 +344,13 @@ class IssuesController extends abstractController {
 			});
 			tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
 				convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
+			});
+			tasks.push((issue: any, sendUpdatesToClientsCompleted: Function) => {
+				self.logger.info("Sending update via sockets");
+				var sio = configuration.socketIO.sockets.in(util.format("%s/%s", user, repository));
+				sio.emit("issue-update", issue);
+
+				sendUpdatesToClientsCompleted(null, issue);
 			});
 
 			async.waterfall(tasks, (err: any, result: any) => {
@@ -373,7 +379,6 @@ class IssuesController extends abstractController {
 				fs.readFile(path.resolve(configuration.templatesDir(), templateName), { encoding: 'utf8' }, loadTemplateCompleted);
 			},
 			(data: string, renderTemplateCompleted: Function) => {
-				mustache["escapeHtml"] = (text: string) => { return text; } // Disable escaping, we really just want plaintext
 				renderTemplateCompleted(null, mustache.render(data, body));
 			}
 		], (err: any, result: any) => { 
