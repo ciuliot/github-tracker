@@ -53,7 +53,7 @@ class TestDataFactory {
 		},
 		create: (data: any, callback: Function) => {
 			var number = Math.floor(Math.random() * 1000);
-			var payload = {
+			var payload: any = {
 				user: data.user,
 				repo: data.repo,
 				milestone: data.milestone,

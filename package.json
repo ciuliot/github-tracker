@@ -52,7 +52,7 @@
     "github": "*",
     "passport-http": "*",
     "request": "*",
-    "coveralls": "*"
+    "coveralls": "*",
     "github": "*",
     "socket.io": "*",
     "cookie": "*",
