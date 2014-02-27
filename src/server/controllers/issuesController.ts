@@ -8,8 +8,10 @@ import path = require("path");
 
 import abstractController = require("./abstractController");
 import labelsController = require("./labelsController");
-import configuration = require('../config/configuration');
 import labelsModel = require("../models/labels_model");
+import clientModel = require("../models/client_model");
+import socketio = require('socket.io');
+import configuration = require("../config/configuration");
 
 var mustache: MustacheStatic = require("mustache");
 
@@ -357,6 +359,13 @@ class IssuesController extends abstractController {
 			});
 			tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
 				convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
+			});
+			tasks.push((issue: any, sendUpdatesToClientsCompleted: Function) => {
+				self.logger.info("Sending update via sockets");
+				var sio = configuration.socketIO.sockets.in(util.format("%s/%s", user, repository));
+				sio.emit("issue-update", issue);
+
+				sendUpdatesToClientsCompleted(null, issue);
 			});
 
 			async.waterfall(tasks, (err: any, result: any) => {

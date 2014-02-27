@@ -15,11 +15,11 @@ class AuthenticationController extends abstractController {
 		this.before("callback", passport.authenticate(configuration.loginStrategy, { failureRedirect: '/login' }));
 	}
 
-	login() {
+	login(): void {
 		this.render();
 	}
 
-	authenticate() {
+	authenticate(): void {
 		passport.authenticate(configuration.loginStrategy);
 
 		/* istanbul ignore else */ 
@@ -33,8 +33,8 @@ class AuthenticationController extends abstractController {
 		this.redirect('/');
 	}
 
-	logout() {
-		this.req["logout"]();
+	logout(): void {
+		this.req.logout();
   		this.redirect('/');
 	}
 }

@@ -1,8 +1,10 @@
 /// <reference path='../../../interfaces/log4js/log4js.d.ts'/>
 /// <reference path='../../../interfaces/node/node.d.ts'/>
+/// <reference path='../../../interfaces/mongoose/mongoose.d.ts'/>
 
 import log4js = require("log4js");
 import path = require("path");
+import mongoose = require('mongoose');
 
 class Configuration {
     /** 
@@ -18,7 +20,7 @@ class Configuration {
      * @property https_address
      * @type {String}
      */
-    static http_address: string = process.env.HTTP_ADDRESS || "127.0.0.1";
+    static http_address: string = process.env.HTTP_ADDRESS || "localhost";
     /** 
     * Defines HTTPS port of server, uses environment value `HTTPS_PORT` if available.
     * @default 3110
@@ -113,6 +115,13 @@ class Configuration {
     static loginStrategy = "github";
 
     static dataFactory: Function = null;
+
+    static socketIO: any = null;
+
+    static sessionStore: any = {
+        secret: 'github-tracker-123',
+        store: null
+    };
 }
 
 export = Configuration;

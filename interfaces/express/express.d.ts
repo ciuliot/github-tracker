@@ -225,6 +225,8 @@ declare module "express" {
 
             session: Session;
 
+            logout(): void;
+
             /**
              * Return request header.
              *

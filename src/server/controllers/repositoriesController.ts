@@ -32,7 +32,6 @@ class RepositoriesController extends abstractController {
 				convertOrgsRepositories();
 			}
 			], (err: any) => {
-				self.logger.debug(repositories);
 				self.jsonResponse(err, repositories);
 			}
 		);

@@ -7,8 +7,7 @@ import log4js = require('log4js');
 import configuration = require('../configuration');
 import util = require('util');
 
-var mongoStore = require('connect-mongodb')
-    , passport = require('passport')
+var   passport = require('passport')
     , GitHubStrategy = require('passport-github').Strategy
     , BasicStrategy = require('passport-http').BasicStrategy;
 
@@ -65,13 +64,11 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
 
     /* istanbul ignore next */
     passport.deserializeUser(function(obj: any, done: Function) {
+      //logger.debug("Deserialize:", obj);
       done(null, obj);
     });
 
-    app.use(express["session"]({
-        secret: 'secret',
-        store: new mongoStore({ db: mongoose.connection.db })
-    }));
+    app.use(express["session"](configuration.sessionStore));
 
     app.use(passport.initialize());
     app.use(passport.session());
