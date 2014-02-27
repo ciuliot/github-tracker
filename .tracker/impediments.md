@@ -14,3 +14,7 @@ __#24 - [hehe](https://github.com/ciuliot/github-tracker/issues/24)__
 
 * 2014-02-13 - test2
 
+__#8 - [yrdy](https://github.com/ciuliot/github-tracker/issues/8)__
+
+* 2014-02-26 - Lala
+
