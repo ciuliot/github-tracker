@@ -22,7 +22,6 @@ var diveSync = require('diveSync');
 var http = require('http');
 var bootable = require('bootable');
 var bootable_enviromnent = require('bootable-environment');
-var passportSocketIo = require("passport.socketio");
 var cookie = require("cookie");
 var connect = require("connect");
 var GitHubApi = require("github");
