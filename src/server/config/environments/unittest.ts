@@ -16,6 +16,9 @@ class TestDataFactory {
 		getAllMilestones(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetAllMilestonesModel, data, callback); },
 		getLabels(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetLabelsModel, data, callback); },
 		repoIssues(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesModel, data, callback); },
+		getRepoIssue(data: any, callback: Function) { 
+			TestDataFactory.getOne(testModels.IssuesModel, { user: data.user, repo: data.repo, number: Number(data.number) }, callback); 
+		},
 		createComment(data: any, callback: Function) {
 			var payload = {
 				user: data.user,
@@ -131,7 +134,7 @@ class TestDataFactory {
 			TestDataFactory.save(testModels.IssuesModel, payload, callback);
 		},
 		edit: (data: any, callback: Function) => {
-			testModels.IssuesModel.findOne({ user: data.user, repo: data.repo, "result.number": Number(data.number) }, (err: any, issue: any) => {
+			testModels.IssuesModel.findOne({ user: data.user, repo: data.repo, number: Number(data.number) }, (err: any, issue: any) => {
 				if (data.assignee) {
 					issue.result.assignee = {
 				      "login": data.assignee,
@@ -154,6 +157,14 @@ class TestDataFactory {
 				    };
 				}
 
+				if (data.state) {
+					issue.state = data.state;
+				}
+
+				if (data.labels) {
+					issue.result.labels = data.labels.map((x:any) => { return { name: x } });
+				}
+
 				issue.save((err: any, data: any) => {
 					callback(err, TestDataFactory.convertResult(err, data));
 				});
@@ -169,6 +180,24 @@ class TestDataFactory {
 
 				callback(err, data);
 			}); 
+		},
+		createReference(data: any, callback: Function) {
+			var payload = {
+				user: data.user,
+				repo: data.repo,
+				ref: data.ref,
+				result: {
+					ref: data.ref,
+					url: "https://api.github.com/repos/octocat/Hello-World/git/" + data.ref,
+					object: {
+						type: "commit",
+						sha: data.sha,
+						url: "https://api.github.com/repos/octocat/Hello-World/git/commits/" + data.sha
+					}
+				}
+			}
+
+			TestDataFactory.save(testModels.GitDataGetReferenceModel, payload, callback);
 		}
 	}
 

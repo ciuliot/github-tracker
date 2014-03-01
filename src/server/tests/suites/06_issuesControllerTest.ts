@@ -247,6 +247,30 @@ vows.describe("IssuesController").addBatch({
 						should.exist(result.assignee);
 						result.assignee.login.should.eql("other_user");
 					}
+				}	
+			},
+			"phase": {
+				topic: testApi.httpPostTopic("/issues", { 
+					user: "utester", 
+					repository: "tracker", 
+					title: "new issue", 
+					body: {
+						description: "Check it out!"
+					} 
+				}),
+				"start work": {
+					topic: function (response: http.ClientResponse, textBody: string) {
+						var result = testApi.verifyJsonResponse(null, response, textBody);
+						testApi.httpPut("/issues/" + result.number, this.callback, { user: "utester", repository: "tracker", phase: "#inprogress" });
+					},
+					"returns updated issue": (err: any, response: http.ClientResponse, textBody: string) => {
+						var result = testApi.verifyJsonResponse(err, response, textBody);
+
+						console.log(JSON.stringify(result));
+
+						should.exist(result.phase);
+						result.phase.id.should.eql("#inprogress");
+					}
 				}
 				
 			}

@@ -259,8 +259,9 @@ class IssuesController extends abstractController {
 
 					tasks.push((getBranchCompleted: Function) => {
 						self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
-							if (!result) {
+							if (result.name === null) {
 								self.logger.info("Issue branch doesn't exists, trying to create new branch %s for issue %d", branchName, number);
+
 								async.waterfall([
 									(getMasterBranchCompleted: Function) => {
 										self.logger.info("Getting master branch for repo %s/%s", user, repository);
@@ -285,7 +286,7 @@ class IssuesController extends abstractController {
 										getBranchCompleted(err, result); 
 									});
 							} else {
-								getBranchCompleted(err, self.convertBranchInfo(result));
+								getBranchCompleted(err, result);
 							}				
 						});
 					});
@@ -308,6 +309,8 @@ class IssuesController extends abstractController {
 					} else {
 						message.state = "closed";
 					}
+
+					self.logger.info("Updating issue state to %s and labels to %s", message.state, JSON.stringify(message.labels));
 
 					self.getGitHubClient().issues.edit(message, (err: any, result: any) => {
 						if (!err) {
@@ -348,7 +351,6 @@ class IssuesController extends abstractController {
 				self.jsonResponse("Operation not allowed");
 			} else {
 				tasks.push((issue: any, getLabelsCompleted: Function) => {
-					self.logger.info(issue);
 					labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
 						getLabelsCompleted(err, issue, labels);
 					});
@@ -375,6 +377,7 @@ class IssuesController extends abstractController {
 				});
 
 				async.waterfall(tasks, (err: any, result: any) => {
+					/* istanbul ignore next */ 
 					if (err) {
 						self.logger.error("Error occured during issue update", err);	
 					} 

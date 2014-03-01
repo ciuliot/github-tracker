@@ -6,6 +6,7 @@ var model = [
 		repo: "tracker",
 		milestone: "1",
 		state: "open",
+		number: 1347,
 		result: {
 		    "url": "https://api.github.com/repos/octocat/Hello-World/issues/1347",
 		    "html_url": "https://github.com/octocat/Hello-World/issues/1347",
@@ -79,6 +80,7 @@ var model = [
 		repo: "tracker",
 		milestone: "1",
 		state: "open",
+		number: 1348,
 		result: {
 		    "url": "https://api.github.com/repos/octocat/Hello-World/issues/1348",
 		    "html_url": "https://github.com/octocat/Hello-World/issues/1348",
@@ -185,6 +187,7 @@ var model = [
 		repo: "tracker",
 		milestone: "1",
 		state: "open",
+		number: 1349,
 		result: {
 		    "url": "https://api.github.com/repos/octocat/Hello-World/issues/1349",
 		    "html_url": "https://github.com/octocat/Hello-World/issues/1349",
@@ -291,6 +294,7 @@ var model = [
 		repo: "tracker",
 		milestone: "1",
 		state: "closed",
+		number: 1350,
 		result: {
 		    "url": "https://api.github.com/repos/octocat/Hello-World/issues/1350",
 		    "html_url": "https://github.com/octocat/Hello-World/issues/1350",

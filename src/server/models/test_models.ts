@@ -37,6 +37,7 @@ var IssuesSchema = mongoose.Schema({
 	repo: String,
 	milestone: String,
 	state: String,
+	number: Number,
     result: mongoose.Schema.Types.Mixed
 });
 
