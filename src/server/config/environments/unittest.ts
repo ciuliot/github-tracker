@@ -56,6 +56,7 @@ class TestDataFactory {
 			var payload: any = {
 				user: data.user,
 				repo: data.repo,
+				number: number,
 				milestone: data.milestone,
 				state: "open",
 				result: {
@@ -128,6 +129,35 @@ class TestDataFactory {
 			};
 
 			TestDataFactory.save(testModels.IssuesModel, payload, callback);
+		},
+		edit: (data: any, callback: Function) => {
+			testModels.IssuesModel.findOne({ user: data.user, repo: data.repo, "result.number": Number(data.number) }, (err: any, issue: any) => {
+				if (data.assignee) {
+					issue.result.assignee = {
+				      "login": data.assignee,
+				      "id": 1,
+				      "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+				      "gravatar_id": "somehexcode",
+				      "url": "https://api.github.com/users/" + data.assignee,
+				      "html_url": "https://github.com/" + data.assignee,
+				      "followers_url": "https://api.github.com/users/octocat/followers",
+				      "following_url": "https://api.github.com/users/octocat/following{/other_user}",
+				      "gists_url": "https://api.github.com/users/octocat/gists{/gist_id}",
+				      "starred_url": "https://api.github.com/users/octocat/starred{/owner}{/repo}",
+				      "subscriptions_url": "https://api.github.com/users/octocat/subscriptions",
+				      "organizations_url": "https://api.github.com/users/octocat/orgs",
+				      "repos_url": "https://api.github.com/users/octocat/repos",
+				      "events_url": "https://api.github.com/users/octocat/events{/privacy}",
+				      "received_events_url": "https://api.github.com/users/octocat/received_events",
+				      "type": "User",
+				      "site_admin": false
+				    };
+				}
+
+				issue.save((err: any, data: any) => {
+					callback(err, TestDataFactory.convertResult(err, data));
+				});
+			});
 		}
 	};
 	gitdata = {

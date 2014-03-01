@@ -218,14 +218,37 @@ vows.describe("IssuesController").addBatch({
 				"returns error": testApi.verifyNoUserProvidedError()
 			},
 			"without repository": {
-				topic: testApi.httpPutTopic("/issues/*", { user: "user" }),
+				topic: testApi.httpPutTopic("/issues/0", { user: "user" }),
 
 				"returns error": testApi.verifyNoRepositoryProvidedError()
 			},
 			"without operation": {
-				topic: testApi.httpPutTopic("/issues/*", { user: "user", repository: "repo" }),
+				topic: testApi.httpPutTopic("/issues/0", { user: "user", repository: "repo" }),
 
 				"returns error": testApi.verifyErrorJsonResponse("Operation not allowed")
+			},
+			"collaborator": {
+				topic: testApi.httpPostTopic("/issues", { 
+					user: "utester", 
+					repository: "tracker", 
+					title: "new issue", 
+					body: {
+						description: "Check it out!"
+					} 
+				}),
+				"update issue": {
+					topic: function (response: http.ClientResponse, textBody: string) {
+						var result = testApi.verifyJsonResponse(null, response, textBody);
+						testApi.httpPut("/issues/" + result.number, this.callback, { user: "utester", repository: "tracker", collaborator: "other_user" });
+					},
+					"returns updated issue": (err: any, response: http.ClientResponse, textBody: string) => {
+						var result = testApi.verifyJsonResponse(err, response, textBody);
+
+						should.exist(result.assignee);
+						result.assignee.login.should.eql("other_user");
+					}
+				}
+				
 			}
 		}
 	}

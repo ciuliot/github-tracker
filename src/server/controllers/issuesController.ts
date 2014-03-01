@@ -234,7 +234,6 @@ class IssuesController extends abstractController {
 		} else if (!repository) {
 			self.jsonResponse("Parameter 'repository' was not provided");
 		} else {
-
 			var message: any = {				
 				user: user,
 				repo: repository,
@@ -349,6 +348,7 @@ class IssuesController extends abstractController {
 				self.jsonResponse("Operation not allowed");
 			} else {
 				tasks.push((issue: any, getLabelsCompleted: Function) => {
+					self.logger.info(issue);
 					labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
 						getLabelsCompleted(err, issue, labels);
 					});
