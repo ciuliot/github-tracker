@@ -161,7 +161,7 @@ module.exports = function (grunt) {
 
     // Default task(s).
     grunt.registerTask('default', ['typescript:server', 'typescript:webapp' , 'copy:dist', 'stylus']);
-    grunt.registerTask('build', ['clean', 'get-revision', 'bump', 'default', 'copy:build', 'compress:build']);
+    grunt.registerTask('build', ['clean', 'get-revision', 'bump-only', 'default', 'copy:build', 'compress:build']);
     grunt.registerTask('docs', ['yuidoc', 'copy:docs', 'compress:docs']);
     grunt.registerTask('tests', ['clean', 'default', 'typescript:server_tests', 'vows:server']);
 };
