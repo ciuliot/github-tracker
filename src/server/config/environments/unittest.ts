@@ -165,6 +165,14 @@ class TestDataFactory {
 					issue.result.labels = data.labels.map((x:any) => { return { name: x } });
 				}
 
+				if (data.body) {
+					issue.result.body = data.body;
+				}
+
+				if (data.body) {
+					issue.result.title = data.title;
+				}
+
 				issue.save((err: any, data: any) => {
 					callback(err, TestDataFactory.convertResult(err, data));
 				});

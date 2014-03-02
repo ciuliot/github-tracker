@@ -282,7 +282,56 @@ vows.describe("IssuesController").addBatch({
 						}
 					}
 				}
-				
+			},
+			"body": {
+				topic: testApi.httpPostTopic("/issues", { 
+					user: "utester", 
+					repository: "tracker", 
+					title: "new feature", 
+					body: {
+						description: "Check it out!",
+						type: { id: "feature" },
+						estimate: "XL"
+					} 
+				}),
+				"update issue": {
+					topic: function (response: http.ClientResponse, textBody: string) {
+						var result = testApi.verifyJsonResponse(null, response, textBody);
+						testApi.httpPut("/issues/" + result.number, this.callback, { 
+							user: "utester", 
+							repository: "tracker", 
+							body: {
+								title: "new bug",
+								description: "Woo!",
+								type: { id: "bug" },
+								category: { id: "@backend" },
+								estimate: "S",
+								expectedBehavior: "Will function properly",
+								environment: "Desktop"
+							} 
+						});
+					},
+					"returns updated issue": (err: any, response: http.ClientResponse, textBody: string) => {
+						var result = testApi.verifyJsonResponse(err, response, textBody);
+
+						should.exist(result.number);
+						console.log(JSON.stringify(result));
+						result.should.eql({
+							title: "new bug",
+							category: { color: '#00ff00', id: '@backend', name: 'backend' },
+							phase: { color: null, id: '#backlog', name: 'backlog' },
+							type: { color: '#f29513', name: 'bug', id: 'bug' }, 
+							branch: { name: null, url: null },
+							number: result.number,
+							compareUrl: null,
+							description: 'Woo!', 
+							assignee: { login: null, avatar_url: null }, 
+							estimate: 'S',
+							expectedBehavior: "Will function properly",
+							environment: 'Desktop'
+						});
+					}
+				}
 			}
 		}
 	}

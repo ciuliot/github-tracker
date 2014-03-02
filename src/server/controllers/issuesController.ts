@@ -322,7 +322,7 @@ class IssuesController extends abstractController {
 				});
 			} 
 			else if (body !== undefined) {
-				self.logger.info("Updating issue %s - updating body to %o", number, body);
+				self.logger.info("Updating issue %s - updating body to %s", number, body);
 
 				tasks = [
 					(renderTemplateCompleted: Function) => {
