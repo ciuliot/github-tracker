@@ -10,7 +10,8 @@ class TestDataFactory {
 		get(data: any, callback: Function) { TestDataFactory.getOne(testModels.UserGetModel, data, callback); }
 	};
 	repos = {
-		getCollaborators(data: any, callback: Function) { TestDataFactory.get(testModels.ReposGetCollaboratorsModel, data, callback); }
+		getCollaborators(data: any, callback: Function) { TestDataFactory.get(testModels.ReposGetCollaboratorsModel, data, callback); },
+		getContent(data: any, callback: Function) { TestDataFactory.getOne(testModels.ReposContentModel, data, callback); }
 	};
 	issues = {
 		getAllMilestones(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetAllMilestonesModel, data, callback); },

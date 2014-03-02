@@ -27,19 +27,28 @@ class ImpedimentsController extends abstractController {
 			path: configuration.impedimentsFile
 		};
 
-		async.waterfall([
-			(getImpedimentsFileComplete: Function) => {
-				self.getGitHubClient().repos.getContent(requestBody, getImpedimentsFileComplete);
-			}
-		], (err: any, result: any) => {
-			if (err) {
-				self.logger.error("Error occured during impediments retrieval", err);	
-			} else {
-				self.logger.debug(result);
-			}
+		if (!requestBody.user) {
+			self.jsonResponse("Parameter 'user' was not provided");
+		} else if (!requestBody.repo) {
+			self.jsonResponse("Parameter 'repository' was not provided");
+		} else {
+			self.logger.info("Loading impediments");
 
-			self.jsonResponse(err);
-		});	
+			async.waterfall([
+				(getImpedimentsFileComplete: Function) => {
+					self.getGitHubClient().repos.getContent(requestBody, getImpedimentsFileComplete);
+				}
+			], (err: any, result: any) => {
+				/* istanbul ignore if */
+				if (err) {
+					self.logger.error("Error occured during impediments retrieval", err);	
+				} else {
+					result = new Buffer(result.content, "base64").toString("utf8");
+				}
+
+				self.jsonResponse(err, result);
+			});	
+		}
 	}
 
 	update() {

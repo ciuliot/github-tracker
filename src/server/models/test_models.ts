@@ -16,6 +16,16 @@ var ReposGetCollaboratorsSchema = mongoose.Schema({
 
 export var ReposGetCollaboratorsModel = mongoose.model('ReposGetCollaborators', ReposGetCollaboratorsSchema);
 
+var ReposContentSchema = mongoose.Schema({
+	user: String,
+	repo: String,
+	path: String,
+    result: mongoose.Schema.Types.Mixed
+});
+
+export var ReposContentModel = mongoose.model('ReposContent', ReposContentSchema);
+
+
 var IssuesGetAllMilestonesSchema = mongoose.Schema({
 	user: String,
 	repo: String,
