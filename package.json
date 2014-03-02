@@ -20,13 +20,13 @@
     "grunt-zip": "*",
     "grunt-contrib-clean": "*",
     "grunt-contrib-compress": "*",
-    "grunt-bumpup": "*",
     "grunt-contrib-yuidoc": "*",
     "grunt-vows-runner": "*",
     "vows": "*",
     "should": "*",
     "grunt-contrib-stylus": "*",
-    "istanbul": "*"
+    "istanbul": "*",
+    "grunt-bump": "*"
   },
   "dependencies": {
     "moment": "*",
@@ -53,7 +53,6 @@
     "passport-http": "*",
     "request": "*",
     "coveralls": "*",
-    "github": "*",
     "socket.io": "*",
     "cookie": "*",
     "connect": "*"

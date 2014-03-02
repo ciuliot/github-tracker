@@ -91,7 +91,7 @@ module.exports = function (grunt) {
             }
         },
         clean: ['dist', 'package', './<%= pkg.name %>.tgz'],
-        bumpup: {
+        bump: {
             file: 'package.json',
             options: {
                 version: function (old, type) {
@@ -127,7 +127,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-zip');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-compress');
-    grunt.loadNpmTasks('grunt-bumpup');
+    grunt.loadNpmTasks('grunt-bump');
     grunt.loadNpmTasks('grunt-contrib-yuidoc');
     grunt.loadNpmTasks('grunt-contrib-stylus');
     grunt.loadNpmTasks('grunt-vows-runner');
@@ -161,7 +161,7 @@ module.exports = function (grunt) {
 
     // Default task(s).
     grunt.registerTask('default', ['typescript:server', 'typescript:webapp' , 'copy:dist', 'stylus']);
-    grunt.registerTask('build', ['clean', 'get-revision', 'bumpup', 'default', 'copy:build', 'compress:build']);
+    grunt.registerTask('build', ['clean', 'get-revision', 'bump', 'default', 'copy:build', 'compress:build']);
     grunt.registerTask('docs', ['yuidoc', 'copy:docs', 'compress:docs']);
     grunt.registerTask('tests', ['clean', 'default', 'typescript:server_tests', 'vows:server']);
 };

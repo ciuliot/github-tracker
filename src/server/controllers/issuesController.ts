@@ -392,6 +392,7 @@ class IssuesController extends abstractController {
 		templateName = templateName || "default";
 		var self = this;
 				
+		/* istanbul ignore next */ 
 		if (!fs.existsSync(path.resolve(configuration.templatesDir(), templateName))) {
 			templateName = "default";
 		}
