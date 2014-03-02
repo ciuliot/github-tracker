@@ -158,7 +158,7 @@ class TestDataFactory {
 				}
 
 				if (data.state) {
-					issue.state = data.state;
+					issue.state = issue.result.state = data.state;
 				}
 
 				if (data.labels) {
