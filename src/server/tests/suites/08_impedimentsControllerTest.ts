@@ -17,12 +17,10 @@ vows.describe("ImpedimentsController").addBatch({
 		topic: testApi.startServerTopic(),
 		"Index without user and repository": {
 			topic: testApi.httpGetTopic("/impediments/0"),
-
 			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Index without user": {
 			topic: testApi.httpGetTopic("/impediments/0?repository=repo"),
-
 			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Index without repository": {
@@ -48,6 +46,25 @@ vows.describe("ImpedimentsController").addBatch({
 
 			}
 
+		},
+		"Update without user": {
+			topic: testApi.httpPutTopic("/impediments/0", { repository: "repo", description: "Doesn't work" }),
+			"returns error": testApi.verifyNoUserProvidedError()
+		},
+		"Update without repository": {
+			topic: testApi.httpPutTopic("/impediments/0", { user: "user", description: "Doesn't work" }),
+			"returns error": testApi.verifyNoRepositoryProvidedError()
+		},
+		"Update without description": {
+			topic: testApi.httpPutTopic("/impediments/0", { user: "user", repository: "repo" }),
+			"returns error": testApi.verifyNoParameterProvidedError("description")
+		},
+		"Update": {
+			topic: testApi.httpPutTopic("/impediments/1347", { user: "utester", repository: "tracker", description: "Waiting for customer" }),
+			"returns response": (err: any, response: http.ClientResponse, textBody: string) => {
+				var result = testApi.verifyJsonResponse(err, response, textBody);
+
+			}
 		}
 	}
 }).export(module);

@@ -11,7 +11,23 @@ class TestDataFactory {
 	};
 	repos = {
 		getCollaborators(data: any, callback: Function) { TestDataFactory.get(testModels.ReposGetCollaboratorsModel, data, callback); },
-		getContent(data: any, callback: Function) { TestDataFactory.getOne(testModels.ReposContentModel, data, callback); }
+		getContent(data: any, callback: Function) { 
+			TestDataFactory.getOne(testModels.ReposContentModel, {
+				user: data.user,
+				repo: data.repo,
+				path: data.path
+			}, callback); 
+		},
+		updateFile(data: any, callback: Function) { 
+			testModels.ReposContentModel.findOne({
+				user: data.user,
+				repo: data.repo,
+				path: data.path
+			}, (err: any, file: any) => {
+				file.content = data.content;
+				file.save(callback);
+			}); 
+		}
 	};
 	issues = {
 		getAllMilestones(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetAllMilestonesModel, data, callback); },
