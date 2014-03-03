@@ -54,15 +54,16 @@ class Configuration {
      */
     static logger: log4js.Logger;
 
-    static phaseRegEx = /\#(.+)/;
+    static phaseRegEx = /\#\d\s(.+)/;
     static categoryRegEx = /\@(.+)/;
 
     static phaseNames: any = { 
-        backlog: "#backlog",
-        onhold: "#onhold", 
-        inprogress: "#inprogress", 
-        implemented: "#implemented", 
-        closed: "#closed" 
+        backlog: "#1 backlog",
+        onhold: "#2 onhold", 
+        inprogress: "#3 inprogress", 
+        inreview: "#4 inreview", 
+        implemented: "#5 implemented", 
+        closed: "#6 closed" 
     };
 
     static defaultCategoryName: string = "@other";

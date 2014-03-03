@@ -109,8 +109,8 @@ var model = [
 		    },
 		    "labels": [
 		      {
-		        "url": "https://api.github.com/repos/octocat/Hello-World/labels/#inprogress",
-			    "name": "#inprogress",
+		        "url": "https://api.github.com/repos/octocat/Hello-World/labels/#3 inprogress",
+			    "name": "#3 inprogress",
 			    "color": "000001"
 		      }, {
 		      	"url": "https://api.github.com/repos/octocat/Hello-World/labels/@frontend",
@@ -216,8 +216,8 @@ var model = [
 		    },
 		    "labels": [
 		      {
-		        "url": "https://api.github.com/repos/octocat/Hello-World/labels/#implemented",
-		   		"name": "#implemented",
+		        "url": "https://api.github.com/repos/octocat/Hello-World/labels/#5 implemented",
+		   		"name": "#5 implemented",
 		    	"color": "000002"
 		      }, {
 		      	"url": "https://api.github.com/repos/octocat/Hello-World/labels/@backend",

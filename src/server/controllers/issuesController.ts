@@ -132,30 +132,34 @@ class IssuesController extends abstractController {
 
 			steps.push(
 				(result: any[], getIssueBranchesCompleted: Function) => {
-					var issuesToRetrieve: any[] = [];
-					self.logger.debug("Looking for issue branches");
+					try {
+						var issuesToRetrieve: any[] = [];
+						self.logger.debug("Looking for issue branches");
 
-					for (var i = 0; i < result.length; i++) {
-						var issue: any = result[i];
+						for (var i = 0; i < result.length; i++) {
+							var issue: any = result[i];
 
-						if (issue.phase.id !== configuration.phaseNames.backlog && issue.phase.id !== configuration.phaseNames.closed) {
-							issuesToRetrieve = issuesToRetrieve.concat(issue);
-						} else {
-							issue.branch = self.convertBranchInfo();
+							if (issue.phase.id !== configuration.phaseNames.backlog && issue.phase.id !== configuration.phaseNames.closed) {
+								issuesToRetrieve = issuesToRetrieve.concat(issue);
+							} else {
+								issue.branch = self.convertBranchInfo();
+							}
 						}
-					}
 
-					self.logger.debug("Found %d issues for branch retrieval", issuesToRetrieve.length);
+						self.logger.debug("Found %d issues for branch retrieval", issuesToRetrieve.length);
 
-					async.forEach(issuesToRetrieve, (issue: any, cb: Function) => {
-						self.getIssueBranchInfo(issue.number, user, repository, (err: any, result: any) => {
-							issue.branch = result;
-							issue.compareUrl = self.getCompareUrl(user, repository, issue.phase.id, issue.branch);
-							cb();
+						async.forEach(issuesToRetrieve, (issue: any, cb: Function) => {
+							self.getIssueBranchInfo(issue.number, user, repository, (err: any, result: any) => {
+								issue.branch = result;
+								issue.compareUrl = self.getCompareUrl(user, repository, issue.phase.id, issue.branch);
+								cb();
+							});
+						}, (err: any) => { 
+							getIssueBranchesCompleted(err, result); 
 						});
-					}, (err: any) => { 
-						getIssueBranchesCompleted(err, result); 
-					});
+					} catch (ex) {
+						getIssueBranchesCompleted(ex);
+					}
 			});
 
 			if (transformFunction !== null) {

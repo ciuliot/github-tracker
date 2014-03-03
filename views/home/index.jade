@@ -26,65 +26,69 @@ block head
 				<!-- span.badge.pull-right(data-bind="text: (id === null || id === 'none') ? '' : open_issues") -->
 				span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data.number())") 
 
-	- var columnCss = "css: { 'col-lg-2': $root.closedIssuesVisible, 'col-lg-3': !$root.closedIssuesVisible(),";
-	- columnCss +=    " 'col-lg-offset-1': ($root.closedIssuesVisible() && $index() === 0) }, visible: isColumnVisible()";
-
 	script#issue-phase-header-template(type="text/html")
-		- var headerDataBind = "text: name, " + columnCss;
-		.phase-header(data-bind=headerDataBind)
+		.col-lg-3.phase-header(data-bind="text: name, visible: isColumnVisible()")
+
+	script#issue-phase-template(type="text/html")
+		.col-lg-3(data-bind="template: { name: 'issue-template', foreach: filteredIssues}, visible: isColumnVisible()")
 
 	script#issue-category-header-template(type="text/html")
 		li: a(data-bind="text: name, attr: { href: id() }")
 
-	script#issue-phase-template(type="text/html")
-		- var columnDataBind = "foreach: filteredIssues, " + columnCss
-		.col-lg-2(data-bind=columnDataBind)
-			.panel.panel-default.issue
-				.panel-heading(data-bind="style: { background: category().color() }")
-					strong(data-bind="text: ('#' + number() + ' '), tooltip: { title: category().name() }")
-					a.title(data-bind="click: $root.issueOpen.bind($root, $data)", data-toggle="modal", data-target="#issue-modal")
-						strong(data-bind="text: title")
-					span.badge.pull-right(data-bind="text: estimate")
+	script#issue-template(type="text/html")
+		.panel.panel-default.issue
+			.panel-heading(data-bind="style: { background: category().color() }")
+				strong(data-bind="text: ('#' + number() + ' '), tooltip: { title: category().name() }")
+				a.title(data-bind="click: $root.issueOpen.bind($root, $data)", data-toggle="modal", data-target="#issue-modal")
+					strong(data-bind="text: title")
+				span.badge.pull-right(data-bind="text: estimate")
 
-				.panel-body(data-bind="css: { hide: (description() === null || description().length === 0) && $parent.id() === '#closed' }")
-					img.avatar(data-bind="attr: { src: assignee().avatar_url() }, visible: assignee().avatar_url() !== null")
-					span.type.label.label-default(data-bind="text: type().name, style: { 'background-color': '#' + type().color() }")
-					.actions.btn-group.btn-group-sm.pull-right
-						.btn-group.btn-group-sm
-							button.btn.btn-default.dropdown-toggle(type="button", data-bind=" css: { hide: !canAssign() } , tooltip: { title: assigneeTooltip, container: 'body' }", data-toggle="dropdown")
-								img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: assignee().avatar_url() || '/images/question_mark.svg' }")
-								span.caret
-							ul.dropdown-menu(role="menu", data-bind="foreach: collaborators", aria-labelledby="assignee-menu")
-								li(data-bind="css: { active: login() === $parent.assignee().login() }")
-									a(href="#", data-bind="click: $root.assignIssue.bind($root, $parent, $data)") 
-										img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: avatar_url() || '/images/question_mark.svg' }")
-										span(data-bind="text: login() || 'Unassigned' ")
-						.btn-group.btn-group-sm
-							button.btn.btn-default.dropdown-toggle(type="button", data-bind="css: { hide: !haveBranch() }, tooltip: { title: 'Branch information', container: 'body' }", data-toggle="dropdown")
-								span.glyphicon.glyphicon-random.issue-assignee-avatar
-								span.caret
-							ul.dropdown-menu(role="menu", aria-labelledby="branch-menu")
-								li.dropdown-header.checkout-command
-									form: input(type="text", readonly="readonly", onclick="this.select()", data-bind="attr: { value: checkoutCommand() }")
-								li(role="presentation"): a(role="menuitem", data-bind="attr: { href: 'https://github.com/ciuliot/github-tracker/tree/' + branch().name() }", target="_blank") Open branch on GitHub
-								
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }, click: $root.issueStart.bind($root, $data), tooltip: { title: 'Start work', container: 'body' }")
-							span.glyphicon.glyphicon-play
-						a.btn.btn-default(target="_blank", data-bind="attr: { href: compareUrl() === null ? 'javascript:void(0)' : compareUrl() }, css: { hide: !canComplete() }, tooltip: { title: 'Complete work', container: 'body' }")
-							span.glyphicon.glyphicon-ok
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canReview() }, click: $root.issueReview.bind($root, $data), tooltip: { title: 'Review work', container: 'body' }")
-							span.glyphicon.glyphicon-screenshot
-						button.btn.btn-default(type="button", data-toggle="modal" data-target="#impediment-modal"
-							data-bind="css: { hide: !canPause() }, click: $root.issuePauseOpen.bind($root, $data), tooltip: { title: 'Put work on hold', container: 'body' }")
-							span.glyphicon.glyphicon-pause
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canStop() }, click: $root.issueStop.bind($root, $data), tooltip: { title: 'Stop work', container: 'body' }")
-							span.glyphicon.glyphicon-stop
-						button.btn.btn-default(type="button", data-bind="css: { hide: !canAccept() }, click: $root.issueAccept.bind($root, $data), tooltip: { title: 'Accept implementation', container: 'body' }")
-							span.glyphicon.glyphicon-thumbs-up
-						button.btn.btn-default(type="button", data-toggle="modal" data-target="#reject-implementation-modal"
-							data-bind="css: { hide: !canReject() }, click: $root.issueRejectOpen.bind($root, $data), tooltip: { title: 'Reject implementation', container: 'body' }")
-							span.glyphicon.glyphicon-thumbs-down		
+			.panel-body
+				img.avatar(data-bind="attr: { src: assignee().avatar_url() }, visible: assignee().avatar_url() !== null")
+				span.type.label.label-default(data-bind="text: type().name, style: { 'background-color': '#' + type().color() }")
+				.actions.btn-group.btn-group-sm.pull-right
+					.btn-group.btn-group-sm
+						button.btn.btn-default.dropdown-toggle(type="button", data-bind=" css: { hide: !canAssign() } , tooltip: { title: assigneeTooltip, container: 'body' }", data-toggle="dropdown")
+							img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: assignee().avatar_url() || '/images/question_mark.svg' }")
+							span.caret
+						ul.dropdown-menu(role="menu", data-bind="foreach: collaborators", aria-labelledby="assignee-menu")
+							li(data-bind="css: { active: login() === $parent.assignee().login() }")
+								a(href="#", data-bind="click: $root.assignIssue.bind($root, $parent, $data)") 
+									img.img-rounded.issue-assignee-avatar(data-bind="attr: { src: avatar_url() || '/images/question_mark.svg' }")
+									span(data-bind="text: login() || 'Unassigned' ")
+					.btn-group.btn-group-sm
+						button.btn.btn-default.dropdown-toggle(type="button", data-bind="css: { hide: !haveBranch() }, tooltip: { title: 'Branch information', container: 'body' }", data-toggle="dropdown")
+							span.glyphicon.glyphicon-random.issue-assignee-avatar
+							span.caret
+						ul.dropdown-menu(role="menu", aria-labelledby="branch-menu")
+							li.dropdown-header.checkout-command
+								form: input(type="text", readonly="readonly", onclick="this.select()", data-bind="attr: { value: checkoutCommand() }")
+							li(role="presentation"): a(role="menuitem", data-bind="attr: { href: 'https://github.com/ciuliot/github-tracker/tree/' + branch().name() }", target="_blank") Open branch on GitHub
+							
+					button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }, click: $root.issueStart.bind($root, $data), tooltip: { title: 'Start work', container: 'body' }")
+						span.glyphicon.glyphicon-play
+					a.btn.btn-default(target="_blank", data-bind="attr: { href: compareUrl() === null ? 'javascript:void(0)' : compareUrl() }, css: { hide: !canComplete() }, tooltip: { title: 'Complete work', container: 'body' }")
+						span.glyphicon.glyphicon-ok
+					button.btn.btn-default(type="button", data-bind="css: { hide: !canReview() }, click: $root.issueReview.bind($root, $data), tooltip: { title: 'Review work', container: 'body' }")
+						span.glyphicon.glyphicon-screenshot
+					button.btn.btn-default(type="button", data-toggle="modal" data-target="#impediment-modal"
+						data-bind="css: { hide: !canPause() }, click: $root.issuePauseOpen.bind($root, $data), tooltip: { title: 'Put work on hold', container: 'body' }")
+						span.glyphicon.glyphicon-pause
+					button.btn.btn-default(type="button", data-bind="css: { hide: !canStop() }, click: $root.issueStop.bind($root, $data), tooltip: { title: 'Stop work', container: 'body' }")
+						span.glyphicon.glyphicon-stop
+					button.btn.btn-default(type="button", data-bind="css: { hide: !canAccept() }, click: $root.issueAccept.bind($root, $data), tooltip: { title: 'Accept implementation', container: 'body' }")
+						span.glyphicon.glyphicon-thumbs-up
+					button.btn.btn-default(type="button", data-toggle="modal" data-target="#reject-implementation-modal"
+						data-bind="css: { hide: !canReject() }, click: $root.issueRejectOpen.bind($root, $data), tooltip: { title: 'Reject implementation', container: 'body' }")
+						span.glyphicon.glyphicon-thumbs-down		
 					span.description(data-bind="text: description")
+
+	script#issue-wrap-template(type="text/html")
+		<!-- ko foreach: filteredIssues -->
+		.col-lg-3
+			<!-- ko template: { name: 'issue-template' } -->
+			<!-- /ko --> 
+		<!-- /ko -->
 
 block body
 	#impediment-modal.modal.fade(data-bind="with: impediment")
@@ -131,7 +135,7 @@ block body
 							label(for="type") Issue type:
 							br
 							.btn-group.btn-group-sm(data-bind="foreach: mainLabelsViewModel.labels().types")
-								button.btn.btn-default(type="button", data-bind="text: name, css: { 'btn-primary': id() === $parent.type().id() }, click: $root.changeDetailIssueType.bind($root, $data)")		
+								button.btn.btn-default(type="button", data-bind="text: name, css: { active: id() === $parent.type().id() }, click: $root.changeDetailIssueType.bind($root, $data)")		
 						.form-data
 							label(for="category") Category:
 							select#category.form-control(data-bind="options: mainLabelsViewModel.labels().categories, optionsText: 'name', optionsValue: 'id', value: category().id") 
@@ -181,8 +185,17 @@ block body
 			ul.nav.navbar-nav.navbar-right
 				li: p.saving-indicator.navbar-text(data-bind="css: { invisible: savingCount() == 0 }")
 				li: p.loading-indicator.navbar-text(data-bind="css: { invisible: loadingCount() == 0 }")
-				li: button.btn.btn-default.navbar-btn(type="button", data-bind="tooltip: { title: $root.closedIssuesVisible() ? 'Hide closed issues' : 'Show closed issues', container: 'body', placement: 'bottom' }, click: $root.toggleClosedIssuesVisibility.bind($root)")
-					span.glyphicon(data-bind="css: { 'glyphicon-eye-open': !$root.closedIssuesVisible(), 'glyphicon-eye-close': $root.closedIssuesVisible() }")
+				li: .btn-group
+					button.btn.btn-default.navbar-btn(type="button", 
+						data-bind="tooltip: { title: 'View tasks in backlog', container: 'body', placement: 'bottom' }, click: $root.selectMode.bind($root, 'backlog'), css: { active: $root.mode() === 'backlog' }")
+						span.glyphicon.glyphicon-share-alt
+					button.btn.btn-default.navbar-btn(type="button", 
+						data-bind="tooltip: { title: 'View task board', container: 'body', placement: 'bottom' }, click: $root.selectMode.bind($root, 'board'), css: { active: $root.mode() === 'board' }")
+						span.glyphicon.glyphicon-list-alt
+					button.btn.btn-default.navbar-btn(type="button", 
+						data-bind="tooltip: { title: 'View closed tasks', container: 'body', placement: 'bottom' }, click: $root.selectMode.bind($root, 'closed'), css: { active: $root.mode() === 'closed' }")
+						span.glyphicon.glyphicon-folder-close
+					
 				li
 					form.navbar-form(role="form")
 						.form-group
@@ -214,8 +227,12 @@ block body
 		.row.phases(data-bind="template: { name: 'issue-phase-header-template', foreach: phases }")
 	.container-fluid
 		<!-- ko foreach: issuesViewModel.categories() -->
-		div(data-bind="visible: visibleIssueCount() > 0, attr: { href: visibleIssueCount() }")
-			.row.phase(data-bind="template: { name: 'issue-phase-template', foreach: phases} , css: { 'top-priority': isTopPriority }")
+		div(data-bind="visible: $root.mode() === 'board' && visibleIssueCount() > 0")
+			.row.phase(data-bind="template: { name: 'issue-phase-template', foreach: phases } , css: { 'top-priority': isTopPriority }")
+		<!-- /ko -->
+		<!-- ko foreach: issuesViewModel.categories() -->
+		div(data-bind="visible: $root.mode() !== 'board'")
+			.row.phase(data-bind="template: { name: 'issue-wrap-template', foreach: rows } , css: { 'top-priority': isTopPriority }, visible: rows().length > 0")
 		<!-- /ko -->
 				
 				

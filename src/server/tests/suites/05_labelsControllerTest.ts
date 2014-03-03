@@ -48,21 +48,23 @@ vows.describe("LabelsController").addBatch({
 					     { color: '#00ff00', id: '@backend', name: 'backend' },
 					     { color: null, id: '@other', name: 'other' } ],
 					phases: 
-					   [ { color: null, id: '#backlog', name: 'backlog' },
-					     { color: '#000000', id: '#onhold', name: 'onhold' },
-					     { color: '#000001', id: '#inprogress', name: 'inprogress' },
-					     { color: '#000002', id: '#implemented', name: 'implemented' },
-					     { color: null, id: '#closed', name: 'closed' } ],
+					   [ { color: null, id: '#1 backlog', name: 'backlog' },
+					     { color: '#000000', id: '#2 onhold', name: 'onhold' },
+					     { color: '#000001', id: '#3 inprogress', name: 'inprogress' },
+					     { color: '#000002', id: '#4 inreview', name: 'inreview' },
+					     { color: '#000002', id: '#5 implemented', name: 'implemented' },
+					     { color: null, id: '#6 closed', name: 'closed' } ],
 					types: 
 					   [ { color: '#f29513', id: 'bug', name: 'bug' },
 					     { color: '#0000ff', id: 'feature', name: 'feature' } ],
 					declaration: 
 					   { phases: 
-					      { backlog: '#backlog',
-					        onhold: '#onhold',
-					        inprogress: '#inprogress',
-					        implemented: '#implemented',
-					        closed: '#closed' },
+					      { backlog: '#1 backlog',
+					        onhold: '#2 onhold',
+					        inprogress: '#3 inprogress',
+					        inreview: '#4 inreview',
+					        implemented: '#5 implemented',
+					        closed: '#6 closed' },
 					     defaultCategory: '@other' 
 					 	}
 				});

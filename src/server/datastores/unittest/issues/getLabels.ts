@@ -23,8 +23,8 @@ var model = [
 		user: "utester",
 		repo: "tracker",
 		result: {
-		    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#onhold",
-		    "name": "#onhold",
+		    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#2 onhold",
+		    "name": "#2 onhold",
 		    "color": "000000"
 		  }
 	}),
@@ -32,8 +32,8 @@ var model = [
 		user: "utester",
 		repo: "tracker",
 		result: {
-		    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#inprogress",
-		    "name": "#inprogress",
+		    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#3 inprogress",
+		    "name": "#3 inprogress",
 		    "color": "000001"
 		  }
 	}),
@@ -41,8 +41,17 @@ var model = [
 		user: "utester",
 		repo: "tracker",
 		result: {
-		    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#implemented",
-		    "name": "#implemented",
+		    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#4 inreview",
+		    "name": "#4 inreview",
+		    "color": "000002"
+		  }
+	}),
+	new testModels.IssuesGetLabelsModel({
+		user: "utester",
+		repo: "tracker",
+		result: {
+		    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#5 implemented",
+		    "name": "#5 implemented",
 		    "color": "000002"
 		  }
 	}),

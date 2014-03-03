@@ -65,7 +65,7 @@ vows.describe("IssuesController").addBatch({
 						issues: [{
 							title: 'Issue in backlog', 
 					        category: { color: null, id: '@other', name: 'other' }, 
-							phase: { color: null, id: '#backlog', name: 'backlog' }, 
+							phase: { color: null, id: '#1 backlog', name: 'backlog' }, 
 					        type: { color: null, name: null, id: null }, 
 					        number: 1347, 
 					        compareUrl: null, 
@@ -75,7 +75,7 @@ vows.describe("IssuesController").addBatch({
 						}, {
 							title: 'Issue in progress', 
 					        category: { color: "#ff0000", id: '@frontend', name: 'frontend' }, 
-							phase: { color: "#000001", id: '#inprogress', name: 'inprogress' }, 
+							phase: { color: "#000001", id: '#3 inprogress', name: 'inprogress' }, 
 					        type: { color: '#0000ff', name: 'feature', id: 'feature' }, 
 					        number: 1348, 
 					        compareUrl: 'https://github.com/utester/tracker/compare/master...issue/1348', 
@@ -90,7 +90,7 @@ vows.describe("IssuesController").addBatch({
 						}, {
 							title: 'Implemented bug', 
 					        category: { color: '#00ff00', id: '@backend', name: 'backend' },
-							phase: { color: '#000002', id: '#implemented', name: 'implemented' }, 
+							phase: { color: '#000002', id: '#5 implemented', name: 'implemented' }, 
 					        type: { color: '#f29513', id: 'bug', name: 'bug' }, 
 					        number: 1349, 
 					        compareUrl: null, 
@@ -103,7 +103,7 @@ vows.describe("IssuesController").addBatch({
 						}, {
 							title: 'Completed task', 
 					        category: { color: '#00ff00', id: '@backend', name: 'backend' },
-							phase: { color: null, id: '#closed', name: 'closed' }, 
+							phase: { color: null, id: '#6 closed', name: 'closed' }, 
 					        type: { name: null, id: null, color: null }, 
 					        number: 1350, 
 					        compareUrl: null, 
@@ -162,7 +162,7 @@ vows.describe("IssuesController").addBatch({
 					result.should.eql({
 						title: "new issue",
 						category: { color: null, id: '@other', name: 'other' },
-						phase: { color: null, id: '#backlog', name: 'backlog' },
+						phase: { color: null, id: '#1 backlog', name: 'backlog' },
 						type: { name: null, id: null, color: null }, 
 						number: result.number,
 						compareUrl: null,
@@ -192,7 +192,7 @@ vows.describe("IssuesController").addBatch({
 					result.should.eql({
 						title: "new bug",
 						category: { color: '#00ff00', id: '@backend', name: 'backend' },
-						phase: { color: null, id: '#backlog', name: 'backlog' },
+						phase: { color: null, id: '#1 backlog', name: 'backlog' },
 						type: { name: 'bug', id: 'bug', color: '#f29513' }, 
 						number: result.number,
 						compareUrl: null,
@@ -261,24 +261,24 @@ vows.describe("IssuesController").addBatch({
 				"start work": {
 					topic: function (response: http.ClientResponse, textBody: string) {
 						var result = testApi.verifyJsonResponse(null, response, textBody);
-						testApi.httpPut("/issues/" + result.number, this.callback, { user: "utester", repository: "tracker", phase: "#inprogress" });
+						testApi.httpPut("/issues/" + result.number, this.callback, { user: "utester", repository: "tracker", phase: "#3 inprogress" });
 					},
 					"returns updated issue": (err: any, response: http.ClientResponse, textBody: string) => {
 						var result = testApi.verifyJsonResponse(err, response, textBody);
 
 						should.exist(result.phase);
-						result.phase.id.should.eql("#inprogress");
+						result.phase.id.should.eql("#3 inprogress");
 					},
 					"close": {
 						topic: function (response: http.ClientResponse, textBody: string) {
 							var result = testApi.verifyJsonResponse(null, response, textBody);
-							testApi.httpPut("/issues/" + result.number, this.callback, { user: "utester", repository: "tracker", phase: "#closed" });
+							testApi.httpPut("/issues/" + result.number, this.callback, { user: "utester", repository: "tracker", phase: "#6 closed" });
 						},
 						"returns updated issue": (err: any, response: http.ClientResponse, textBody: string) => {
 							var result = testApi.verifyJsonResponse(err, response, textBody);
 
 							should.exist(result.phase);
-							result.phase.id.should.eql("#closed");
+							result.phase.id.should.eql("#6 closed");
 						}
 					}
 				}
@@ -319,7 +319,7 @@ vows.describe("IssuesController").addBatch({
 						result.should.eql({
 							title: "new bug",
 							category: { color: '#00ff00', id: '@backend', name: 'backend' },
-							phase: { color: null, id: '#backlog', name: 'backlog' },
+							phase: { color: null, id: '#1 backlog', name: 'backlog' },
 							type: { color: '#f29513', name: 'bug', id: 'bug' }, 
 							branch: { name: null, url: null },
 							number: result.number,

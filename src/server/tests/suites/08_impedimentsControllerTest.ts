@@ -44,6 +44,8 @@ vows.describe("ImpedimentsController").addBatch({
 			"returns impediments": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyJsonResponse(err, response, textBody);
 
+				// ToDo
+
 			}
 
 		},
@@ -63,6 +65,8 @@ vows.describe("ImpedimentsController").addBatch({
 			topic: testApi.httpPutTopic("/impediments/1347", { user: "utester", repository: "tracker", description: "Waiting for customer" }),
 			"returns response": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyJsonResponse(err, response, textBody);
+
+				// ToDo
 
 			}
 		}

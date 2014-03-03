@@ -46,12 +46,12 @@ class HomeViewModel {
 	selectedRepository: KnockoutObservable<string> = ko.observable(null);
 
 	url: KnockoutComputed<string>;
+	mode: KnockoutObservable<string> = ko.observable("board");
+	columnClass: KnockoutComputed<string>;
 
 	selectedMilestone: KnockoutObservable<string> = ko.observable("none");
 	selectedMilestoneTitle: KnockoutComputed<string>;
 	issuesColumnWidth: KnockoutComputed<string>;
-
-	closedIssuesVisible: KnockoutObservable<boolean> = ko.observable(true);
 
 	newBranchIssueNumber: KnockoutObservable<number> = ko.observable(0);
 	
@@ -123,7 +123,7 @@ class HomeViewModel {
 			}
 		});
 
-		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount, this.closedIssuesVisible);
+		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount, this.mode);
 
 		this.impediment = knockout_mapping.fromJS({ issue_id: null, description: null }, {
 			create: (options: any) => {
@@ -184,6 +184,10 @@ class HomeViewModel {
 			});
 		});
 
+		this.columnClass = ko.computed(() => {
+			return self.mode() === "board" ? "col-lg-3" : "col-lg-12";
+		});
+
 		this.issuesColumnWidth = ko.computed(() => {
 			var phases = self.labelsViewModel.labels().phases();
 			return (phases.length > 0 ? (100 / phases.length) : 100) + "%"; 
@@ -209,7 +213,7 @@ class HomeViewModel {
 				}
 
 				var url = parts.join("/");
-				var queryString = ["showClosedIssues=" + self.closedIssuesVisible()];
+				var queryString = ["mode=" + self.mode()];
 
 				if (self.issuesViewModel.filter().length > 0) {
 					queryString.push("q=" + self.issuesViewModel.filter());
@@ -255,8 +259,8 @@ class HomeViewModel {
 							if (key === "q") {
 								self.issuesViewModel.filter(value);
 							}
-							else if (key === "showClosedIssues") {
-								self.closedIssuesVisible(value === "true");
+							else if (key === "mode") {
+								self.mode(value);
 							}
 						}
 					}
@@ -481,8 +485,8 @@ class HomeViewModel {
 		this.issueDetail().type().id(type.id());
 	}
 
-	toggleClosedIssuesVisibility(): void {
-		this.closedIssuesVisible(!this.closedIssuesVisible());
+	selectMode(newMode: string): void {
+		this.mode(newMode);
 	}
 }
 
