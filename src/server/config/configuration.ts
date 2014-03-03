@@ -112,6 +112,10 @@ class Configuration {
 
     static impedimentsFieldsRegEx = /(?:^## Impediments$)|(?:^__#(\d+) - \[(.+)\]\((.+)\)__$)|(?:\* (|~~)(\d{4}-\d{2}-\d{2}) - ([^~]+?)(?:|~~)$)/gm;
 
+    static loginStrategy = "github";
+
+    static dataFactory: Function = null;
+
     static socketIO: any = null;
 
     static sessionStore: any = {

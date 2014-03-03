@@ -35,6 +35,7 @@ class Server {
     constructor() {
         this.logger = log4js.getLogger('Server');
 
+        /* istanbul ignore if */
         if (!fs.existsSync("logs")) {
             fs.mkdirSync("logs");
         }
@@ -44,50 +45,6 @@ class Server {
                 { type: 'console' },
                 { type: 'file', filename: 'logs/app.log' }
             ]
-        });
-    }
-
-    private loadControllers() {
-        var self = this;
-        var dir = path.resolve(configuration.startupDirectory, './dist/controllers');
-        var exts = ['js'];
-        var exception: any;
-
-        diveSync(dir, function(err: Error, filePath: string) {
-            if (exception) { return; }
-            var regex = new RegExp('\\.(' + exts.join('|') + ')$');
-            if (regex.test(filePath)) {
-                var name = filePath.slice(dir.length + 1).replace(regex, '');
-                self.logger.debug('Trying to register controller from file %s', name);
-                try {
-                    var type = require(filePath);
-                    console.log(type);
-                    var instance: locomotive.Controller;
-                    var className: string;
-
-                    for (var i in type) {
-                        if (typeof (type[i]) === 'function') {
-                            self.logger.debug("Found initialize function %s", i);
-
-                            var tempObject: abstractController = new type[i](i);
-
-                            if (tempObject.__beforeFilters && tempObject.__afterFilters) {
-                                className = i;
-                                instance = tempObject;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!!instance) {
-                        self.logger.debug("Registering controller class %s as %s", className, name);
-                        locomotive._controller(name, instance);
-                    }
-                } catch (ex) {
-                    self.logger.error(util.format("Exception occured during controller '%s' load", name), ex);
-                    exception = ex;
-                }
-            }
         });
     }
 
@@ -218,6 +175,8 @@ class Server {
 
         locomotive.boot(configuration.environment, (err: String) => {
             self.logger.debug("Server initialized at : %s:%d", configuration.http_address, configuration.http_port);
+            
+            /* istanbul ignore else */
             if (!err) {
                 locomotive.use(locomotive.router);
             }

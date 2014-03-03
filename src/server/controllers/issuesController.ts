@@ -61,7 +61,7 @@ class IssuesController extends abstractController {
 		this.getIssues(loadStep, additionalSteps);
 	}
 
-	show() {
+	/*show() {
 		var self = this;
 		var requestBody = {
 			user: self.param("user"),
@@ -88,7 +88,7 @@ class IssuesController extends abstractController {
 			}
 			transformCompleted(null, issue); 
 		});
-	}
+	}*/
 
 	private getIssues(retrieveStep: Function, additionalLoadSteps: Function[] = [(labels: any, results:any, cb:Function) => { cb(null, results); } ], transformFunction: Function = null) {
 		var self = this;
@@ -97,86 +97,97 @@ class IssuesController extends abstractController {
 		var repository = self.param("repository");
 		var milestone = self.param("milestone");
 
-		self.logger.info("Loading issues for repository '%s/%s' @ milestone '%s'", user, repository, milestone);
+		if (!user) {
+			self.jsonResponse("Parameter 'user' was not provided");
+		} else if (!repository) {
+			self.jsonResponse("Parameter 'repository' was not provided");
+		} else if (!milestone) {
+			self.jsonResponse("Parameter 'milestone' was not provided");
+		} else {
+			self.logger.info("Loading issues for repository '%s/%s' @ milestone '%s'", user, repository, milestone);
 
-		var requestBody = {
-			user: user,
-			state: "open",
-			repo: repository,
-			milestone: milestone
-		};
+			var requestBody = {
+				user: user,
+				state: "open",
+				repo: repository,
+				milestone: milestone
+			};
 
-		var steps: Function[] = [
-			(getLabelsCompleted: Function) => {
-				labelsController.getLabels(self, user, repository, getLabelsCompleted);
-			},
-			retrieveStep,
-			(labels: labelsModel.IndexResult, allIssues: any[], assignOpenIssuesCompleted: Function) => {
-				var results: any[] = []; 
-				self.logger.debug("Transforming %d open issues", allIssues.length);
+			var steps: Function[] = [
+				(getLabelsCompleted: Function) => {
+					labelsController.getLabels(self, user, repository, getLabelsCompleted);
+				},
+				retrieveStep,
+				(labels: labelsModel.IndexResult, allIssues: any[], assignOpenIssuesCompleted: Function) => {
+					var results: any[] = []; 
+					self.logger.debug("Transforming %d open issues", allIssues.length);
 
-				self.transformIssues(user, repository, labels, allIssues, results);
+					self.transformIssues(user, repository, labels, allIssues, results);
 
-				assignOpenIssuesCompleted(null, labels, results);
-			}
-		];
+					assignOpenIssuesCompleted(null, labels, results);
+				}
+			];
 
-		steps = steps.concat(additionalLoadSteps);
+			steps = steps.concat(additionalLoadSteps);
 
-		steps.push(
-			(result: any[], getIssueBranchesCompleted: Function) => {
-				var issuesToRetrieve: any[] = [];
-				self.logger.debug("Looking for issue branches");
+			steps.push(
+				(result: any[], getIssueBranchesCompleted: Function) => {
+					var issuesToRetrieve: any[] = [];
+					self.logger.debug("Looking for issue branches");
 
-				for (var i = 0; i < result.length; i++) {
-					var issue: any = result[i];
+					for (var i = 0; i < result.length; i++) {
+						var issue: any = result[i];
 
-					if (issue.phase.id === configuration.phaseNames.onhold || issue.phase.id === configuration.phaseNames.inprogress) {
-						issuesToRetrieve = issuesToRetrieve.concat(issue);
+						if (issue.phase.id !== configuration.phaseNames.backlog && issue.phase.id !== configuration.phaseNames.closed) {
+							issuesToRetrieve = issuesToRetrieve.concat(issue);
+						} else {
+							issue.branch = self.convertBranchInfo();
+						}
 					}
-				}
 
-				self.logger.debug("Found %d issues for branch retrieval", issuesToRetrieve.length);
+					self.logger.debug("Found %d issues for branch retrieval", issuesToRetrieve.length);
 
-				async.forEach(issuesToRetrieve, (issue: any, cb: Function) => {
-					self.getIssueBranchInfo(issue.number, user, repository, (err: any, result: any) => {
-						issue.branch = result;
-						issue.compareUrl = self.getCompareUrl(user, repository, issue.phase.id, issue.branch);
-						cb();
+					async.forEach(issuesToRetrieve, (issue: any, cb: Function) => {
+						self.getIssueBranchInfo(issue.number, user, repository, (err: any, result: any) => {
+							issue.branch = result;
+							issue.compareUrl = self.getCompareUrl(user, repository, issue.phase.id, issue.branch);
+							cb();
+						});
+					}, (err: any) => { 
+						getIssueBranchesCompleted(err, result); 
 					});
-				}, (err: any) => { 
-					getIssueBranchesCompleted(err, result); 
-				});
-		});
+			});
 
-		if (transformFunction !== null) {
-			steps.push(transformFunction);
-		}
-
-		async.waterfall(steps, 
-			(err: any, result: any[]) => {
-				if (err) {
-					self.logger.error("Error occured during issues retrieval", err);	
-				}
-
-				self.jsonResponse(err, {
-					meta: {
-						estimateSizes: configuration.estimateSizes,
-						branchNameFormat: configuration.branchNameFormat,
-						priorityTypes: configuration.priorityTypes
-					},
-					issues: result
-				});
+			if (transformFunction !== null) {
+				steps.push(transformFunction);
 			}
-		);
+
+			async.waterfall(steps, 
+				(err: any, result: any[]) => {
+					/* istanbul ignore if */ 
+					if (err) {
+						self.logger.error("Error occured during issues retrieval", err);	
+					}
+
+					self.jsonResponse(err, {
+						meta: {
+							estimateSizes: configuration.estimateSizes,
+							branchNameFormat: configuration.branchNameFormat,
+							priorityTypes: configuration.priorityTypes
+						},
+						issues: result
+					});
+				}
+			);
+		}
 	}
 
-	private convertBranchInfo(data: any): any {
-		return {
+	private convertBranchInfo(data?: any): any {
+		return data ? {
 			ref: data.ref,
 			name: data.ref.replace("refs/heads/", ""),
 			url: data.url 
-		};
+		} : { name: null, url: null };
 	}
 
 	private getIssueBranchInfo(number: number, user: string, repository: string, callback: Function) {
@@ -191,18 +202,19 @@ class IssuesController extends abstractController {
 					repo: repository,
 					ref: branchName
 				}, getBranchInfoCompleted);
-			},
+			}/*,
 			(branchInfo: any, getPullRequestCompleted: Function) => {
 				getPullRequestCompleted(null, branchInfo);
-			}
+			}*/
 		], (err: any, result: any) => {
 			if (err) {
 				self.logger.debug("Branch %s not found", branchName);
-				callback(err.code === 404 ? null : err); // Branch not found
+				err = err.code === 404 ? null : err; // Branch not found
 			} else {
 				self.logger.debug("Branch %s found", branchName);
-				callback(null, self.convertBranchInfo(result));
-			}		
+			}	
+
+			callback(err, self.convertBranchInfo(result));	
 		});
 	}
 
@@ -217,158 +229,170 @@ class IssuesController extends abstractController {
 		var phase = self.param("phase");
 		var body = self.param("body");
 
-		var message: any = {				
-			user: user,
-			repo: repository,
-			number: number
-		};
+		if (!user) {
+			self.jsonResponse("Parameter 'user' was not provided");
+		} else if (!repository) {
+			self.jsonResponse("Parameter 'repository' was not provided");
+		} else {
+			var message: any = {				
+				user: user,
+				repo: repository,
+				number: number
+			};
 
-		var tasks: any[] = [];
+			var tasks: any[] = [];
 
-		if (collaborator !== undefined) {
-			self.logger.info("Updating issue %s - assigning collaborator %s", number, collaborator);
-			message.assignee = collaborator;
+			if (collaborator !== undefined) {
+				self.logger.info("Updating issue %s - assigning collaborator %s", number, collaborator);
+				message.assignee = collaborator;
 
-			tasks.push((updateIssueCompleted: Function) => {
-				self.getGitHubClient().issues.edit(message, updateIssueCompleted);
-			});
-		} else if (phase !== undefined) {
-			self.logger.info("Updating issue %s - updating phase to %s", number, phase);
-			tasks = [];
-			var branchInfo: any = undefined;
+				tasks.push((updateIssueCompleted: Function) => {
+					self.getGitHubClient().issues.edit(message, updateIssueCompleted);
+				});
+			} else if (phase !== undefined) {
+				self.logger.info("Updating issue %s - updating phase to %s", number, phase);
+				tasks = [];
+				var branchInfo: any = undefined;
 
-			if (phase === configuration.phaseNames.inprogress) {
-				var branchName = util.format("heads/" + configuration.branchNameFormat, number);
-				self.logger.debug("Trying to get branch %s for issue %d", branchName, number);
+				if (phase === configuration.phaseNames.inprogress) {
+					var branchName = util.format("heads/" + configuration.branchNameFormat, number);
 
-				tasks.push((getBranchCompleted: Function) => {
-					self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
-						if (!result) {
-							self.logger.debug("Issue branch doesn't exists, trying to create new branch %s for issue %d", branchName, number);
-							async.waterfall([
-								(getMasterBranchCompleted: Function) => {
-									self.getGitHubClient().gitdata.getReference({
-										user: user,
-										repo: repository,
-										ref: "heads/master"
-									}, (err: any, data: any) => {
-										getMasterBranchCompleted(err, data);
-									});	
-								}, 
-								(masterBranch: any, createBranchCompleted: Function) => {
-									self.getGitHubClient().gitdata.createReference({
-										user: user,
-										repo: repository,
-										ref: "refs/" + branchName,
-										sha: masterBranch.object.sha
-									}, createBranchCompleted);
-								}
-								], (err: any, result: any) => { 
-									getBranchCompleted(err, self.convertBranchInfo(result)); 
-								});
-						} else {
-							getBranchCompleted(err, result);
-						}				
+					tasks.push((getBranchCompleted: Function) => {
+						self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
+							if (result.name === null) {
+								self.logger.info("Issue branch doesn't exists, trying to create new branch %s for issue %d", branchName, number);
+
+								async.waterfall([
+									(getMasterBranchCompleted: Function) => {
+										self.logger.info("Getting master branch for repo %s/%s", user, repository);
+										self.getGitHubClient().gitdata.getReference({
+											user: user,
+											repo: repository,
+											ref: "heads/master"
+										}, (err: any, data: any) => {
+											getMasterBranchCompleted(err, data);
+										});	
+									}, 
+									(masterBranch: any, createBranchCompleted: Function) => {
+										self.logger.info("Creating new branch %s for repo %s/%s", branchName, user, repository);
+										self.getGitHubClient().gitdata.createReference({
+											user: user,
+											repo: repository,
+											ref: "refs/" + branchName,
+											sha: masterBranch.object.sha
+										}, createBranchCompleted);
+									}
+									], (err: any, result: any) => { 
+										getBranchCompleted(err, result); 
+									});
+							} else {
+								getBranchCompleted(err, result);
+							}				
+						});
+					});
+
+					tasks.push((result: any, storeBranchCompleted: Function) => {		
+						branchInfo = result;
+						storeBranchCompleted();
+					});
+				}
+
+				tasks.push((getIssueCompleted: Function) => {
+					self.getGitHubClient().issues.getRepoIssue(message, getIssueCompleted);
+				});
+				tasks.push((issue: any, updateIssueCompleted: Function) => {
+					message.labels = issue.labels.map((x: any) => { return x.name });
+					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) === null; });
+
+					if (phase !== configuration.phaseNames.closed) {
+						message.labels.push(phase);
+					} else {
+						message.state = "closed";
+					}
+
+					self.logger.info("Updating issue state to %s and labels to %s", message.state, JSON.stringify(message.labels));
+
+					self.getGitHubClient().issues.edit(message, (err: any, result: any) => {
+						if (!err) {
+							result.branch = branchInfo;
+						}
+						
+						updateIssueCompleted(err, result);
 					});
 				});
+			} 
+			else if (body !== undefined) {
+				self.logger.info("Updating issue %s - updating body to %s", number, body);
 
-				tasks.push((result: any, storeBranchCompleted: Function) => {		
-					branchInfo = result;
-					storeBranchCompleted();
-				});
+				tasks = [
+					(renderTemplateCompleted: Function) => {
+						self.getDescriptionFromBody(body, renderTemplateCompleted);
+					},
+					(output: string, getIssueCompleted: Function) => {
+						self.getGitHubClient().issues.getRepoIssue(message, (err: any, data: any) => {
+							getIssueCompleted(err, data, output);
+						});
+					},
+					(issue: any, formattedBody: string, issueSaveCompleted: Function) => {
+						message.labels = issue.labels.map((x: any) => { return x.name });
+						message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) !== null; }); // Keep only phase labels
+
+						message.labels = message.labels.concat(self.getLabelsFromBody(body));
+
+						message.body = formattedBody;
+						message.title = body.title;
+
+						self.getGitHubClient().issues.edit(message, issueSaveCompleted);
+					}
+				];
 			}
 
-			tasks.push((getIssueCompleted: Function) => {
-				self.getGitHubClient().issues.getRepoIssue(message, getIssueCompleted);
-			});
-			tasks.push((issue: any, updateIssueCompleted: Function) => {
-				message.labels = issue.labels.map((x: any) => { return x.name });
-				message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) === null; });
-
-				if (phase !== configuration.phaseNames.closed) {
-					message.labels.push(phase);
-				} else {
-					message.state = "closed";
-				}
-
-				self.getGitHubClient().issues.edit(message, (err: any, result: any) => {
-					result.branch = branchInfo;
-					
-					updateIssueCompleted(err, result);
-				});
-			});
-		} 
-		else if (body !== undefined) {
-			self.logger.info("Updating issue %s - updating body to %o", number, body);
-
-			tasks = [
-				(renderTemplateCompleted: Function) => {
-					self.getDescriptionFromBody(body, renderTemplateCompleted);
-				},
-				(output: string, getIssueCompleted: Function) => {
-					self.getGitHubClient().issues.getRepoIssue(message, (err: any, data: any) => {
-						getIssueCompleted(err, data, output);
+			if (tasks.length == 0) {
+				self.jsonResponse("Operation not allowed");
+			} else {
+				tasks.push((issue: any, getLabelsCompleted: Function) => {
+					labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
+						getLabelsCompleted(err, issue, labels);
 					});
-				},
-				(issue: any, formattedBody: string, issueSaveCompleted: Function) => {
-					message.labels = issue.labels.map((x: any) => { return x.name });
-					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) !== null; }); // Keep only phase labels
-
-					message.labels = message.labels.concat(self.getLabelsFromBody(body));
-
-					message.body = formattedBody;
-					message.title = body.title;
-
-					self.getGitHubClient().issues.edit(message, issueSaveCompleted);
-				}
-			];
-		}
-
-		if (tasks.length == 0) {
-			self.jsonResponse("Operation not allowed");
-		} else {
-			tasks.push((issue: any, getLabelsCompleted: Function) => {
-				labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
-					getLabelsCompleted(err, issue, labels);
 				});
-			});
-			tasks.push((issue: any, labels: labelsModel.IndexResult, getBranchCompleted: Function) => {
-				if (issue.branch) {
-					getBranchCompleted(null, issue, labels);
-				} else {
-					self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
-						issue.branch = result;
+				tasks.push((issue: any, labels: labelsModel.IndexResult, getBranchCompleted: Function) => {
+					if (issue.branch) {
 						getBranchCompleted(null, issue, labels);
-					});
-				}
-			});
-			tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
-				convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
-			});
-			tasks.push((issue: any, sendUpdatesToClientsCompleted: Function) => {
-				self.logger.info("Sending update via sockets");
-				var sio = configuration.socketIO.sockets.in(util.format("%s/%s", user, repository));
-				sio.emit("issue-update", issue);
+					} else {
+						self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
+							issue.branch = result;
+							getBranchCompleted(null, issue, labels);
+						});
+					}
+				});
+				tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
+					convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
+				});
+				tasks.push((issue: any, sendUpdatesToClientsCompleted: Function) => {
+					self.logger.info("Sending update via sockets");
+					var sio = configuration.socketIO.sockets.in(util.format("%s/%s", user, repository));
+					sio.emit("issue-update", issue);
 
-				sendUpdatesToClientsCompleted(null, issue);
-			});
+					sendUpdatesToClientsCompleted(null, issue);
+				});
 
-			async.waterfall(tasks, (err: any, result: any) => {
-				if (err) {
-					self.logger.error("Error occured during issue update", err);	
-				} else {
-					
-				}
-
-				self.jsonResponse(err, result);
-			});
+				async.waterfall(tasks, (err: any, result: any) => {
+					/* istanbul ignore next */ 
+					if (err) {
+						self.logger.error("Error occured during issue update", err);	
+					} 
+					self.jsonResponse(err, result);
+				});
+			}
 		}
 	}
 
 	private getDescriptionFromBody(body: any, callback: Function) {
-		var templateName: string = body.type.id || "default";
+		var templateName: string = body.type ? body.type.id : undefined;
+		templateName = templateName || "default";
 		var self = this;
 				
+		/* istanbul ignore next */ 
 		if (!fs.existsSync(path.resolve(configuration.templatesDir(), templateName))) {
 			templateName = "default";
 		}
@@ -388,11 +412,18 @@ class IssuesController extends abstractController {
 
 	private getLabelsFromBody(body: any): string[] {
 		var labels: string[] = [];
-		if (body.category.id !== configuration.defaultCategoryName) {
-			labels.push(body.category.id);
+		var categoryId = body.category ? body.category.id : undefined;
+		categoryId = categoryId || configuration.defaultCategoryName;
+
+		if (categoryId !== configuration.defaultCategoryName) {
+			labels.push(categoryId);
 		}
-		if (body.type.id && body.type.id.length > 0) {
-			labels.push(body.type.id);
+
+		var typeId = body.type ? body.type.id : undefined;
+		typeId = typeId || "";
+
+		if (typeId.length > 0) {
+			labels.push(typeId);
 		}
 
 		return labels;
@@ -403,44 +434,67 @@ class IssuesController extends abstractController {
 
 		var user = self.param("user");
 		var repository = self.param("repository");
-
 		var body = self.param("body");
+		var title = self.param("title");
 
-		var message: any = {				
-			user: user,
-			repo: repository,
-			milestone: self.param("milestone"),
-			title: self.param("title")
-		};
+		if (!user) {
+			self.jsonResponse("Parameter 'user' was not provided");
+		} else if (!repository) {
+			self.jsonResponse("Parameter 'repository' was not provided");
+		} else if (!body) {
+			self.jsonResponse("Parameter 'body' was not provided");
+		} else if (!title) {
+			self.jsonResponse("Parameter 'title' was not provided");
+		} else {
+			var message: any = {				
+				user: user,
+				repo: repository,
+				milestone: self.param("milestone"),
+				title: title
+			};
 
-		async.waterfall([
-			(getLabelsCompleted: Function) => {
-				labelsController.getLabels(self, user, repository, getLabelsCompleted);
-			},
-			(labels: labelsModel.IndexResult, renderTemplateCompleted: Function) => {
-				self.getDescriptionFromBody(body, (err: any, result: any) => {
-					renderTemplateCompleted(err, labels, result);
-				});
-			},
-			(labels: labelsModel.IndexResult, formattedBody: string, createIssueCompleted: Function) => {
-				message.labels = self.getLabelsFromBody(body);
-				message.body = formattedBody;
+			self.logger.info("Creating new issue at %s/%s/%s [%s]", user, repository, message.milestone, title);
+			self.logger.info(body);
 
-				self.getGitHubClient().issues.create(message, (err: any, issue: any) => {
-					createIssueCompleted(err, issue, labels);
-				});
-			},
-			(issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
-				convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
-			}
-		], (err: any, result: any) => {
-			if (err) {
-				self.logger.error("Error occured during issue create", err);	
-			} else {
-			}
+			var labels: labelsModel.IndexResult;
 
-			self.jsonResponse(err, result);
-		});
+			async.waterfall([
+				(getLabelsCompleted: Function) => {
+					labelsController.getLabels(self, user, repository, getLabelsCompleted);
+				},
+				(result: labelsModel.IndexResult, renderTemplateCompleted: Function) => {
+					labels = result;
+					self.getDescriptionFromBody(body, renderTemplateCompleted);
+				},
+				(formattedBody: string, createIssueCompleted: Function) => {
+					try {
+						message.labels = self.getLabelsFromBody(body);
+						message.body = formattedBody;
+
+						self.getGitHubClient().issues.create(message, createIssueCompleted);
+					}
+					catch (ex) {
+						/* istanbul ignore next */ 
+						createIssueCompleted(ex);
+					}
+				},
+				(issue: any, convertIssueCompleted: Function) => {
+					try {
+						convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
+					} catch (ex) {
+						/* istanbul ignore next */ 
+						convertIssueCompleted(ex);	
+					}
+				}
+			], (err: any, result: any) => {
+				/* istanbul ignore next */ 
+				if (err) {
+					self.logger.error("Error occured during issue create", err);	
+				}
+
+				self.jsonResponse(err, result);
+			});
+		}
 	}
 
 	transformIssues(user: string, repository: string, labels: labelsModel.IndexResult, allIssues: any[], results: any, forcePhase: string = null) {
@@ -450,14 +504,14 @@ class IssuesController extends abstractController {
 	}
 
 	private getCompareUrl(user: string, repository: string, phase: string, branch: any) {
-		return (phase === configuration.phaseNames.inprogress && branch !== undefined) ? 
+		return (phase === configuration.phaseNames.inprogress && branch != undefined && branch.name !== null) ? 
 				util.format(configuration.pullRequestCompareFormat, user, repository, branch.name) : null;
 	}
 
 	private convertIssue(user: string, repository: string, issue: any, labels: labelsModel.IndexResult, forcePhase: string = null): any {
 		var category = configuration.defaultCategoryName;
 		var phase = forcePhase || (issue.state === "closed" ? configuration.phaseNames.closed :	configuration.phaseNames.backlog);
-		var type: labelsModel.Label = null;
+		var typeName: string = null; 
 		var issueLabels = issue.labels || [];
 
 		for (var j = 0; j < issueLabels.length; j++) {
@@ -471,12 +525,12 @@ class IssuesController extends abstractController {
 				if (forcePhase === null) {
 					phase = label.name;
 				}
-			} else if (type === null) {
-				type = label;
-				type.id = label.name;
+			} else if (typeName === null) {
+				typeName = label.name;
 			}
 		}
 
+		var type = typeName === null ? null : labels.types.filter(x => x.id === typeName)[0];
 		this.logger.info("Transforming issue #%d to '%s'/'%s' [%s]", issue.number, category, phase, type === null ? "" : type.id);
 
 		var convertedIssue: any = {
@@ -487,9 +541,8 @@ class IssuesController extends abstractController {
 			number: issue.number,
 			compareUrl: this.getCompareUrl(user, repository, phase, issue.branch),
 			description: issue.body || "",
-			branch: issue.branch || { name: null, url: null },
-			assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null },
-			estimate: null
+			branch: issue.branch,
+			assignee: issue.assignee ? { login: issue.assignee.login, avatar_url: issue.assignee.avatar_url } : { login: null, avatar_url: null }
 		};
 
 		var bodyParts = convertedIssue.description.split(configuration.bodyFieldsSeparator);

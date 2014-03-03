@@ -19,6 +19,7 @@ function initializeDatabase(done: (result?: any) => void) {
 
         db.on('error', logger.error.bind(logger, 'connection error:'));
         db.once('open', (err: String) => {
+            /* istanbul ignore if */
             if (err) {
                 logger.error("Error occured during database open", err);
             } else {
@@ -31,7 +32,9 @@ function initializeDatabase(done: (result?: any) => void) {
         });
     }
     catch (ex) {
+        /* istanbul ignore next */ 
         logger.error("Exception occured during MongoDb initialization", ex);
+        /* istanbul ignore next */ 
         done(ex);
     }
 }

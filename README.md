@@ -2,6 +2,7 @@ github-tracker
 ==============
 
 [Travis CI](https://travis-ci.org/ciuliot/github-tracker): ![Build status](https://travis-ci.org/ciuliot/github-tracker.png)
+[![Coverage Status](https://coveralls.io/repos/ciuliot/github-tracker/badge.png)](https://coveralls.io/r/ciuliot/github-tracker)
 
 Bringing issue tracking to new level. We all know how what it currently means to use 
 bug tracking issues - we need to login to separate system every day to find out what 

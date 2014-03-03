@@ -1,10 +1,10 @@
 {
   "name": "github-tracker",
-  "version": "0.1.314",
+  "version": "0.1.316",
   "description": "Issue tracking",
   "main": "dist/app.js",
   "scripts": {
-    "test": "grunt tests"
+    "test": "node node_modules/istanbul/lib/cli.js cover grunt tests --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "repository": {
     "type": "git",
@@ -20,15 +20,16 @@
     "grunt-zip": "*",
     "grunt-contrib-clean": "*",
     "grunt-contrib-compress": "*",
-    "grunt-bumpup": "*",
     "grunt-contrib-yuidoc": "*",
     "grunt-vows-runner": "*",
     "vows": "*",
     "should": "*",
-    "grunt-contrib-stylus": "*"
+    "grunt-contrib-stylus": "*",
+    "istanbul": "*",
+    "grunt-bump": "*"
   },
   "dependencies": {
-    "moment": "~2.5.1",
+    "moment": "*",
     "mustache": "*",
     "locomotive": "*",
     "jade": "*",
@@ -44,11 +45,14 @@
     "connect-mongodb": "*",
     "passport": "*",
     "passport-local": "*",
-    "bootable": "0.2.x",
+    "bootable": "*",
     "bootable-environment": "0.2.x",
     "passport-github": "*",
     "connect-ensure-login": "*",
     "github": "*",
+    "passport-http": "*",
+    "request": "*",
+    "coveralls": "*",
     "socket.io": "*",
     "cookie": "*",
     "connect": "*"

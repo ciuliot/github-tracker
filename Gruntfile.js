@@ -1,3 +1,4 @@
+/* istanbul ignore next */
 module.exports = function (grunt) {
     var util = require("util");
     var revision = "";
@@ -13,7 +14,8 @@ module.exports = function (grunt) {
                     module: 'commonjs', //or commonjs
                     target: 'es5', //or es3
                     base_path: 'src/server',
-                    noImplicitAny: true
+                    noImplicitAny: true,
+                    comments: true
                 }
             },
             webapp: {
@@ -23,11 +25,12 @@ module.exports = function (grunt) {
                     module: 'amd', //or commonjs
                     target: 'es5', //or es3
                     base_path: 'src/webapp',
+                    sourcemap: true,
                     noImplicitAny: true
                 }
             },
             server_tests: {
-                src: ['src/server/tests/*.ts'],
+                src: ['src/server/tests/**/*.ts'],
                 dest: './dist',
                 options: {
                     module: 'commonjs', //or commonjs
@@ -88,7 +91,7 @@ module.exports = function (grunt) {
             }
         },
         clean: ['dist', 'package', './<%= pkg.name %>.tgz'],
-        bumpup: {
+        bump: {
             file: 'package.json',
             options: {
                 version: function (old, type) {
@@ -101,11 +104,21 @@ module.exports = function (grunt) {
         },
         vows: {
             server: {
-                src: "dist/tests/*.js",
+                src: ["dist/tests/suites/*.js"],
                 options : {
                   reporter : "spec"
                 }
             }
+        },
+        instrument : {
+          files : "dist/**/*.js",
+          options : {
+            lazy : true,
+            basePath : 'dist/instrument/'
+          }
+        },
+        reloadTasks : {
+            rootPath : 'dist/instrument/dist'
         }
     });
 
@@ -114,7 +127,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-zip');
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-compress');
-    grunt.loadNpmTasks('grunt-bumpup');
+    grunt.loadNpmTasks('grunt-bump');
     grunt.loadNpmTasks('grunt-contrib-yuidoc');
     grunt.loadNpmTasks('grunt-contrib-stylus');
     grunt.loadNpmTasks('grunt-vows-runner');
@@ -136,10 +149,20 @@ module.exports = function (grunt) {
         });
     });
 
+    grunt.registerTask('run-istanbul', 'Get revision.', function () {
+        var done = this.async();
+
+        var cli = require("istanbul/lib/cli");
+
+        console.log(cli);
+
+        cli.runToCompletion(["cover", "vows"], done);
+    });
+
     // Default task(s).
     grunt.registerTask('default', ['typescript:server', 'typescript:webapp' , 'copy:dist', 'stylus']);
-    grunt.registerTask('build', ['clean', 'get-revision', 'bumpup', 'default', 'copy:build', 'compress:build']);
+    grunt.registerTask('build', ['clean', 'get-revision', 'bump-only', 'default', 'copy:build', 'compress:build']);
     grunt.registerTask('docs', ['yuidoc', 'copy:docs', 'compress:docs']);
-    grunt.registerTask('tests', ['default', 'typescript:server_tests', 'vows:server']);
+    grunt.registerTask('tests', ['clean', 'default', 'typescript:server_tests', 'vows:server']);
 };
 

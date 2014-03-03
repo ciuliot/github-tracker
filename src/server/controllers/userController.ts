@@ -29,14 +29,16 @@ class UserController extends abstractController {
 				controller.getGitHubClient().user.get({ }, getUserCompleted); 
 			}
 			], (err: any, user: any) => {
-				user = {
-					id: user.id,
-					name: user.name,
-					login: user.login,
-					avatar_url: user.avatar_url
-				};
-				controller.logger.debug(user);
-				controller.jsonResponse(err, user);
+				/* istanbul ignore else */ 
+				if (!err) {
+					user = {
+						id: user.id,
+						name: user.name,
+						login: user.login,
+						avatar_url: user.avatar_url
+					};
+				}
+				callback(err, user);
 			}
 		);
 	}

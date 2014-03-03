@@ -7,15 +7,10 @@ import configuration = require("../configuration");
 var poweredBy = require('connect-powered-by')
     , util = require('util')
     , nib = require('nib')
-    , stylus = require('stylus');
+    , stylus = require('stylus')    
+    , GitHubApi = require("github");
 
 function initialize() {
-    // Warn of version mismatch between global "lcm" binary and local installation
-    // of Locomotive.
-    if (this.version !== require('locomotive').version) {
-        console.warn(util.format('version mismatch between local (%s) and global (%s) Locomotive module', require('locomotive').version, this.version));
-    }
-
     var config = configuration;
 
     // Configure application settings.  Consult the Express API Reference for a
@@ -28,22 +23,6 @@ function initialize() {
     config.logger.debug("Views directory: %s", viewsDir);
     config.logger.debug("Styles directory: %s", stylesDir);
     config.logger.debug("Public directory: %s", publicDir);
-
-    function compile(str: string, path: string) {
-        console.log(str);
-        console.log(path);
-
-        return stylus(str)
-            .set('filename', path)
-            .set('compress', true)
-            .use(nib());
-    }
-
-    this.use(stylus.middleware({
-          src: process.cwd()
-        , dest: publicDir
-        , compile: compile
-    }));
 
     this.set('views', viewsDir);
     this.set('view engine', 'jade');
@@ -73,9 +52,25 @@ function initialize() {
     this.use(express.logger());
     this.use(express.favicon());
     this.use(express["cookieParser"]());
+
+    this.use("/src", express.static(path.resolve(config.startupDirectory, "./src")));
     this.use(express.static(publicDir));
+
     this.use(express.bodyParser());
     this.use(express.methodOverride());
+
+    /* istanbul ignore next */
+    config.dataFactory = (): any => { 
+        return new GitHubApi ({
+            // required
+            version: "3.0.0",
+            // optional
+            debug: false,
+            protocol: "https",
+            host: "api.github.com",
+            timeout: 5000
+        });
+    };
 }
 
 export = initialize;

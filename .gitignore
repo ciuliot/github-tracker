@@ -2,6 +2,7 @@ dist/
 logs/
 node_modules/
 package/
+coverage/
 github-tracker.tgz
 .sublime-grunt.cache
 github-tracker.sublime-project

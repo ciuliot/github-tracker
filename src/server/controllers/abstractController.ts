@@ -8,8 +8,10 @@
 import locomotive = require("locomotive");
 import log4js = require("log4js");
 import util = require("util");
+import configuration = require("../config/configuration");
 
-var GitHubApi = require("github");
+var passport = require('passport');
+
 var connectEnsureLogin = require('connect-ensure-login');
 
 /**
@@ -48,23 +50,16 @@ class AbstractController extends locomotive.Controller {
     }
 
     getGitHubClient(): any {
-        var github = new GitHubApi({
-            // required
-            version: "3.0.0",
-            // optional
-            debug: false,
-            protocol: "https",
-            host: "api.github.com",
-            timeout: 5000
-        });
+        var dataFactory = configuration.dataFactory();
 
-        this.logger.debug("Access token:" + this.req.user.accessToken);
-
-        github.authenticate({ type: "oauth", token: this.req.user.accessToken });
-        return github;
+        dataFactory.authenticate({ type: "oauth", token: this.req.user.accessToken });
+        return dataFactory;
     }
 
     ensureLogin(path: string): void {
+        if (configuration.loginStrategy === "basic") {
+            this.before(path, passport.authenticate(configuration.loginStrategy));
+        }
         this.before(path, connectEnsureLogin.ensureLoggedIn("/login"));
     }
 }
