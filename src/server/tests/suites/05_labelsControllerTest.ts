@@ -39,7 +39,7 @@ vows.describe("LabelsController").addBatch({
 		"Valid user and repository": {
 			topic: testApi.httpGetTopic("/labels?user=utester&repository=tracker"),
 		
-			"returns milestones": (err: any, response: http.ClientResponse, textBody: string) => {
+			"returns labels": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyJsonResponse(err, response, textBody);
 
 				result.should.eql({
@@ -48,23 +48,23 @@ vows.describe("LabelsController").addBatch({
 					     { color: '#00ff00', id: '@backend', name: 'backend' },
 					     { color: null, id: '@other', name: 'other' } ],
 					phases: 
-					   [ { color: null, id: '#1 backlog', name: 'backlog' },
-					     { color: '#000000', id: '#2 onhold', name: 'onhold' },
-					     { color: '#000001', id: '#3 inprogress', name: 'inprogress' },
-					     { color: '#000002', id: '#4 inreview', name: 'inreview' },
-					     { color: '#000002', id: '#5 implemented', name: 'implemented' },
-					     { color: null, id: '#6 closed', name: 'closed' } ],
+					   [ { color: null, id: '#backlog', name: 'backlog' },
+					     { color: '#000000', id: '#onhold', name: 'onhold' },
+					     { color: null, id: '#inprogress', name: 'inprogress' },
+					     { color: null, id: '#inreview', name: 'inreview' },
+					     { color: null, id: '#implemented', name: 'implemented' },
+					     { color: null, id: '#closed', name: 'closed' } ],
 					types: 
 					   [ { color: '#f29513', id: 'bug', name: 'bug' },
 					     { color: '#0000ff', id: 'feature', name: 'feature' } ],
 					declaration: 
 					   { phases: 
-					      { backlog: '#1 backlog',
-					        onhold: '#2 onhold',
-					        inprogress: '#3 inprogress',
-					        inreview: '#4 inreview',
-					        implemented: '#5 implemented',
-					        closed: '#6 closed' },
+					      { backlog: '#backlog',
+					        onhold: '#onhold',
+					        inprogress: '#inprogress',
+					        inreview: '#inreview',
+					        implemented: '#implemented',
+					        closed: '#closed' },
 					     defaultCategory: '@other' 
 					 	}
 				});

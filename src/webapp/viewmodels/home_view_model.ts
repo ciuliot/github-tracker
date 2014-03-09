@@ -414,7 +414,7 @@ class HomeViewModel {
 	}
 
 	issueComplete(issue: issuesViewModel.Issue): void {
-		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases().implemented());
+		this.updateIssuePhase(issue, this.labelsViewModel.labels().declaration().phases().inreview());
 	}
 
 	issueReview(issue: issuesViewModel.Issue): void {

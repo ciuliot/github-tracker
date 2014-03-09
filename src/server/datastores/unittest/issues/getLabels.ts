@@ -24,35 +24,8 @@ var model = [
 		repo: "tracker",
 		result: {
 		    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#2 onhold",
-		    "name": "#2 onhold",
+		    "name": "#onhold",
 		    "color": "000000"
-		  }
-	}),
-	new testModels.IssuesGetLabelsModel({
-		user: "utester",
-		repo: "tracker",
-		result: {
-		    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#3 inprogress",
-		    "name": "#3 inprogress",
-		    "color": "000001"
-		  }
-	}),
-	new testModels.IssuesGetLabelsModel({
-		user: "utester",
-		repo: "tracker",
-		result: {
-		    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#4 inreview",
-		    "name": "#4 inreview",
-		    "color": "000002"
-		  }
-	}),
-	new testModels.IssuesGetLabelsModel({
-		user: "utester",
-		repo: "tracker",
-		result: {
-		    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#5 implemented",
-		    "name": "#5 implemented",
-		    "color": "000002"
 		  }
 	}),
 	new testModels.IssuesGetLabelsModel({

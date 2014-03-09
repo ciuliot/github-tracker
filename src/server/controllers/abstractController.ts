@@ -62,6 +62,26 @@ class AbstractController extends locomotive.Controller {
         }
         this.before(path, connectEnsureLogin.ensureLoggedIn("/login"));
     }
+
+    private getLogFormat(params: string[], format: string) {
+        var header = util.format("[%s] ", params.join("/"));
+        return [header, format].join("");
+    }
+
+    logInfo(params: string[], format: string, ...args: any[]) {
+        var format = this.getLogFormat(params, format);
+        this.logger.info.apply(this.logger, [format].concat(args));  
+    }
+
+    logDebug(params: string[], format: string, ...args: any[]) {
+        var format = this.getLogFormat(params, format);
+        this.logger.debug.apply(this.logger, [format].concat(args));
+    }
+
+    logError(params: string[], format: string, ...args: any[]) {
+        var format = this.getLogFormat(params, format);
+        this.logger.error.apply(this.logger, [format].concat(args)); 
+    }
 }
 
 export = AbstractController;

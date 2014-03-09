@@ -29,6 +29,9 @@ class TestDataFactory {
 			}); 
 		}
 	};
+	pullRequests = {
+		get(data: any, callback: Function) { TestDataFactory.getOne(testModels.PullRequestModel, data, callback); }
+	}
 	issues = {
 		getAllMilestones(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetAllMilestonesModel, data, callback); },
 		getLabels(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetLabelsModel, data, callback); },
@@ -138,9 +141,9 @@ class TestDataFactory {
 				    },
 				    "comments": 0,
 				    "pull_request": {
-				      "html_url": "https://github.com/octocat/Hello-World/pull/1347",
-				      "diff_url": "https://github.com/octocat/Hello-World/pull/1347.diff",
-				      "patch_url": "https://github.com/octocat/Hello-World/pull/1347.patch"
+				      "html_url": null,
+				      "diff_url": null,
+				      "patch_url": null
 				    },
 				    "closed_at": null,
 				    "created_at": "2011-04-22T13:33:48Z",

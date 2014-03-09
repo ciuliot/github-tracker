@@ -31,7 +31,7 @@ class CollaboratorsController extends abstractController {
 		} else if (!repository) {
 			callback("Parameter 'repository' was not provided");
 		} else {
-			controller.logger.info("Loading collaborators for repository '%s/%s'", user, repository);
+			controller.logInfo([user, repository], "Loading collaborators");
 
 			async.waterfall([
 				(getAllCollaboratorsCompleted: Function) => { 

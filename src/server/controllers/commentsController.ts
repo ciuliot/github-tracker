@@ -29,6 +29,8 @@ class CommentsController extends abstractController {
 		} else if (!requestBody.body) {
 			self.jsonResponse("Parameter 'description' was not provided");
 		} else {
+			self.logInfo([requestBody.user, requestBody.repo, requestBody.number], "Loading comments");
+
 			async.waterfall([
 				(createCommentCompleted: Function) => {
 					self.logger.debug("Adding comment to issue #%d", requestBody.number);
