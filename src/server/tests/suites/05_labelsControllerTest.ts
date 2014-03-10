@@ -52,7 +52,7 @@ vows.describe("LabelsController").addBatch({
 					     { color: '#000000', id: '#onhold', name: 'onhold' },
 					     { color: null, id: '#inprogress', name: 'inprogress' },
 					     { color: null, id: '#inreview', name: 'inreview' },
-					     { color: null, id: '#implemented', name: 'implemented' },
+					     { color: '#000001', id: '#implemented', name: 'implemented' },
 					     { color: null, id: '#closed', name: 'closed' } ],
 					types: 
 					   [ { color: '#f29513', id: 'bug', name: 'bug' },

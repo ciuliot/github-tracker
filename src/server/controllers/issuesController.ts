@@ -365,7 +365,7 @@ class IssuesController extends abstractController {
 					});
 				}
 
-				if (phase === configuration.phaseNames.implemented) {
+				if (phase === configuration.phaseNames.closed) {
 					tasks.push((mergePullRequestCompleted: Function) => {
 						self.logInfo([user, repository, number], "Merging pull request", branchName);
 						self.getGitHubClient().pullRequests.merge({
@@ -384,11 +384,13 @@ class IssuesController extends abstractController {
 				tasks.push((issue: any, updateIssueCompleted: Function) => {
 					message.labels = issue.labels.map((x: any) => { return x.name });
 					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) === null; });
+					message.state = issue.state;
 					message.state = "open";
 
-					if (phase === configuration.phaseNames.onhold) { // Only onhold phase have a label 
+					if (phase === configuration.phaseNames.onhold || phase === configuration.phaseNames.implemented) { // Only onhold & implemented phases have a label 
 						message.labels.push(phase);
-					} else if (phase === configuration.phaseNames.closed) {
+					} 
+					if (phase === configuration.phaseNames.closed) {
 						message.state = "closed";
 					}
 
@@ -629,17 +631,16 @@ class IssuesController extends abstractController {
 		}
 
 		// Closed state always takes precedence
-		phase = issue.state === "closed" ? configuration.phaseNames.closed : phase;
+		if (issue.state === "closed") {
+			phase = configuration.phaseNames.closed;
+		}
 
 		if (phase === null) {
 			phase = configuration.phaseNames.backlog;
 			var pull_request = (issue.pull_request && issue.pull_request.html_url !== null) ? issue.pull_request : null;
 
-			if (pull_request !== null) {
-				phase = configuration.phaseNames.implemented
-				if (pull_request.state === "open") {
-					phase = configuration.phaseNames.inreview;
-				}
+			if (pull_request !== null && pull_request.state === "open") {
+				phase = configuration.phaseNames.inreview;
 			} else if (issue.branch && issue.branch.name !== null) {
 				phase = configuration.phaseNames.inprogress;
 			}
