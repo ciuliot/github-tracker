@@ -365,6 +365,19 @@ class IssuesController extends abstractController {
 					});
 				}
 
+				if (phase === configuration.phaseNames.implemented) {
+					tasks.push((mergePullRequestCompleted: Function) => {
+						self.logInfo([user, repository, number], "Merging pull request", branchName);
+						self.getGitHubClient().pullRequests.merge({
+							user: user,
+							repo: repository,
+							number: number
+						}, (err: any) => {
+							mergePullRequestCompleted(err);
+						});
+					});
+				}
+
 				tasks.push((getIssueCompleted: Function) => {
 					self.getGitHubClient().issues.getRepoIssue(message, getIssueCompleted);
 				});
