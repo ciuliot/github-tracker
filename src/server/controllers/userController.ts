@@ -22,7 +22,7 @@ class UserController extends abstractController {
 	}
 
 	getUser(controller: abstractController, callback: (err: any, result: any) => void) {
-		controller.logger.info("Loading user for data");
+		controller.logger.info("Loading user data");
 
 		async.waterfall([
 			(getUserCompleted: Function) => { 

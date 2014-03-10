@@ -18,6 +18,7 @@ export interface PhasesDeclaration {
 	onhold(): string;
 	inprogress(): string;
 	implemented(): string;
+	inreview(): string;
 	closed(): string;
 }
 

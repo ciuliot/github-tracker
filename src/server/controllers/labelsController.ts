@@ -32,7 +32,7 @@ class LabelsController extends abstractController {
 		} else if (!repository) {
 			callback("Parameter 'repository' was not provided");
 		} else {
-			controller.logger.info("Loading labels for repository '%s/%s'", user, repository);
+			controller.logInfo([user, repository], "Loading collaborators");
 
 			async.waterfall([
 				(getAllLabels: Function) => { 
@@ -55,6 +55,9 @@ class LabelsController extends abstractController {
 
 						allLabels.push({ id: null, name: configuration.defaultCategoryName });
 						allLabels.unshift({ id: null, name: configuration.phaseNames.backlog });
+						allLabels.push({ id: null, name: configuration.phaseNames.inprogress });
+						allLabels.push({ id: null, name: configuration.phaseNames.inreview });
+						allLabels.push({ id: null, name: configuration.phaseNames.implemented });
 						allLabels.push({ id: null, name: configuration.phaseNames.closed });
 
 						for (var i = 0; i < allLabels.length; i++) {
@@ -80,13 +83,14 @@ class LabelsController extends abstractController {
 						convertLabelsCompleted(null, result);
 					} catch (ex) {
 						/* istanbul ignore next */ 
+						controller.logError([user, repository], "Error occured during label conversion", ex);
 						convertLabelsCompleted(ex);
 					}
 				}
 				], (err: any, result: any) => {
 					/* istanbul ignore if */ 
 					if (err) {
-						controller.logger.error("Error occured during labels retrieval");
+						controller.logError([user, repository], "Error occured during labels retrieval", err);
 					} 
 						
 					callback(err, result);

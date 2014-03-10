@@ -22,7 +22,7 @@ class MilestonesController extends abstractController {
 		} else if (!repository) {
 			self.jsonResponse("Parameter 'repository' was not provided");
 		} else {
-			this.logger.info("Loading milestones for repository '%s/%s'", user, repository);
+			this.logInfo([user, repository], "Loading milestones");
 
 			async.waterfall([
 				(getAllMilestones: Function) => { 

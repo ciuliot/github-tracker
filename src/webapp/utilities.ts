@@ -201,5 +201,32 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	return target;
 };
 
+ko.bindingHandlers['class'] = {
+    update: (element: any, valueAccessor: any) => {
+        var currentValue: any = ko.utils.unwrapObservable(valueAccessor()),
+            prevValue = element['__ko__previousClassValue__'],
+
+            // Handles updating adding/removing classes
+            addOrRemoveClasses = (singleValueOrArray: any, shouldHaveClass: any) => {
+                if (Object.prototype.toString.call(singleValueOrArray) === '[object Array]') {          
+                    ko.utils.arrayForEach(singleValueOrArray, (cssClass: any) => {
+                      var value: any = ko.utils.unwrapObservable(cssClass);
+                      ko.utils.toggleDomNodeCssClass(element, value, shouldHaveClass);
+                    });
+                } else if (singleValueOrArray) {
+                    ko.utils.toggleDomNodeCssClass(element, singleValueOrArray, shouldHaveClass);
+                }
+            };
+
+        // Remove old value(s) (preserves any existing CSS classes)
+        addOrRemoveClasses(prevValue, false);
+
+        // Set new value(s)
+        addOrRemoveClasses(currentValue, true);
+
+        // Store a copy of the current value
+        element['__ko__previousClassValue__'] = currentValue.concat();
+    }
+};
 
 export = Utilities;

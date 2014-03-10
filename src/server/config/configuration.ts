@@ -61,6 +61,7 @@ class Configuration {
         backlog: "#backlog",
         onhold: "#onhold", 
         inprogress: "#inprogress", 
+        inreview: "#inreview", 
         implemented: "#implemented", 
         closed: "#closed" 
     };

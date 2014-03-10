@@ -70,3 +70,13 @@ var IssueCommentSchema = mongoose.Schema({
 });
 
 export var IssueCommentModel = mongoose.model('IssueComment', IssueCommentSchema);
+
+var PullRequestSchema = mongoose.Schema({
+	user: String,
+	repo: String,
+	state: String,
+	number: Number,
+    result: mongoose.Schema.Types.Mixed
+});
+
+export var PullRequestModel = mongoose.model('PullRequest', PullRequestSchema);

@@ -39,7 +39,7 @@ vows.describe("LabelsController").addBatch({
 		"Valid user and repository": {
 			topic: testApi.httpGetTopic("/labels?user=utester&repository=tracker"),
 		
-			"returns milestones": (err: any, response: http.ClientResponse, textBody: string) => {
+			"returns labels": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyJsonResponse(err, response, textBody);
 
 				result.should.eql({
@@ -50,8 +50,9 @@ vows.describe("LabelsController").addBatch({
 					phases: 
 					   [ { color: null, id: '#backlog', name: 'backlog' },
 					     { color: '#000000', id: '#onhold', name: 'onhold' },
-					     { color: '#000001', id: '#inprogress', name: 'inprogress' },
-					     { color: '#000002', id: '#implemented', name: 'implemented' },
+					     { color: null, id: '#inprogress', name: 'inprogress' },
+					     { color: null, id: '#inreview', name: 'inreview' },
+					     { color: null, id: '#implemented', name: 'implemented' },
 					     { color: null, id: '#closed', name: 'closed' } ],
 					types: 
 					   [ { color: '#f29513', id: 'bug', name: 'bug' },
@@ -61,6 +62,7 @@ vows.describe("LabelsController").addBatch({
 					      { backlog: '#backlog',
 					        onhold: '#onhold',
 					        inprogress: '#inprogress',
+					        inreview: '#inreview',
 					        implemented: '#implemented',
 					        closed: '#closed' },
 					     defaultCategory: '@other' 

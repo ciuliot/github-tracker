@@ -123,7 +123,7 @@ export class Issue {
 
 		this.canReview = ko.computed(() => {
 			if (phases() !== null) {
-				return self.phase().id() === phases().inprogress();
+				return self.phase().id() === phases().inreview();
 			} else {
 				return false;
 			}
@@ -182,6 +182,15 @@ export class IssueDetail extends Issue {
 	milestone: KnockoutObservable<string>;
 }
 
+function isIssueMatchingFilter(x: Issue, category: labelsViewModel.Label, phase: labelsViewModel.Label, filter: KnockoutObservable<string>): boolean {
+	var filterValue: string = filter().toLowerCase();
+	return filterValue.length === 0 
+	    || (x.number().toString().indexOf(filterValue) >= 0)
+	    || (x.title().toLowerCase().indexOf(filterValue) >= 0)
+	    || (category.name() === null ? false : (category.name().toLowerCase().indexOf(filterValue) >= 0))
+	    || (phase ? (phase.name().toLowerCase().indexOf(filterValue) >= 0) : false)
+	    || (x.assignee().login() !== null && x.assignee().login().toLowerCase().indexOf(filterValue) >= 0);
+}
 
 export class Phase extends labelsViewModel.Label {
 	issues: KnockoutComputed<Issue[]>;
@@ -211,25 +220,49 @@ export class Phase extends labelsViewModel.Label {
 
 		this.filteredIssues = ko.computed(() => {
 			return ko.utils.arrayFilter(self.issues(), x => {
-				var filterValue: string = self.filter().toLowerCase();
-				return filterValue.length === 0 
-				    || (x.number().toString().indexOf(filterValue) >= 0)
-				    || (x.title().toLowerCase().indexOf(filterValue) >= 0)
-				    || (self.category.name().toLowerCase().indexOf(filterValue) >= 0)
-				    || (self.name().toLowerCase().indexOf(filterValue) >= 0)
-				    || (x.assignee().login() !== null && x.assignee().login().toLowerCase().indexOf(filterValue) >= 0);
+				return isIssueMatchingFilter(x, self.category, self, self.filter);
 			});
 		});
 
 		this.isColumnVisible = ko.computed(() => {
 			var phases = self.category.viewModel.labelsViewModelInstance.labels().declaration().phases;
-			var closedIssuesVisible = self.category.viewModel.closedIssuesVisible();
+			var mode = self.category.viewModel.mode();
 			var id = self.id();
-			if (phases() !== null) {
-				return id !== phases().closed() ||
-					(closedIssuesVisible && id === phases().closed());
+			var result: boolean = true;
+
+			if (phases() !== null) {				
+				var isBacklog = mode === "backlog";
+				var isBoard = mode === "board";
+				var isClosed = mode === "closed";
+
+				result = id === phases().backlog() && isBacklog;
+				result = result || (id === phases().onhold() && isBoard);
+				result = result || (id === phases().inprogress() && isBoard);
+				result = result || (id === phases().implemented() && isBoard);
+				result = result || (id === phases().inreview() && isBoard);
+				result = result || (id === phases().closed() && isClosed);
+
+				/*return id !== phases().closed() ||
+					(closedIssuesVisible && id === phases().closed());*/
 			}
-			return true;
+			return result;
+		});
+	}
+}
+
+export class Row {
+	issues: KnockoutComputed<Issue[]>;
+	filteredIssues: KnockoutComputed<Issue[]>;
+
+	constructor(public category: Category, private filter: KnockoutObservable<string>, data: any[]) {
+		var self = this;
+		this.issues = knockout_mapping.fromJS(data);
+
+		this.filteredIssues = ko.computed(() => {
+			var mode = self.category.viewModel.mode();
+			return ko.utils.arrayFilter(self.issues(), x => {
+				return isIssueMatchingFilter(x, self.category, undefined, self.filter);
+			});
 		});
 	}
 }
@@ -238,6 +271,7 @@ export class Category extends labelsViewModel.Label  {
 	phases: KnockoutComputed<Phase[]>;
 	isTopPriority: KnockoutObservable<boolean> = ko.observable(false);
 	visibleIssueCount: KnockoutComputed<number>;
+	rows: KnockoutComputed<Row[]>;
 
 	constructor(public viewModel: IssuesViewModel, data: string) {
 		super();
@@ -249,6 +283,30 @@ export class Category extends labelsViewModel.Label  {
 			return ko.utils.arrayMap(self.viewModel.labelsViewModelInstance.labels().phases(), phase => {
 				return new Phase(self, viewModel.filter, knockout_mapping.toJS(phase));
 			});
+		});
+
+		self.rows = ko.computed(() => {
+			var issues = self.viewModel.issuesData().issues();
+			var mode = self.viewModel.mode();
+			var phases = self.viewModel.labelsViewModelInstance.labels().declaration().phases;
+
+			console.log(mode);
+			issues = ko.utils.arrayFilter(issues, x => {
+				var isInMode = (mode === "backlog" && x.phase().id() == phases().backlog()) ||
+				      		   (mode === "closed" && x.phase().id() == phases().closed());
+				return x.category().id() === self.id() && isInMode;
+			});
+			var result = [];
+
+			var startIndex = 0;
+
+			while(startIndex < issues.length) {
+				var endIndex = Math.min(startIndex + 4, issues.length);
+				result.push(new Row(self, self.viewModel.filter, issues.slice(startIndex, endIndex)));
+				startIndex += 4;
+			}
+
+			return result;
 		});
 
 		self.visibleIssueCount = ko.computed(() => {
@@ -298,7 +356,7 @@ export class IssuesViewModel {
 	lastTemporaryId: number = 0;
 
 	constructor(public labelsViewModelInstance: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
-		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>, public closedIssuesVisible: KnockoutObservable<boolean>) {
+		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>, public mode: KnockoutObservable<string>) {
 		var self = this;
 		var mapping = {
 			create: (options: any) => {

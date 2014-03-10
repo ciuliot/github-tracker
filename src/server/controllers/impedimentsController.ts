@@ -21,18 +21,19 @@ class ImpedimentsController extends abstractController {
 
 	show() {
 		var self = this;
+		var user = self.param("user"), repository = self.param("repository");
 		var requestBody = {
-			user: self.param("user"),
-			repo: self.param("repository"),
+			user: user,
+			repo: repository,
 			path: configuration.impedimentsFile
 		};
 
-		if (!requestBody.user) {
+		if (!user) {
 			self.jsonResponse("Parameter 'user' was not provided");
-		} else if (!requestBody.repo) {
+		} else if (!repository) {
 			self.jsonResponse("Parameter 'repository' was not provided");
 		} else {
-			self.logger.info("Loading impediments");
+			self.logInfo([user, repository], "Loading impediments from file '%s'", configuration.impedimentsFile);
 
 			async.waterfall([
 				(getImpedimentsFileComplete: Function) => {
@@ -41,7 +42,7 @@ class ImpedimentsController extends abstractController {
 			], (err: any, result: any) => {
 				/* istanbul ignore if */
 				if (err) {
-					self.logger.error("Error occured during impediments retrieval", err);	
+					self.logError([user, repository], "Error occured during impediments retrieval", err);	
 				} else {
 					result = new Buffer(result.content, "base64").toString("utf8");
 				}
@@ -53,39 +54,41 @@ class ImpedimentsController extends abstractController {
 
 	update() {
 		var self = this;
+		var user = self.param("user"), repository = self.param("repository"), number = self.param("id"), description = self.param("description");
+
 		var requestBody: any = {
-			user: self.param("user"),
-			repo: self.param("repository"),
-			number: self.param("id"),
-			body: self.param("description"),
+			user: user,
+			repo: repository,
+			number: number,
+			body: description,
 			path: undefined,
 			message: undefined,
 			sha: undefined,
 			content: undefined
 		};
 
-		if (!requestBody.user) {
+		if (!user) {
 			self.jsonResponse("Parameter 'user' was not provided");
-		} else if (!requestBody.repo) {
+		} else if (!repository) {
 			self.jsonResponse("Parameter 'repository' was not provided");
-		} else if (!requestBody.body) {
+		} else if (!description) {
 			self.jsonResponse("Parameter 'description' was not provided");
 		} else {
 			var template: string, impediments: any;
 
 			async.waterfall([
 				(createCommentCompleted: Function) => {
-					self.logger.info("Adding impediment comment to issue #%d", requestBody.number);
+					self.logInfo([user, repository, number], "Adding impediment comment");
 					self.getGitHubClient().issues.createComment(requestBody, createCommentCompleted);
 				}, 
 				(comment: any, loadTemplateCompleted: (err: ErrnoException, data: any) => void) => {
 					var filePath = path.resolve(configuration.templatesDir(), "impediments");
-					self.logger.info("Loading impediments template from %s", filePath);
+					self.logInfo([user, repository, number], "Loading impediments template from %s", filePath);
 					fs.readFile(filePath, { encoding: 'utf8' }, loadTemplateCompleted);
 				},
 				(result: any, getImpedimentsFileComplete: Function) => {
 					template = result;
-					self.logger.info("Getting impediments file");
+					self.logInfo([user, repository, number], "Getting impediments file");
 					requestBody.path = configuration.impedimentsFile;
 					self.getGitHubClient().repos.getContent(requestBody, getImpedimentsFileComplete);
 				},
@@ -146,14 +149,14 @@ class ImpedimentsController extends abstractController {
 					requestBody.sha = impediments.sha;
 					requestBody.content = new Buffer(newContent, 'utf8').toString("base64");
 
-					self.logger.debug("Uploading new impediments file");
+					self.logInfo([user, repository, number], "Uploading new impediments file");
 
 					self.getGitHubClient().repos.updateFile(requestBody, updateImpedimentsFileComplete);
 				}
 			], (err: any, result: any) => {
 				/* istanbul ignore next */
 				if (err) {
-					self.logger.error("Error occured during impediments retrieval", err);	
+					self.logError([user, repository, number], "Error occured during impediments update", err);	
 				} 
 
 				self.jsonResponse(err, "OK");
