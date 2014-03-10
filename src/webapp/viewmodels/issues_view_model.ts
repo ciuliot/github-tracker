@@ -21,6 +21,7 @@ export class Issue {
 
 	assignee: KnockoutObservable<collaboratorModel>;
 	branch: KnockoutObservable<any>;
+	pull_request: KnockoutObservable<any>;
 	number: KnockoutObservable<number>;
 	phase: KnockoutObservable<labelsViewModel.Label>;
 	category: KnockoutObservable<labelsViewModel.Label>;
@@ -40,6 +41,7 @@ export class Issue {
 		estimate: null,
 		assignee: { login: null, avatar_url: null, estimate: null },
 		branch: { name: null },
+		pull_request: { html_url: null, state: null },
 		type: $.extend({}, labelsViewModel.Label.empty ),
 		environment: null,
 		compareUrl: null,
@@ -58,6 +60,11 @@ export class Issue {
 				}
 			},
 			'branch': {
+				create: (options: any) => {
+					return ko.observable(knockout_mapping.fromJS(options.data));
+				}
+			},
+			'pull_request': {
 				create: (options: any) => {
 					return ko.observable(knockout_mapping.fromJS(options.data));
 				}

@@ -315,7 +315,7 @@ vows.describe("IssuesController").addBatch({
 				topic: testApi.httpPostTopic("/issues", { 
 					user: "utester", 
 					repository: "tracker", 
-					title: "new issue", 
+					title: "new issue for phase update", 
 					body: {
 						description: "Check it out!"
 					} 
@@ -388,6 +388,7 @@ vows.describe("IssuesController").addBatch({
 							compareUrl: null,
 							description: 'Woo!', 
 							assignee: { login: null, avatar_url: null }, 
+							pull_request: { html_url: null, state: null },
 							estimate: 'S',
 							expectedBehavior: "Will function properly",
 							environment: 'Desktop'
