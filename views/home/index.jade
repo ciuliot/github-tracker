@@ -64,6 +64,7 @@ block head
 							li.dropdown-header.checkout-command
 								form: input(type="text", readonly="readonly", onclick="this.select()", data-bind="attr: { value: checkoutCommand() }")
 							li(role="presentation"): a(role="menuitem", data-bind="attr: { href: 'https://github.com/ciuliot/github-tracker/tree/' + branch().name() }", target="_blank") Open branch on GitHub
+							li(role="presentation", data-bind="visible: pull_request().html_url() !== null"): a(role="menuitem", data-bind="attr: { href: pull_request().html_url() }", target="_blank") Open pull request
 							
 					button.btn.btn-default(type="button", data-bind="css: { hide: !canStart() }, click: $root.issueStart.bind($root, $data), tooltip: { title: 'Start work', container: 'body' }")
 						span.glyphicon.glyphicon-play
