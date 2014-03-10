@@ -187,6 +187,46 @@ new testModels.IssuesModel({
 		    "created_at": "2011-04-22T13:33:48Z",
 		    "updated_at": "2011-04-22T13:33:48Z"
 		}
+	}),
+	new testModels.IssuesModel({
+		user: "utester",
+		repo: "tracker",
+		milestone: "1",
+		state: "closed",
+		number: 1352,
+		result: {
+		    "url": "https://api.github.com/repos/octocat/Hello-World/issues/1352",
+		    "html_url": "https://github.com/octocat/Hello-World/issues/1352",
+		    "number": 1352,
+		    "state": "closed",
+		    "title": "Closed task",
+		    "body": "__Estimate:__ M\n***\nAll done!",
+		    "labels": [
+		      {
+		      	"url": "https://api.github.com/repos/octocat/Hello-World/labels/@frontend",
+		    	"name": "@frontend",
+		    	"color": "ff0000"
+		      }, {
+		    	"url": "https://api.github.com/repos/octocat/Hello-World/labels/feature",
+		    	"name": "feature",
+		    	"color": "0000ff"
+		      }
+		    ],
+		    "assignee": {
+		      "login": "octocat",
+		      "id": 1,
+		      "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+		    },
+		    "comments": 0,
+		    "pull_request": {
+		      "html_url": "https://github.com/octocat/Hello-World/pull/1352",
+		      "diff_url": "https://github.com/octocat/Hello-World/pull/1352.diff",
+		      "patch_url": "https://github.com/octocat/Hello-World/pull/1352.patch"
+		    },
+		    "closed_at": null,
+		    "created_at": "2011-04-22T13:33:48Z",
+		    "updated_at": "2011-04-22T13:33:48Z"
+		}
 	})
 ];
 

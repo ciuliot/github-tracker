@@ -295,14 +295,14 @@ class IssuesController extends abstractController {
 			var tasks: any[] = [];
 
 			if (collaborator !== undefined) {
-				self.logger.info("Updating issue %s - assigning collaborator %s", number, collaborator);
+				self.logInfo([user, repository, number], "Assigning collaborator '%s'", collaborator);
 				message.assignee = collaborator;
 
 				tasks.push((updateIssueCompleted: Function) => {
 					self.getGitHubClient().issues.edit(message, updateIssueCompleted);
 				});
 			} else if (phase !== undefined) {
-				self.logger.info("Updating issue %s - updating phase to %s", number, phase);
+				self.logInfo([user, repository, number], "Updating phase to '%s'", phase);
 				tasks = [];
 				var branchInfo: any = undefined;
 
@@ -312,11 +312,11 @@ class IssuesController extends abstractController {
 					tasks.push((getBranchCompleted: Function) => {
 						self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
 							if (result.name === null) {
-								self.logger.info("Issue branch doesn't exists, trying to create new branch %s for issue %d", branchName, number);
+								self.logInfo([user, repository, number], "Issue branch doesn't exists, trying to create new branch '%s'", branchName);
 
 								async.waterfall([
 									(getMasterBranchCompleted: Function) => {
-										self.logger.info("Getting master branch for repo %s/%s", user, repository);
+										self.logInfo([user, repository, number], "Getting master branch");
 										self.getGitHubClient().gitdata.getReference({
 											user: user,
 											repo: repository,
@@ -326,7 +326,7 @@ class IssuesController extends abstractController {
 										});	
 									}, 
 									(masterBranch: any, createBranchCompleted: Function) => {
-										self.logger.info("Creating new branch %s for repo %s/%s", branchName, user, repository);
+										self.logInfo([user, repository, number], "Creating new branch '%s'", branchName);
 										self.getGitHubClient().gitdata.createReference({
 											user: user,
 											repo: repository,
@@ -352,7 +352,7 @@ class IssuesController extends abstractController {
 				if (phase === configuration.phaseNames.inreview) {
 					tasks.push((createPullRequestCompleted: Function) => {
 						var branchName = util.format(configuration.branchNameFormat, number);
-						self.logger.info("Creating pull request for branch %s", branchName);
+						self.logInfo([user, repository, number], "Creating pull request for branch '%s'", branchName);
 						self.getGitHubClient().pullRequests.createFromIssue({
 							user: user,
 							repo: repository,
@@ -378,7 +378,7 @@ class IssuesController extends abstractController {
 						message.state = "closed";
 					}
 
-					self.logger.info("Updating issue state to %s and labels to %s", message.state, JSON.stringify(message.labels));
+					self.logInfo([user, repository, number], "Updating issue state to %s and labels to %s", message.state, message.labels);
 
 					self.getGitHubClient().issues.edit(message, (err: any, result: any) => {
 						if (!err) {
@@ -390,7 +390,7 @@ class IssuesController extends abstractController {
 				});
 			} 
 			else if (body !== undefined) {
-				self.logger.info("Updating issue %s - updating body to %s", number, body);
+				self.logInfo([user, repository, number], "Updating body");
 
 				tasks = [
 					(renderTemplateCompleted: Function) => {
@@ -402,15 +402,20 @@ class IssuesController extends abstractController {
 						});
 					},
 					(issue: any, formattedBody: string, issueSaveCompleted: Function) => {
-						message.labels = issue.labels.map((x: any) => { return x.name });
-						message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) !== null; }); // Keep only phase labels
+						try {
+							message.labels = issue.labels.map((x: any) => { return x.name });
+							message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) !== null; }); // Keep only phase labels
 
-						message.labels = message.labels.concat(self.getLabelsFromBody(body));
+							message.labels = message.labels.concat(self.getLabelsFromBody(body));
 
-						message.body = formattedBody;
-						message.title = body.title;
+							message.body = formattedBody;
+							message.title = body.title;
 
-						self.getGitHubClient().issues.edit(message, issueSaveCompleted);
+							self.getGitHubClient().issues.edit(message, issueSaveCompleted);
+						} catch (ex) {
+							self.logError([user, repository, number], "Error occured during body update", ex);
+							issueSaveCompleted(ex);
+						}
 					}
 				];
 			}
@@ -418,36 +423,42 @@ class IssuesController extends abstractController {
 			if (tasks.length == 0) {
 				self.jsonResponse("Operation not allowed");
 			} else {
-				tasks.push((issue: any, getLabelsCompleted: Function) => {
-					labelsController.getLabels(self, user, repository, (err: any, labels: any) => {
-						getLabelsCompleted(err, issue, labels);
-					});
+				var issue: any, labels: labelsModel.IndexResult;
+				tasks.push((result: any, getLabelsCompleted: Function) => {
+					issue = result;
+					labelsController.getLabels(self, user, repository, getLabelsCompleted);
 				});
-				tasks.push((issue: any, labels: labelsModel.IndexResult, getBranchCompleted: Function) => {
+				tasks.push((result: labelsModel.IndexResult, getBranchCompleted: Function) => {
+					labels = result;
 					if (issue.branch) {
-						getBranchCompleted(null, issue, labels);
+						getBranchCompleted(null, null);
 					} else {
-						self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
-							issue.branch = result;
-							getBranchCompleted(null, issue, labels);
-						});
+						self.getIssueBranchInfo(number, user, repository, getBranchCompleted);
 					}
 				});
-				tasks.push((issue: any, labels: labelsModel.IndexResult, convertIssueCompleted: Function) => {
-					convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
+				tasks.push((result: any, getPullRequestCompleted: Function) => {
+					issue.branch = result;
+					self.getGitHubClient().pullRequests.get({ user: user, repo: repository, number: number }, getPullRequestCompleted);
 				});
-				tasks.push((issue: any, sendUpdatesToClientsCompleted: Function) => {
-					self.logger.info("Sending update via sockets");
-					var sio = configuration.socketIO.sockets.in(util.format("%s/%s", user, repository));
-					sio.emit("issue-update", issue);
+				tasks.push((result: any, convertIssueCompleted: Function) => {
+					issue.pull_request = result;
+					try {
+						issue = self.convertIssue(user, repository, issue, labels);
+						self.logInfo([user, repository, number], "Sending update via websockets");
 
-					sendUpdatesToClientsCompleted(null, issue);
+						var sio = configuration.socketIO.sockets.in(util.format("%s/%s", user, repository));
+						sio.emit("issue-update", issue);
+
+						convertIssueCompleted(null, issue);
+					} catch (ex){
+						self.logError([user, repository, number], "Error occured during issue conversion", ex);	
+					}
 				});
 
 				async.waterfall(tasks, (err: any, result: any) => {
 					/* istanbul ignore next */ 
 					if (err) {
-						self.logger.error("Error occured during issue update", err);	
+						self.logError([user, repository, number], "Error occured during issue update", err);
 					} 
 					self.jsonResponse(err, result);
 				});
@@ -504,6 +515,7 @@ class IssuesController extends abstractController {
 		var repository = self.param("repository");
 		var body = self.param("body");
 		var title = self.param("title");
+		var milestone = self.param("milestone");
 
 		if (!user) {
 			self.jsonResponse("Parameter 'user' was not provided");
@@ -517,12 +529,11 @@ class IssuesController extends abstractController {
 			var message: any = {				
 				user: user,
 				repo: repository,
-				milestone: self.param("milestone"),
+				milestone: milestone,
 				title: title
 			};
 
-			self.logger.info("Creating new issue at %s/%s/%s [%s]", user, repository, message.milestone, title);
-			self.logger.info(body);
+			self.logInfo([user, repository, milestone], "Creating new issue with title '%s'", title);
 
 			var labels: labelsModel.IndexResult;
 
@@ -543,6 +554,7 @@ class IssuesController extends abstractController {
 					}
 					catch (ex) {
 						/* istanbul ignore next */ 
+						self.logError([user, repository, milestone], "Error occured during labels parsing", ex);
 						createIssueCompleted(ex);
 					}
 				},
@@ -552,13 +564,14 @@ class IssuesController extends abstractController {
 						convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
 					} catch (ex) {
 						/* istanbul ignore next */ 
+						self.logError([user, repository, milestone], "Error occured during issue conversion", ex);
 						convertIssueCompleted(ex);	
 					}
 				}
 			], (err: any, result: any) => {
 				/* istanbul ignore next */ 
 				if (err) {
-					self.logger.error("Error occured during issue create", err);	
+					self.logError([user, repository, milestone], "Error occured during issue creation", err);
 				}
 
 				self.jsonResponse(err, result);

@@ -63,7 +63,7 @@ vows.describe("IssuesController").addBatch({
 
 					should.exist(result.issues);
 					should.exist(result.issues.length);
-					result.issues.length.should.eql(5);
+					result.issues.length.should.eql(6);
 
 					should.exist(result.meta);
 					result.meta.should.eql({
@@ -164,36 +164,23 @@ vows.describe("IssuesController").addBatch({
 				        assignee: { login: 'octocat', avatar_url: 'https://github.com/images/error/octocat_happy.gif' }
 					});
 
-					/*result.should.eql({
-						{
-							title: 'Implemented bug', 
-					        category: { color: '#00ff00', id: '@backend', name: 'backend' },
-							phase: { color: '#000002', id: '#implemented', name: 'implemented' }, 
-					        type: { color: '#f29513', id: 'bug', name: 'bug' }, 
-					        number: 1349, 
-					        compareUrl: null, 
-					        description: '1. Doesn\'t really work\n2. And crashes', 
-					        branch: { name: null, url: null }, 
-					        assignee: { login: 'octocat', avatar_url: 'https://github.com/images/error/octocat_happy.gif' },
-					        estimate: "S",
-					        expectedBehavior: 'Works correctly', 
-					        environment: 'Browser'
-						}, {
-							title: 'Completed task', 
-					        category: { color: '#00ff00', id: '@backend', name: 'backend' },
-							phase: { color: null, id: '#closed', name: 'closed' }, 
-					        type: { name: null, id: null, color: null }, 
-					        number: 1350, 
-					        compareUrl: null, 
-					        description: 'Refactor', 
-					        branch: { name: null, url: null }, 
-					        assignee: { login: 'octocat', avatar_url: 'https://github.com/images/error/octocat_happy.gif' }
-						}]
-					});*/
+					result.issues[5].should.eql({
+						title: 'Closed task', 
+				        category: { color: '#ff0000', id: '@frontend', name: 'frontend' },
+						phase: { color: null, id: '#closed', name: 'closed' }, 
+				        type: { color: '#0000ff', name: 'feature', id: 'feature' }, 
+				        number: 1352, 
+				        compareUrl: null, 
+				        description: 'All done!',
+				        pull_request: { html_url: null, state: null },
+				        branch: { name: null, url: null },
+				        assignee: { login: 'octocat', avatar_url: 'https://github.com/images/error/octocat_happy.gif' },
+				        estimate: "M"
+					});
 				}
 			}
 		},
-		/*"Create": {
+		"Create": {
 			"without parameters": {
 				topic: testApi.httpPostTopic("/issues"),
 
@@ -278,9 +265,9 @@ vows.describe("IssuesController").addBatch({
 						environment: 'Browser'
 					});
 				}
-			},
-		},*/
-		/*"Update": 
+			}
+		},
+		"Update": 
 		{
 			"without parameters": {
 				topic: testApi.httpPutTopic("/issues/0"),
@@ -408,7 +395,7 @@ vows.describe("IssuesController").addBatch({
 					}
 				}
 			}
-		}*/
+		}
 	}
 }).export(module);
 
