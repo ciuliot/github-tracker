@@ -32,7 +32,7 @@ class LabelsController extends abstractController {
 		} else if (!repository) {
 			callback("Parameter 'repository' was not provided");
 		} else {
-			controller.logInfo([user, repository], "Loading collaborators");
+			controller.logInfo([user, repository], "Loading labels");
 
 			async.waterfall([
 				(getAllLabels: Function) => { 

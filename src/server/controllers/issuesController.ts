@@ -334,8 +334,8 @@ class IssuesController extends abstractController {
 											sha: masterBranch.object.sha
 										}, createBranchCompleted);
 									}
-									], (err: any, result: any) => { 
-										getBranchCompleted(err, result); 
+									], (err:any, result: any) => {
+										getBranchCompleted(err, result);
 									});
 							} else {
 								getBranchCompleted(err, result);
@@ -344,7 +344,7 @@ class IssuesController extends abstractController {
 					});
 
 					tasks.push((result: any, storeBranchCompleted: Function) => {		
-						branchInfo = result;
+						branchInfo = self.convertBranchInfo(result);
 						storeBranchCompleted();
 					});
 				}
@@ -371,12 +371,15 @@ class IssuesController extends abstractController {
 				tasks.push((issue: any, updateIssueCompleted: Function) => {
 					message.labels = issue.labels.map((x: any) => { return x.name });
 					message.labels = message.labels.filter((x: string) => { return configuration.phaseRegEx.exec(x) === null; });
+					message.state = "open";
 
-					if (phase !== configuration.phaseNames.closed) {
+					if (phase === configuration.phaseNames.onhold) { // Only onhold phase have a label 
 						message.labels.push(phase);
-					} else {
+					} else if (phase === configuration.phaseNames.closed) {
 						message.state = "closed";
 					}
+
+					self.logDebug([user, repository, number], "Branch info", branchInfo);
 
 					self.logInfo([user, repository, number], "Updating issue state to %s and labels to %s", message.state, message.labels);
 
@@ -431,14 +434,20 @@ class IssuesController extends abstractController {
 				tasks.push((result: labelsModel.IndexResult, getBranchCompleted: Function) => {
 					labels = result;
 					if (issue.branch) {
-						getBranchCompleted(null, null);
+						getBranchCompleted(null, issue.branch);
 					} else {
 						self.getIssueBranchInfo(number, user, repository, getBranchCompleted);
 					}
 				});
 				tasks.push((result: any, getPullRequestCompleted: Function) => {
 					issue.branch = result;
-					self.getGitHubClient().pullRequests.get({ user: user, repo: repository, number: number }, getPullRequestCompleted);
+					self.getGitHubClient().pullRequests.get({ user: user, repo: repository, number: number }, (err: any, result: any) => {
+						if (err && err.code === 404) { // In case that PR doesn't exist continue with empty
+							getPullRequestCompleted(null, self.convertPullRequestInfo(null));
+						} else {
+							getPullRequestCompleted(err, result);
+						}
+					});
 				});
 				tasks.push((result: any, convertIssueCompleted: Function) => {
 					issue.pull_request = result;
@@ -606,21 +615,20 @@ class IssuesController extends abstractController {
 			}
 		}
 
-		if (phase === null) {
-			if (issue.state === "closed") {
-			 	phase = configuration.phaseNames.closed;
-			} else {
-				phase = configuration.phaseNames.backlog;
-				var pull_request = (issue.pull_request && issue.pull_request.html_url !== null) ? issue.pull_request : null;
+		// Closed state always takes precedence
+		phase = issue.state === "closed" ? configuration.phaseNames.closed : phase;
 
-				if (pull_request !== null) {
-					phase = configuration.phaseNames.implemented
-					if (pull_request.state === "open") {
-						phase = configuration.phaseNames.inreview;
-					}
-				} else if (issue.branch && issue.branch.name !== null) {
-					phase = configuration.phaseNames.inprogress;
+		if (phase === null) {
+			phase = configuration.phaseNames.backlog;
+			var pull_request = (issue.pull_request && issue.pull_request.html_url !== null) ? issue.pull_request : null;
+
+			if (pull_request !== null) {
+				phase = configuration.phaseNames.implemented
+				if (pull_request.state === "open") {
+					phase = configuration.phaseNames.inreview;
 				}
+			} else if (issue.branch && issue.branch.name !== null) {
+				phase = configuration.phaseNames.inprogress;
 			}
 		}
 

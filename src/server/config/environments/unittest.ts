@@ -30,7 +30,15 @@ class TestDataFactory {
 		}
 	};
 	pullRequests = {
-		get(data: any, callback: Function) { TestDataFactory.getOne(testModels.PullRequestModel, data, callback); }
+		get(data: any, callback: Function) { 
+			TestDataFactory.getOne(testModels.PullRequestModel, data, (err:any, data: any) => {
+				if (!data && !err) {
+					err = { message:"Not Found", documentation_url:"http://developer.github.com/v3", code: 404 };
+				}
+
+				callback(err, data);
+			}); 
+		}
 	}
 	issues = {
 		getAllMilestones(data: any, callback: Function) { TestDataFactory.get(testModels.IssuesGetAllMilestonesModel, data, callback); },
