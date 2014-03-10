@@ -38,6 +38,18 @@ class TestDataFactory {
 
 				callback(err, data);
 			}); 
+		},
+		merge(data: any, callback: Function) { 
+			testModels.PullRequestModel.findOne(data, (err:any, data: any) => {
+				data.state = "closed";
+				data.result.state = "closed";
+
+				data.save((err: any, data: any) => {
+					callback(err, TestDataFactory.convertResult(err, data));
+				});
+
+				
+			}); 
 		}
 	}
 	issues = {
