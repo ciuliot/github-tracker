@@ -367,18 +367,6 @@ vows.describe("IssuesController").addBatch({
 							}
 						}
 					}
-					/*"close": {
-						topic: function (response: http.ClientResponse, textBody: string) {
-							var result = testApi.verifyJsonResponse(null, response, textBody);
-							testApi.httpPut("/issues/" + result.number, this.callback, { user: "utester", repository: "tracker", phase: "#closed" });
-						},
-						"returns updated issue": (err: any, response: http.ClientResponse, textBody: string) => {
-							var result = testApi.verifyJsonResponse(err, response, textBody);
-
-							should.exist(result.phase);
-							result.phase.id.should.eql("#closed");
-						}
-					}*/
 				}
 			},
 			"body": {
