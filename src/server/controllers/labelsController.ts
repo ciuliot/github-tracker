@@ -53,11 +53,14 @@ class LabelsController extends abstractController {
 							}
 						};
 
+						var phases: labelsModel.Label[] = [];
+
+						allLabels = allLabels.sort();
+
 						allLabels.push({ id: null, name: configuration.defaultCategoryName });
 						allLabels.unshift({ id: null, name: configuration.phaseNames.backlog });
 						allLabels.push({ id: null, name: configuration.phaseNames.inprogress });
 						allLabels.push({ id: null, name: configuration.phaseNames.inreview });
-						allLabels.push({ id: null, name: configuration.phaseNames.implemented });
 						allLabels.push({ id: null, name: configuration.phaseNames.closed });
 
 						for (var i = 0; i < allLabels.length; i++) {
@@ -75,11 +78,20 @@ class LabelsController extends abstractController {
 								result.categories.push(convertedLabel);
 							} else if (phase !== null) {
 								convertedLabel.name = phase[1];
-								result.phases.push(convertedLabel);
+								phases.push(convertedLabel);
 							} else {
 								result.types.push(convertedLabel);
 							}
 						}
+
+						result.phases.push(phases.filter(x => { return x.id === configuration.phaseNames.backlog })[0]);
+						result.phases.push(phases.filter(x => { return x.id === configuration.phaseNames.onhold })[0]);
+						result.phases.push(phases.filter(x => { return x.id === configuration.phaseNames.inprogress })[0]);
+						result.phases.push(phases.filter(x => { return x.id === configuration.phaseNames.inreview })[0]);
+						result.phases.push(phases.filter(x => { return x.id === configuration.phaseNames.implemented })[0]);
+						result.phases.push(phases.filter(x => { return x.id === configuration.phaseNames.closed })[0]);
+
+
 						convertLabelsCompleted(null, result);
 					} catch (ex) {
 						/* istanbul ignore next */ 

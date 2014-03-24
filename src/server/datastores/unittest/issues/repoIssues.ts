@@ -170,7 +170,11 @@ new testModels.IssuesModel({
 		      	"url": "https://api.github.com/repos/octocat/Hello-World/labels/@backend",
 		    	"name": "@backend",
 		    	"color": "00ff00"
-		      }
+		      },  {
+			    "url": "https://api.github.com/repos/octocat/Hello-World/labels/#implemented",
+			    "name": "#implemented",
+			    "color": "000001"
+			  }
 		    ],
 		    "assignee": {
 		      "login": "octocat",

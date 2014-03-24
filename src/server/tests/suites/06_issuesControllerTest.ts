@@ -57,7 +57,7 @@ vows.describe("IssuesController").addBatch({
 			"valid user and repository": {
 				topic: testApi.httpGetTopic("/issues?user=utester&repository=tracker&milestone=1"),
 			
-				"returns milestones": (err: any, response: http.ClientResponse, textBody: string) => {
+				"returns issue": (err: any, response: http.ClientResponse, textBody: string) => {
 					var result = testApi.verifyJsonResponse(err, response, textBody);
 					//console.log(JSON.stringify(result));
 
@@ -147,14 +147,14 @@ vows.describe("IssuesController").addBatch({
 					result.issues[4].should.eql({
 						title: 'Completed task', 
 				        category: { color: '#00ff00', id: '@backend', name: 'backend' },
-						phase: { color: null, id: '#implemented', name: 'implemented' }, 
+						phase: { color: '#000001', id: '#implemented', name: 'implemented' }, 
 				        type: { color: null, id: null, name: null }, 
 				        number: 1351, 
 				        compareUrl: 'https://github.com/utester/tracker/compare/master...issue/1351', 
 				        description: 'Refactor',
 				        pull_request: { 
 				        	html_url: "https://github.com/octocat/Hello-World/pull/1351", 
-				        	state: "closed" 
+				        	state: "open" 
 				        },
 				        branch: { 
 				        	ref: 'refs/heads/issue/1351', 
@@ -331,16 +331,40 @@ vows.describe("IssuesController").addBatch({
 						should.exist(result.phase);
 						result.phase.id.should.eql("#inprogress");
 					},
-					"close": {
+					"complete work": {
 						topic: function (response: http.ClientResponse, textBody: string) {
 							var result = testApi.verifyJsonResponse(null, response, textBody);
-							testApi.httpPut("/issues/" + result.number, this.callback, { user: "utester", repository: "tracker", phase: "#closed" });
+							testApi.httpPut("/issues/" + result.number, this.callback, { user: "utester", repository: "tracker", phase: "#inreview" });
 						},
-						"returns updated issue": (err: any, response: http.ClientResponse, textBody: string) => {
+						"returns reviewed issue": (err: any, response: http.ClientResponse, textBody: string) => {
 							var result = testApi.verifyJsonResponse(err, response, textBody);
 
 							should.exist(result.phase);
-							result.phase.id.should.eql("#closed");
+							result.phase.id.should.eql("#inreview");
+						},
+						"review work": {
+							topic: function (response: http.ClientResponse, textBody: string) {
+								var result = testApi.verifyJsonResponse(null, response, textBody);
+								testApi.httpPut("/issues/" + result.number, this.callback, { user: "utester", repository: "tracker", phase: "#implemented" });
+							},
+							"returns implemented issue": (err: any, response: http.ClientResponse, textBody: string) => {
+								var result = testApi.verifyJsonResponse(err, response, textBody);
+
+								should.exist(result.phase);
+								result.phase.id.should.eql("#implemented");
+							},
+							"accept work": {
+								topic: function (response: http.ClientResponse, textBody: string) {
+									var result = testApi.verifyJsonResponse(null, response, textBody);
+									testApi.httpPut("/issues/" + result.number, this.callback, { user: "utester", repository: "tracker", phase: "#closed" });
+								},
+								"returns closed issue": (err: any, response: http.ClientResponse, textBody: string) => {
+									var result = testApi.verifyJsonResponse(err, response, textBody);
+
+									should.exist(result.phase);
+									result.phase.id.should.eql("#closed");
+								}
+							}
 						}
 					}
 				}

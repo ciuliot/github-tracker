@@ -31,7 +31,7 @@ var model = [
 		user: "utester",
 		repo: "tracker",
 		number: 1351,
-		state: "closed",
+		state: "open",
 		result: {
 		      "url": "https://api.github.com/repos/octocat/Hello-World/pulls/1351",
 			  "html_url": "https://github.com/octocat/Hello-World/pull/1351",
@@ -44,7 +44,7 @@ var model = [
 			  "comments_url": "https://api.github.com/repos/octocat/Hello-World/issues/1/comments",
 			  "statuses_url": "https://api.github.com/repos/octocat/Hello-World/statuses/6dcb09b5b57875f334f61aebed695e2e4193db5e",
 			  "number": 1351,
-			  "state": "closed",
+			  "state": "open",
 			  "title": "new-feature",
 			  "body": "Please pull these awesome changes",
 			  "created_at": "2011-01-26T19:01:12Z",

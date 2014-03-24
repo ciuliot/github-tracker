@@ -106,7 +106,7 @@ export class Issue {
 
 		this.canPause = ko.computed(() => {
 			if (phases() !== null) {
-				return self.phase().id() === phases().inprogress();
+				return self.phase().id() === phases().inprogress() || self.phase().id() === phases().inreview();
 			} else {
 				return false;
 			}
