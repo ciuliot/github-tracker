@@ -7,6 +7,8 @@ import collaboratorModel = require("../models/collaborator_model");
 import ko = require("knockout");
 import $ = require("jquery");
 
+export enum BoardType { developer, qa };
+
 export class Issue {
 	canStart: KnockoutComputed<boolean>;
 	canAssign: KnockoutComputed<boolean>;
@@ -199,7 +201,7 @@ function isIssueMatchingFilter(x: Issue, category: labelsViewModel.Label, phase:
 	    || (x.assignee().login() !== null && x.assignee().login().toLowerCase().indexOf(filterValue) >= 0);
 }
 
-export class Phase extends labelsViewModel.Label {
+export class DeveloperBoardColumn extends labelsViewModel.Label {
 	issues: KnockoutComputed<Issue[]>;
 	filteredIssues: KnockoutComputed<Issue[]>;
 	isColumnVisible: KnockoutComputed<boolean>;
@@ -211,7 +213,7 @@ export class Phase extends labelsViewModel.Label {
 		knockout_mapping.fromJS(data, {}, this);
 
 		this.issues = ko.computed(() => {
-			return ko.utils.arrayFilter(self.category.viewModel.issuesData().issues(), x => {
+			return ko.utils.arrayFilter(self.category.issues(), x => {
 				var meta = self.category.viewModel.issuesData().meta();
 				var isPriorityType: boolean = meta !== null && meta.priorityTypes().indexOf(x.type().id()) >= 0;
 
@@ -230,34 +232,10 @@ export class Phase extends labelsViewModel.Label {
 				return isIssueMatchingFilter(x, self.category, self, self.filter);
 			});
 		});
-
-		this.isColumnVisible = ko.computed(() => {
-			var phases = self.category.viewModel.labelsViewModelInstance.labels().declaration().phases;
-			var mode = self.category.viewModel.mode();
-			var id = self.id();
-			var result: boolean = true;
-
-			if (phases() !== null) {				
-				var isBacklog = mode === "backlog";
-				var isBoard = mode === "board";
-				var isClosed = mode === "closed";
-
-				result = id === phases().backlog() && isBacklog;
-				result = result || (id === phases().onhold() && isBoard);
-				result = result || (id === phases().inprogress() && isBoard);
-				result = result || (id === phases().implemented() && isBoard);
-				result = result || (id === phases().inreview() && isBoard);
-				result = result || (id === phases().closed() && isClosed);
-
-				/*return id !== phases().closed() ||
-					(closedIssuesVisible && id === phases().closed());*/
-			}
-			return result;
-		});
 	}
 }
 
-export class Row {
+export class QABoardColumn {
 	issues: KnockoutComputed<Issue[]>;
 	filteredIssues: KnockoutComputed<Issue[]>;
 
@@ -266,7 +244,7 @@ export class Row {
 		this.issues = knockout_mapping.fromJS(data);
 
 		this.filteredIssues = ko.computed(() => {
-			var mode = self.category.viewModel.mode();
+			var boardType = self.category.viewModel.boardType();
 			return ko.utils.arrayFilter(self.issues(), x => {
 				return isIssueMatchingFilter(x, self.category, undefined, self.filter);
 			});
@@ -275,10 +253,11 @@ export class Row {
 }
 
 export class Category extends labelsViewModel.Label  {
-	phases: KnockoutComputed<Phase[]>;
+	developerBoardColumns: KnockoutComputed<DeveloperBoardColumn[]>;
+	issues: KnockoutComputed<Issue[]>;
 	isTopPriority: KnockoutObservable<boolean> = ko.observable(false);
 	visibleIssueCount: KnockoutComputed<number>;
-	rows: KnockoutComputed<Row[]>;
+	qaBoardColumns: KnockoutComputed<QABoardColumn[]>;
 
 	constructor(public viewModel: IssuesViewModel, data: string) {
 		super();
@@ -286,31 +265,50 @@ export class Category extends labelsViewModel.Label  {
 		var self = this;
 		knockout_mapping.fromJS(data, {}, this);
 
-		self.phases = ko.computed(() => {
-			return ko.utils.arrayMap(self.viewModel.labelsViewModelInstance.labels().phases(), phase => {
-				return new Phase(self, viewModel.filter, knockout_mapping.toJS(phase));
+		this.issues = ko.computed(() => {
+			return ko.utils.arrayFilter(self.viewModel.issuesData().issues(), x => { return x.category().id() === self.id(); });
+		});
+
+		self.developerBoardColumns = ko.computed(() => {
+			var phases = self.viewModel.labelsViewModelInstance.labels().declaration().phases();
+			var developerPhases = ko.utils.arrayFilter(self.viewModel.labelsViewModelInstance.labels().phases(), phase => {
+				return phases !== null ? (phase.id() !== phases.implemented() && phase.id() != phases.closed()) : false;
+			});
+
+			return ko.utils.arrayMap(developerPhases, phase => {
+				if (phase.id() !== phases.implemented() && phase.id() != phases.closed()) {
+					return new DeveloperBoardColumn(self, viewModel.filter, knockout_mapping.toJS(phase));
+				}
 			});
 		});
 
-		self.rows = ko.computed(() => {
-			var issues = self.viewModel.issuesData().issues();
-			var mode = self.viewModel.mode();
+		self.qaBoardColumns = ko.computed(() => {
+			var boardType = self.viewModel.boardType();
 			var phases = self.viewModel.labelsViewModelInstance.labels().declaration().phases;
 
-			console.log(mode);
-			issues = ko.utils.arrayFilter(issues, x => {
-				var isInMode = (mode === "backlog" && x.phase().id() == phases().backlog()) ||
-				      		   (mode === "closed" && x.phase().id() == phases().closed());
-				return x.category().id() === self.id() && isInMode;
+			var implementedIssues = ko.utils.arrayFilter(self.issues(), x => {
+				return x.phase().id() === phases().implemented();
 			});
-			var result = [];
 
-			var startIndex = 0;
+			var closedIssues = ko.utils.arrayFilter(self.issues(), x => {
+				return x.phase().id() === phases().closed();
+			});
 
-			while(startIndex < issues.length) {
-				var endIndex = Math.min(startIndex + 4, issues.length);
-				result.push(new Row(self, self.viewModel.filter, issues.slice(startIndex, endIndex)));
-				startIndex += 4;
+			var columns = [], result = [];
+			for (var i=0; i < 4; i++) {
+				columns.push([]);
+			}
+
+			for (var i=0; i < implementedIssues.length; i++) {
+				columns[i%2].push(implementedIssues[i]);
+			}
+
+			for (var i=0; i < closedIssues.length; i++) {
+				columns[2 + i%2].push(closedIssues[i]);
+			}
+
+			for (var i=0; i < columns.length; i++) {
+				result.push(new QABoardColumn(self, self.viewModel.filter, columns[i]));
 			}
 
 			return result;
@@ -318,9 +316,10 @@ export class Category extends labelsViewModel.Label  {
 
 		self.visibleIssueCount = ko.computed(() => {
 			var result = 0;
-			for (var i=0; i< self.phases().length; i++) {
-				var phase = self.phases()[i];
-				result += phase.isColumnVisible() ? phase.filteredIssues().length : 0;
+			var columns: any[] = self.viewModel.boardType() === BoardType.developer ? self.developerBoardColumns() : self.qaBoardColumns();
+
+			for (var i=0; i < columns.length; i++) {
+				result += columns[i].filteredIssues().length;
 			}
 			return result;
 		});
@@ -359,11 +358,12 @@ export class IssuesData {
 export class IssuesViewModel {
 	issuesData: KnockoutObservable<IssuesData>;
 	categories: KnockoutComputed<Category[]>;
+	headers: KnockoutComputed<labelsViewModel.Label[]>;
 	filter: KnockoutObservable<string> = ko.observable("");
 	lastTemporaryId: number = 0;
 
 	constructor(public labelsViewModelInstance: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
-		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>, public mode: KnockoutObservable<string>) {
+		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>, public boardType: KnockoutObservable<BoardType>) {
 		var self = this;
 		var mapping = {
 			create: (options: any) => {
@@ -397,6 +397,17 @@ export class IssuesViewModel {
 			result.unshift(highPriorityCategory);
 
 			return result;
+		});
+
+		this.headers = ko.computed(() => {
+			var phases = self.labelsViewModelInstance.labels().declaration().phases();
+
+			return ko.utils.arrayFilter(self.labelsViewModelInstance.labels().phases(), phase => {
+				var isImplementedOrClosed = phases !== null && (phase.id() === phases.implemented() || phase.id() === phases.closed());
+
+				return (self.boardType() === BoardType.developer && !isImplementedOrClosed) ||
+					   (self.boardType() === BoardType.qa && isImplementedOrClosed);
+			});
 		});
 
 		$(document).on('click', '.checkout-command', function (e) { e.stopPropagation(); });
