@@ -27,10 +27,10 @@ block head
 				span(data-bind="text: title, click: $root.selectMilestone.bind($root, $data.number())") 
 
 	script#issue-phase-header-template(type="text/html")
-		.col-lg-3.phase-header(data-bind="text: name, visible: isColumnVisible()")
+		.phase-header(data-bind="text: name, css: { 'col-lg-3': $root.isInDeveloperBoard, 'col-lg-6': $root.isInQABoard }")
 
-	script#issue-phase-template(type="text/html")
-		.col-lg-3(data-bind="template: { name: 'issue-template', foreach: filteredIssues}, visible: isColumnVisible()")
+	script#issue-column-template(type="text/html")
+		.col-lg-3(data-bind="template: { name: 'issue-template', foreach: filteredIssues }")
 
 	script#issue-category-header-template(type="text/html")
 		li: a(data-bind="text: name, attr: { href: id() }")
@@ -83,13 +83,6 @@ block head
 						data-bind="css: { hide: !canReject() }, click: $root.issueRejectOpen.bind($root, $data), tooltip: { title: 'Reject implementation', container: 'body' }")
 						span.glyphicon.glyphicon-thumbs-down		
 					span.description(data-bind="text: description")
-
-	script#issue-wrap-template(type="text/html")
-		<!-- ko foreach: filteredIssues -->
-		.col-lg-3
-			<!-- ko template: { name: 'issue-template' } -->
-			<!-- /ko --> 
-		<!-- /ko -->
 
 block body
 	#impediment-modal.modal.fade(data-bind="with: impediment")
@@ -188,13 +181,10 @@ block body
 				li: p.loading-indicator.navbar-text(data-bind="css: { invisible: loadingCount() == 0 }")
 				li: .btn-group
 					button.btn.btn-default.navbar-btn(type="button", 
-						data-bind="tooltip: { title: 'View tasks in backlog', container: 'body', placement: 'bottom' }, click: $root.selectMode.bind($root, 'backlog'), css: { active: $root.mode() === 'backlog' }")
-						span.glyphicon.glyphicon-share-alt
-					button.btn.btn-default.navbar-btn(type="button", 
-						data-bind="tooltip: { title: 'View task board', container: 'body', placement: 'bottom' }, click: $root.selectMode.bind($root, 'board'), css: { active: $root.mode() === 'board' }")
+						data-bind="tooltip: { title: 'View developer board', container: 'body', placement: 'bottom' }, click: $root.selectDeveloperBoard.bind($root), css: { active: $root.isInDeveloperBoard }")
 						span.glyphicon.glyphicon-list-alt
 					button.btn.btn-default.navbar-btn(type="button", 
-						data-bind="tooltip: { title: 'View closed tasks', container: 'body', placement: 'bottom' }, click: $root.selectMode.bind($root, 'closed'), css: { active: $root.mode() === 'closed' }")
+						data-bind="tooltip: { title: 'View Q/A board', container: 'body', placement: 'bottom' }, click: $root.selectQABoard.bind($root), css: { active: $root.isInQABoard }")
 						span.glyphicon.glyphicon-folder-close
 					
 				li
@@ -224,16 +214,16 @@ block body
 		strong 
 			span New branch was created. Please see issue branch details.
 
-	.container-fluid.visible-lg(data-bind="with: issuesViewModel.categories()[0]")
-		.row.phases(data-bind="template: { name: 'issue-phase-header-template', foreach: phases }")
+	.container-fluid.visible-lg
+		.row.phases(data-bind="template: { name: 'issue-phase-header-template', foreach: issuesViewModel.headers }")
 	.container-fluid
 		<!-- ko foreach: issuesViewModel.categories() -->
-		div(data-bind="visible: $root.mode() === 'board' && visibleIssueCount() > 0")
-			.row.phase(data-bind="template: { name: 'issue-phase-template', foreach: phases } , css: { 'top-priority': isTopPriority }")
+		div(data-bind="visible: $root.isInDeveloperBoard() && visibleIssueCount() > 0")
+			.row.phase(data-bind="template: { name: 'issue-column-template', foreach: developerBoardColumns }, css: { 'top-priority': isTopPriority }, visible: visibleIssueCount() > 0")
 		<!-- /ko -->
 		<!-- ko foreach: issuesViewModel.categories() -->
-		div(data-bind="visible: $root.mode() !== 'board'")
-			.row.phase(data-bind="template: { name: 'issue-wrap-template', foreach: rows } , css: { 'top-priority': isTopPriority }, visible: rows().length > 0")
+		div(data-bind="visible: $root.isInQABoard")
+			.row.phase(data-bind="template: { name: 'issue-column-template', foreach: qaBoardColumns }, css: { 'top-priority': isTopPriority }, visible: visibleIssueCount() > 0")
 		<!-- /ko -->
 				
 				

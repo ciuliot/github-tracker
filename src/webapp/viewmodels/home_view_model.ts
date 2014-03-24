@@ -46,7 +46,10 @@ class HomeViewModel {
 	selectedRepository: KnockoutObservable<string> = ko.observable(null);
 
 	url: KnockoutComputed<string>;
-	mode: KnockoutObservable<string> = ko.observable("board");
+	boardType: KnockoutObservable<issuesViewModel.BoardType>;
+	isInDeveloperBoard: KnockoutComputed<boolean>;
+	isInQABoard: KnockoutComputed<boolean>;
+
 	columnClass: KnockoutComputed<string>;
 
 	selectedMilestone: KnockoutObservable<string> = ko.observable("none");
@@ -62,6 +65,11 @@ class HomeViewModel {
 
 	start() {
 		var self = this;
+
+		self.boardType = ko.observable(issuesViewModel.BoardType.developer);
+
+		self.isInDeveloperBoard = ko.computed(() => { return self.boardType() === issuesViewModel.BoardType.developer });
+		self.isInQABoard = ko.computed(() => { return self.boardType() === issuesViewModel.BoardType.qa });
 
 		self.socket = socketio.connect();
 		self.socket.on("issue-update", (data:any) => {
@@ -123,7 +131,7 @@ class HomeViewModel {
 			}
 		});
 
-		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount, this.mode);
+		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount, this.boardType);
 
 		this.impediment = knockout_mapping.fromJS({ issue_id: null, description: null }, {
 			create: (options: any) => {
@@ -185,7 +193,7 @@ class HomeViewModel {
 		});
 
 		this.columnClass = ko.computed(() => {
-			return self.mode() === "board" ? "col-lg-3" : "col-lg-12";
+			return self.boardType() === issuesViewModel.BoardType.developer ? "col-lg-3" : "col-lg-6";
 		});
 
 		this.issuesColumnWidth = ko.computed(() => {
@@ -213,7 +221,7 @@ class HomeViewModel {
 				}
 
 				var url = parts.join("/");
-				var queryString = ["mode=" + self.mode()];
+				var queryString = ["board=" + issuesViewModel.BoardType[self.boardType()]];
 
 				if (self.issuesViewModel.filter().length > 0) {
 					queryString.push("q=" + self.issuesViewModel.filter());
@@ -255,12 +263,13 @@ class HomeViewModel {
 					for (var i = 0; i < queryString.length; i++) {
 						var parts = queryString[i].split("=");
 							if (parts.length === 2) {
-							var key = parts[0], value = parts[1];
+							var key = parts[0], value: string = parts[1];
 							if (key === "q") {
 								self.issuesViewModel.filter(value);
 							}
-							else if (key === "mode") {
-								self.mode(value);
+							else if (key === "board") {
+								var boardType: issuesViewModel.BoardType = issuesViewModel.BoardType[value];
+								self.boardType(boardType);
 							}
 						}
 					}
@@ -485,8 +494,12 @@ class HomeViewModel {
 		this.issueDetail().type().id(type.id());
 	}
 
-	selectMode(newMode: string): void {
-		this.mode(newMode);
+	selectDeveloperBoard(): void {
+		this.boardType(issuesViewModel.BoardType.developer);
+	}
+
+	selectQABoard(): void {
+		this.boardType(issuesViewModel.BoardType.qa);
 	}
 }
 

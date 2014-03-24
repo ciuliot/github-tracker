@@ -13,7 +13,7 @@ module.exports = function (grunt) {
                 options: {
                     module: 'commonjs', //or commonjs
                     target: 'es5', //or es3
-                    base_path: 'src/server',
+                    basePath: 'src/server',
                     noImplicitAny: true,
                     comments: true
                 }
@@ -24,8 +24,8 @@ module.exports = function (grunt) {
                 options: {
                     module: 'amd', //or commonjs
                     target: 'es5', //or es3
-                    base_path: 'src/webapp',
-                    sourcemap: true,
+                    basePath: 'src/webapp',
+                    sourceMap: true,
                     noImplicitAny: true
                 }
             },
@@ -35,7 +35,7 @@ module.exports = function (grunt) {
                 options: {
                     module: 'commonjs', //or commonjs
                     target: 'es5', //or es3
-                    base_path: 'src/server',
+                    basePath: 'src/server',
                     noImplicitAny: true
                 }
             }
