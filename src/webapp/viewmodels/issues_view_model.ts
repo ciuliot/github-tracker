@@ -214,16 +214,9 @@ export class DeveloperBoardColumn extends labelsViewModel.Label {
 
 		this.issues = ko.computed(() => {
 			return ko.utils.arrayFilter(self.category.issues(), x => {
-				var meta = self.category.viewModel.issuesData().meta();
-				var isPriorityType: boolean = meta !== null && meta.priorityTypes().indexOf(x.type().id()) >= 0;
-
 				var isInPhase = x.phase().id() === self.id();
-				var isTopPriorityCategory = self.category.isTopPriority();
 
-				var isInCategory = (isTopPriorityCategory && isPriorityType) ||
-				                   (!isTopPriorityCategory && !isPriorityType && x.category().id() === self.category.id());
-
-				return isInPhase && isInCategory;
+				return isInPhase;
 			});
 		});
 
@@ -266,13 +259,22 @@ export class Category extends labelsViewModel.Label  {
 		knockout_mapping.fromJS(data, {}, this);
 
 		this.issues = ko.computed(() => {
-			return ko.utils.arrayFilter(self.viewModel.issuesData().issues(), x => { return x.category().id() === self.id(); });
+			return ko.utils.arrayFilter(self.viewModel.issuesData().issues(), x => { 
+				var meta = self.viewModel.issuesData().meta();
+				var isPriorityType: boolean = meta !== null && meta.priorityTypes().indexOf(x.type().id()) >= 0;
+
+				var isInPhase = x.category().id() === self.id(); 
+				var isTopPriorityCategory = self.isTopPriority();
+
+				return (isTopPriorityCategory && isPriorityType) ||
+				        (!isTopPriorityCategory && !isPriorityType && x.category().id() === self.id());
+			});
 		});
 
 		self.developerBoardColumns = ko.computed(() => {
 			var phases = self.viewModel.labelsViewModelInstance.labels().declaration().phases();
 			var developerPhases = ko.utils.arrayFilter(self.viewModel.labelsViewModelInstance.labels().phases(), phase => {
-				return phases !== null ? (phase.id() !== phases.implemented() && phase.id() != phases.closed()) : false;
+				return phases !== null ? (phase.id() !== phases.implemented() && phase.id() !== phases.closed()) : false;
 			});
 
 			return ko.utils.arrayMap(developerPhases, phase => {
