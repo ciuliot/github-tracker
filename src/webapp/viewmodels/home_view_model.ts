@@ -52,7 +52,7 @@ class HomeViewModel {
 
 	columnClass: KnockoutComputed<string>;
 
-	selectedMilestone: KnockoutObservable<string> = ko.observable("none");
+	selectedMilestone: KnockoutObservable<string> = ko.observable(issuesViewModel.ProductBacklogMilestone);
 	selectedMilestoneTitle: KnockoutComputed<string>;
 	issuesColumnWidth: KnockoutComputed<string>;
 
@@ -99,7 +99,7 @@ class HomeViewModel {
 				savingCount: self.savingCount,
 				loadOnStart: false,
 				indexDone: () => {
-					self.milestones.push(knockout_mapping.fromJS ({ number: "none", title: "Product backlog" }));
+					self.milestones.push(knockout_mapping.fromJS ({ number: issuesViewModel.ProductBacklogMilestone, title: "Product backlog" }));
 				}
 			}
 		});
@@ -131,7 +131,8 @@ class HomeViewModel {
 			}
 		});
 
-		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount, this.boardType);
+		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, 
+			this.collaborators, this.loadingCount, this.savingCount, this.boardType, this.selectedMilestone);
 
 		this.impediment = knockout_mapping.fromJS({ issue_id: null, description: null }, {
 			create: (options: any) => {
@@ -244,7 +245,7 @@ class HomeViewModel {
 
 				var user = variables.length > 2 ? variables[2] : "";
 				var repository = variables.length > 3 ? variables[3] : null;
-				var milestone = variables.length > 4 ? variables[4] : "none";
+				var milestone = variables.length > 4 ? variables[4] : issuesViewModel.ProductBacklogMilestone;
 
 				if (user.length === 0 && self.users().length > 0) {
 					user = self.users()[0];
@@ -302,7 +303,7 @@ class HomeViewModel {
 
 		if (loadIssues) {
 			this.loadIssues(false, () => {
-				self.selectMilestone("none");
+				self.selectMilestone(issuesViewModel.ProductBacklogMilestone);
 			});
 		}
 	}
@@ -442,7 +443,7 @@ class HomeViewModel {
 		var rawData = knockout_mapping.toJSON(issue);
 		knockout_mapping.fromJS(issuesViewModel.Issue.empty, this.issueDetail()); // Cleanup fields
 		knockout_mapping.fromJSON(rawData, this.issueDetail());
-		this.issueDetail().milestone(this.selectedMilestone());
+		//this.issueDetail().milestone(this.selectedMilestone());
 	}
 
 	issueSave():void {
@@ -451,14 +452,13 @@ class HomeViewModel {
 		var args: any = {
 			user: this.selectedUser(),
 			repository: this.selectedRepository(),
-			title: this.issueDetail().title()
+			title: this.issueDetail().title(),
+			milestone: this.issueDetail().milestone(),
 		};
-		
+
 		var issue: issuesViewModel.Issue = null;
 
 		if (id === null) {
-			args.milestone = (this.selectedMilestone() === "*" || this.selectedMilestone() === "none") ? undefined : this.selectedMilestone();
-
 			var phase = self.labelsViewModel.labels().phases()[0];
 
 			issue = new issuesViewModel.Issue(self.labelsViewModel, self.collaborators);
@@ -469,10 +469,14 @@ class HomeViewModel {
 			issue = this.issuesViewModel.findIssue(id);
 		}
 
+		args.milestone = args.milestone === issuesViewModel.ProductBacklogMilestone ? null : args.milestone;
+
 		var rawData = knockout_mapping.toJS(this.issueDetail());
 		knockout_mapping.fromJS(rawData, issue);
 
 		issue.moveToCategory(this.issueDetail().category().id());
+
+		issue.milestone(args.milestone);
 
 		var newType = this.labelsViewModel.labels().types().filter(x => x.id () === self.issueDetail().type().id());
 		var newTypeJSON = knockout_mapping.toJSON(newType.length > 0 ? newType[0] : labelsViewModel.Label.empty);

@@ -9,6 +9,8 @@ import $ = require("jquery");
 
 export enum BoardType { developer, qa };
 
+export var ProductBacklogMilestone: string = "none";
+
 export class Issue {
 	canStart: KnockoutComputed<boolean>;
 	canAssign: KnockoutComputed<boolean>;
@@ -25,6 +27,8 @@ export class Issue {
 	branch: KnockoutObservable<any>;
 	pull_request: KnockoutObservable<any>;
 	number: KnockoutObservable<number>;
+	updated_at: KnockoutObservable<string>;
+	milestone: KnockoutObservable<string>;
 	phase: KnockoutObservable<labelsViewModel.Label>;
 	category: KnockoutObservable<labelsViewModel.Label>;
 	title: KnockoutObservable<string>;
@@ -265,9 +269,11 @@ export class Category extends labelsViewModel.Label  {
 
 				var isInPhase = x.category().id() === self.id(); 
 				var isTopPriorityCategory = self.isTopPriority();
+				var isInMilestone = (self.viewModel.selectedMilestone() === ProductBacklogMilestone && x.milestone() === null) ||
+								    (self.viewModel.selectedMilestone() === x.milestone());
 
-				return (isTopPriorityCategory && isPriorityType) ||
-				        (!isTopPriorityCategory && !isPriorityType && x.category().id() === self.id());
+				return isInMilestone && ((isTopPriorityCategory && isPriorityType) ||
+				        (!isTopPriorityCategory && !isPriorityType && x.category().id() === self.id()));
 			});
 		});
 
@@ -344,6 +350,9 @@ export class IssuesData {
 		}, data);
 		knockout_mapping.fromJS(data, {
 			'issues': {
+				key: (data: Issue) => {
+					return ko.utils.unwrapObservable(data.number);
+				},
 				create: (options: any) => {
 					return new Issue(self.viewModel.labelsViewModelInstance, self.viewModel.collaborators, options.data);
 				}
@@ -365,7 +374,8 @@ export class IssuesViewModel {
 	lastTemporaryId: number = 0;
 
 	constructor(public labelsViewModelInstance: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
-		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>, public boardType: KnockoutObservable<BoardType>) {
+		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>, public boardType: KnockoutObservable<BoardType>,
+		public selectedMilestone: KnockoutObservable<string>) {
 		var self = this;
 		var mapping = {
 			create: (options: any) => {

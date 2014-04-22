@@ -428,6 +428,7 @@ class IssuesController extends abstractController {
 
 							message.body = formattedBody;
 							message.title = body.title;
+							message.milestone = body.milestone;
 
 							self.getGitHubClient().issues.edit(message, issueSaveCompleted);
 						} catch (ex) {
@@ -539,7 +540,6 @@ class IssuesController extends abstractController {
 		var repository = self.param("repository");
 		var body = self.param("body");
 		var title = self.param("title");
-		var milestone = self.param("milestone");
 
 		if (!user) {
 			self.jsonResponse("Parameter 'user' was not provided");
@@ -553,11 +553,11 @@ class IssuesController extends abstractController {
 			var message: any = {				
 				user: user,
 				repo: repository,
-				milestone: milestone,
+				milestone: body.milestone,
 				title: title
 			};
 
-			self.logInfo([user, repository, milestone], "Creating new issue with title '%s'", title);
+			self.logInfo([user, repository, message.milestone], "Creating new issue with title '%s'", title);
 
 			var labels: labelsModel.IndexResult;
 
@@ -578,7 +578,7 @@ class IssuesController extends abstractController {
 					}
 					catch (ex) {
 						/* istanbul ignore next */ 
-						self.logError([user, repository, milestone], "Error occured during labels parsing", ex);
+						self.logError([user, repository, message.milestone], "Error occured during labels parsing", ex);
 						createIssueCompleted(ex);
 					}
 				},
@@ -588,14 +588,14 @@ class IssuesController extends abstractController {
 						convertIssueCompleted(null, self.convertIssue(user, repository, issue, labels));
 					} catch (ex) {
 						/* istanbul ignore next */ 
-						self.logError([user, repository, milestone], "Error occured during issue conversion", ex);
+						self.logError([user, repository, message.milestone], "Error occured during issue conversion", ex);
 						convertIssueCompleted(ex);	
 					}
 				}
 			], (err: any, result: any) => {
 				/* istanbul ignore next */ 
 				if (err) {
-					self.logError([user, repository, milestone], "Error occured during issue creation", err);
+					self.logError([user, repository, message.milestone], "Error occured during issue creation", err);
 				}
 
 				self.jsonResponse(err, result);
@@ -676,6 +676,8 @@ class IssuesController extends abstractController {
 			title: issue.title,
 			category: labels.categories.filter(x => x.id === category)[0],
 			phase: phase,
+			updated_at: issue.updated_at,
+			milestone: issue.milestone ? issue.milestone.number : null,
 			type: type || { name: null, id: null, color: null },
 			pull_request: issue.pull_request,
 			number: issue.number,
