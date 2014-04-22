@@ -5,8 +5,10 @@ import configuration = require("../configuration");
 import express = require("express");
 import util = require("util");
 
+var errorHandler = require('errorhandler');
+
 function configure(server: express.Application): void {
-    server.use(express.errorHandler());
+    server.use(errorHandler());
 
     configuration.http_address = process.env.OPENSHIFT_NODEJS_IP;
     configuration.http_port = process.env.OPENSHIFT_NODEJS_PORT;
