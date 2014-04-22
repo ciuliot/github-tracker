@@ -9,7 +9,8 @@ import util = require('util');
 
 var   passport = require('passport')
     , GitHubStrategy = require('passport-github').Strategy
-    , BasicStrategy = require('passport-http').BasicStrategy;
+    , BasicStrategy = require('passport-http').BasicStrategy
+    , session = require('express-session');
 
 function initializeDatabase(app: express.Application, done: (result?: any) => void) {
     var logger = log4js.getLogger("Passport");
@@ -68,7 +69,7 @@ function initializeDatabase(app: express.Application, done: (result?: any) => vo
       done(null, obj);
     });
 
-    app.use(express["session"](configuration.sessionStore));
+    app.use(session(configuration.sessionStore));
 
     app.use(passport.initialize());
     app.use(passport.session());

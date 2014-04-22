@@ -174,11 +174,12 @@ class Server {
         locomotive.phase(this.startHttpServer());
 
         locomotive.boot(configuration.environment, (err: String) => {
-            self.logger.debug("Server initialized at : %s:%d", configuration.http_address, configuration.http_port);
-            
             /* istanbul ignore else */
             if (!err) {
+                self.logger.debug("Server initialized at : %s:%d", configuration.http_address, configuration.http_port);
                 locomotive.use(locomotive.router);
+            } else {
+                self.logger.error("Error occured during initialization", err);
             }
 
             callback(err, self);

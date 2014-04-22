@@ -268,7 +268,7 @@ class HomeViewModel {
 								self.issuesViewModel.filter(value);
 							}
 							else if (key === "board") {
-								var boardType: issuesViewModel.BoardType = issuesViewModel.BoardType[value];
+								var boardType: issuesViewModel.BoardType = (<any>issuesViewModel.BoardType)[value];
 								self.boardType(boardType);
 							}
 						}
