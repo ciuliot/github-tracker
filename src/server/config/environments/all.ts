@@ -8,7 +8,12 @@ var poweredBy = require('connect-powered-by')
     , util = require('util')
     , nib = require('nib')
     , stylus = require('stylus')    
-    , GitHubApi = require("github");
+    , GitHubApi = require("github")
+    , morgan = require("morgan")
+    , favicon = require("static-favicon")
+    , cookieParser = require('cookie-parser')
+    , bodyParser = require('body-parser')
+    , methodOverride = require('method-override');
 
 function initialize() {
     var config = configuration;
@@ -20,9 +25,9 @@ function initialize() {
     var stylesDir = path.resolve(config.startupDirectory, "./styles");
     var publicDir = path.resolve(config.startupDirectory, "./dist/public");
 
-    config.logger.debug("Views directory: %s", viewsDir);
-    config.logger.debug("Styles directory: %s", stylesDir);
-    config.logger.debug("Public directory: %s", publicDir);
+    config.logger.info("Views directory: %s", viewsDir);
+    config.logger.info("Styles directory: %s", stylesDir);
+    config.logger.info("Public directory: %s", publicDir);
 
     this.set('views', viewsDir);
     this.set('view engine', 'jade');
@@ -49,15 +54,15 @@ function initialize() {
   // middleware available as separate modules.  
 
     this.use(poweredBy('Locomotive'));
-    this.use(express.logger());
-    this.use(express.favicon());
-    this.use(express["cookieParser"]());
+    this.use(morgan());
+    this.use(favicon());
+    this.use(cookieParser());
 
     this.use("/src", express.static(path.resolve(config.startupDirectory, "./src")));
     this.use(express.static(publicDir));
 
-    this.use(express.bodyParser());
-    this.use(express.methodOverride());
+    this.use(bodyParser());
+    this.use(methodOverride());
 
     /* istanbul ignore next */
     config.dataFactory = (): any => { 
@@ -71,6 +76,8 @@ function initialize() {
             timeout: 5000
         });
     };
+
+    config.logger.debug("Common environment init completed");
 }
 
 export = initialize;
