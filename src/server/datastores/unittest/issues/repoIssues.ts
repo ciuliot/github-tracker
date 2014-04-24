@@ -15,8 +15,6 @@ var model = [
 		    "title": "Issue in backlog",
 		    "body": "I'm having a problem with this.",
 		    "labels": [],
-		    "milestone": {
-		    },
 		    "comments": 0,
 		    "pull_request": {
 		      "html_url": null,
@@ -52,6 +50,9 @@ var model = [
 		    	"color": "0000ff"
 		      }
 		    ],
+		    "milestone": {
+		    	"number": "1",
+		    },
 		    "assignee": {
 		      "login": "octocat",
 		      "id": 1,
@@ -96,6 +97,9 @@ new testModels.IssuesModel({
 		    	"color": "000000"
 		      }
 		    ],
+		    "milestone": {
+		    	"number": "1",
+		    },
 		    "assignee": {
 		      "login": "octocat",
 		      "id": 1,
@@ -136,6 +140,9 @@ new testModels.IssuesModel({
 		    	"color": "f29513"
 		      }
 		    ],
+		    "milestone": {
+		    	"number": "1",
+		    },
 		    "assignee": {
 		      "login": "octocat",
 		      "id": 1,
@@ -176,6 +183,9 @@ new testModels.IssuesModel({
 			    "color": "000001"
 			  }
 		    ],
+		    "milestone": {
+		    	"number": "1",
+		    },
 		    "assignee": {
 		      "login": "octocat",
 		      "id": 1,
@@ -216,6 +226,9 @@ new testModels.IssuesModel({
 		    	"color": "0000ff"
 		      }
 		    ],
+		    "milestone": {
+		    	"number": "1",
+		    },
 		    "assignee": {
 		      "login": "octocat",
 		      "id": 1,

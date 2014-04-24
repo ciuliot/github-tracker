@@ -15,6 +15,7 @@ import utilities = require("../utilities");
 import log4js = require("log4js");
 import async = require("async");
 import knockout_mapping = require("knockout.mapping");
+import knockout_cache = require("../knockout_cache");
 
 import repositoryModel = require("../models/repository_model");
 import phaseModel = require("../models/phase_model");
@@ -52,7 +53,7 @@ class HomeViewModel {
 
 	columnClass: KnockoutComputed<string>;
 
-	selectedMilestone: KnockoutObservable<string> = ko.observable("none");
+	selectedMilestone: KnockoutObservable<number> = ko.observable(issuesViewModel.ProductBacklogMilestone);
 	selectedMilestoneTitle: KnockoutComputed<string>;
 	issuesColumnWidth: KnockoutComputed<string>;
 
@@ -65,6 +66,8 @@ class HomeViewModel {
 
 	start() {
 		var self = this;
+
+		knockout_cache.init();
 
 		self.boardType = ko.observable(issuesViewModel.BoardType.developer);
 
@@ -84,6 +87,7 @@ class HomeViewModel {
 				url: "/repositories", 
 				loadingCount: self.loadingCount,
 				savingCount: self.savingCount,
+				keyIgnoreArgs: ["milestone"],
 				indexDone: () => {
 					self.url(null);
 				}
@@ -95,11 +99,26 @@ class HomeViewModel {
 		this.milestones = knockout_mapping.fromJS([]).extend({ 
 			mapToJsonResource: { 
 				url: "/milestones",
+				mapping: {
+					key: (data: milestoneModel) => {
+						return ko.utils.unwrapObservable(data.number);
+					}
+				},
 				loadingCount: self.loadingCount,
 				savingCount: self.savingCount,
+				keyIgnoreArgs: ["milestone"],
 				loadOnStart: false,
 				indexDone: () => {
-					self.milestones.push(knockout_mapping.fromJS ({ number: "none", title: "Product backlog" }));
+					var milestone = ko.utils.arrayFirst(self.milestones(), (x: milestoneModel) => { 
+						return x.number() === issuesViewModel.ProductBacklogMilestone; 
+					});
+
+					if (null === milestone) {
+						self.milestones.unshift(knockout_mapping.fromJS({ 
+							number: issuesViewModel.ProductBacklogMilestone, 
+							title: "Product backlog"
+						}));
+					}
 				}
 			}
 		});
@@ -115,6 +134,7 @@ class HomeViewModel {
 				url: "/collaborators",
 				loadingCount: self.loadingCount,
 				savingCount: self.savingCount,
+				keyIgnoreArgs: ["milestone"],
 				loadOnStart: false
 			}
 		});
@@ -131,7 +151,8 @@ class HomeViewModel {
 			}
 		});
 
-		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, this.collaborators, this.loadingCount, this.savingCount, this.boardType);
+		this.issuesViewModel = new issuesViewModel.IssuesViewModel(this.labelsViewModel, 
+			this.collaborators, this.loadingCount, this.savingCount, this.boardType, this.selectedMilestone);
 
 		this.impediment = knockout_mapping.fromJS({ issue_id: null, description: null }, {
 			create: (options: any) => {
@@ -216,7 +237,7 @@ class HomeViewModel {
 					});
 
 					if (self.selectedMilestone() !== null) {
-						parts.push(self.selectedMilestone());
+						parts.push(self.selectedMilestone().toString());
 					}
 				}
 
@@ -244,7 +265,7 @@ class HomeViewModel {
 
 				var user = variables.length > 2 ? variables[2] : "";
 				var repository = variables.length > 3 ? variables[3] : null;
-				var milestone = variables.length > 4 ? variables[4] : "none";
+				var milestone = variables.length > 4 ? variables[4] : issuesViewModel.ProductBacklogMilestone.toString();
 
 				if (user.length === 0 && self.users().length > 0) {
 					user = self.users()[0];
@@ -255,7 +276,7 @@ class HomeViewModel {
 				}
 
 				self.selectRepository(repository, false);
-				self.selectMilestone(milestone);
+				self.selectMilestone(Number(milestone));
 
 				if (pathParts[1]) { // Querystring
 					var queryString = pathParts[1].split("&");
@@ -302,7 +323,7 @@ class HomeViewModel {
 
 		if (loadIssues) {
 			this.loadIssues(false, () => {
-				self.selectMilestone("none");
+				self.selectMilestone(issuesViewModel.ProductBacklogMilestone);
 			});
 		}
 	}
@@ -338,7 +359,7 @@ class HomeViewModel {
 			});
 		} else {
 			this.labelsViewModel.removeAll();
-			this.milestones.removeAll();
+			this.milestones.remove((x: milestoneModel) => { return x.number() !== issuesViewModel.ProductBacklogMilestone; });
 			this.collaborators.removeAll();
 			this.issuesViewModel.issuesData().issues.removeAll();
 
@@ -346,9 +367,9 @@ class HomeViewModel {
 		}
 	}
 
-	selectMilestone(milestone: string) {
+	selectMilestone(milestone: number) {
 		var self = this;
-		this.logger.info("Selecting milestone: " + milestone);
+		this.logger.info("Selecting milestone: ", milestone);
 		this.selectedMilestone(milestone);
 
 		this.loadIssues(false);
@@ -442,7 +463,7 @@ class HomeViewModel {
 		var rawData = knockout_mapping.toJSON(issue);
 		knockout_mapping.fromJS(issuesViewModel.Issue.empty, this.issueDetail()); // Cleanup fields
 		knockout_mapping.fromJSON(rawData, this.issueDetail());
-		this.issueDetail().milestone(this.selectedMilestone());
+		//this.issueDetail().milestone(this.selectedMilestone());
 	}
 
 	issueSave():void {
@@ -451,14 +472,13 @@ class HomeViewModel {
 		var args: any = {
 			user: this.selectedUser(),
 			repository: this.selectedRepository(),
-			title: this.issueDetail().title()
+			title: this.issueDetail().title(),
+			milestone: this.issueDetail().milestone(),
 		};
-		
+
 		var issue: issuesViewModel.Issue = null;
 
 		if (id === null) {
-			args.milestone = (this.selectedMilestone() === "*" || this.selectedMilestone() === "none") ? undefined : this.selectedMilestone();
-
 			var phase = self.labelsViewModel.labels().phases()[0];
 
 			issue = new issuesViewModel.Issue(self.labelsViewModel, self.collaborators);
@@ -469,10 +489,14 @@ class HomeViewModel {
 			issue = this.issuesViewModel.findIssue(id);
 		}
 
+		args.milestone = args.milestone === issuesViewModel.ProductBacklogMilestone ? null : args.milestone;
+
 		var rawData = knockout_mapping.toJS(this.issueDetail());
 		knockout_mapping.fromJS(rawData, issue);
 
 		issue.moveToCategory(this.issueDetail().category().id());
+
+		issue.milestone(args.milestone);
 
 		var newType = this.labelsViewModel.labels().types().filter(x => x.id () === self.issueDetail().type().id());
 		var newTypeJSON = knockout_mapping.toJSON(newType.length > 0 ? newType[0] : labelsViewModel.Label.empty);
@@ -487,7 +511,7 @@ class HomeViewModel {
 
 	issueAdd(issue: issuesViewModel.Issue): void {
 		knockout_mapping.fromJS(issuesViewModel.Issue.empty, this.issueDetail); // Cleanup fields
-		this.issueDetail().milestone(this.selectedMilestone());
+		this.issueDetail().milestone(this.selectedMilestone().toString());
 	}
 
 	changeDetailIssueType(type: labelsViewModel.Label) {

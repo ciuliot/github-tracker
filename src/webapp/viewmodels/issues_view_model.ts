@@ -9,6 +9,8 @@ import $ = require("jquery");
 
 export enum BoardType { developer, qa };
 
+export var ProductBacklogMilestone: number = -1;
+
 export class Issue {
 	canStart: KnockoutComputed<boolean>;
 	canAssign: KnockoutComputed<boolean>;
@@ -25,6 +27,8 @@ export class Issue {
 	branch: KnockoutObservable<any>;
 	pull_request: KnockoutObservable<any>;
 	number: KnockoutObservable<number>;
+	updated_at: KnockoutObservable<string>;
+	milestone: KnockoutObservable<string>;
 	phase: KnockoutObservable<labelsViewModel.Label>;
 	category: KnockoutObservable<labelsViewModel.Label>;
 	title: KnockoutObservable<string>;
@@ -265,9 +269,11 @@ export class Category extends labelsViewModel.Label  {
 
 				var isInPhase = x.category().id() === self.id(); 
 				var isTopPriorityCategory = self.isTopPriority();
+				var isInMilestone = (self.viewModel.selectedMilestone() === ProductBacklogMilestone && x.milestone() === null) ||
+								    (self.viewModel.selectedMilestone() === Number(x.milestone()));
 
-				return (isTopPriorityCategory && isPriorityType) ||
-				        (!isTopPriorityCategory && !isPriorityType && x.category().id() === self.id());
+				return isInMilestone && ((isTopPriorityCategory && isPriorityType) ||
+				        (!isTopPriorityCategory && !isPriorityType && x.category().id() === self.id()));
 			});
 		});
 
@@ -344,8 +350,17 @@ export class IssuesData {
 		}, data);
 		knockout_mapping.fromJS(data, {
 			'issues': {
+				"key": (data: Issue) => {
+					return ko.utils.unwrapObservable(data.number);
+				},
 				create: (options: any) => {
-					return new Issue(self.viewModel.labelsViewModelInstance, self.viewModel.collaborators, options.data);
+					return self.createIssueFromJS(options.data);
+				},
+				update: (options: any) => {
+					if (options.target.updated_at() < options.data.updated_at) {
+						knockout_mapping.fromJS(options.data, options.target);
+					}
+					return options.target;
 				}
 			},
 			'meta': {
@@ -354,6 +369,10 @@ export class IssuesData {
 				}
 			}
 		}, this);
+	}
+
+	createIssueFromJS(data: any) {
+		return new Issue(this.viewModel.labelsViewModelInstance, this.viewModel.collaborators, data);
 	}
 }
 
@@ -365,7 +384,8 @@ export class IssuesViewModel {
 	lastTemporaryId: number = 0;
 
 	constructor(public labelsViewModelInstance: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, 
-		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>, public boardType: KnockoutObservable<BoardType>) {
+		loadingCount: KnockoutObservable<number>, savingCount: KnockoutObservable<number>, public boardType: KnockoutObservable<BoardType>,
+		public selectedMilestone: KnockoutObservable<number>) {
 		var self = this;
 		var mapping = {
 			create: (options: any) => {
@@ -382,8 +402,38 @@ export class IssuesViewModel {
 				savingCount: savingCount,
 				loadOnStart: false,
 				findById: self.findIssueOnCollection,
+				keyIgnoreArgs: ["milestone"],
 				setId: (where: any, id: number) => {
 					where.number(id);
+				},
+				loadMerge: (err: any, data: any) => {
+					var issuesData = self.issuesData();
+					knockout_mapping.fromJS(data.meta, issuesData.meta());
+
+					for (var i = 0; i < issuesData.issues().length; i++) {
+						var issue = issuesData.issues()[i];
+						var number = issue.number();
+						var newIssue: any = null;
+
+						for (var j =0 ; j < data.issues.length; j++) {
+							if (data.issues[j].number === number) {
+								newIssue = data.issues[j];
+								data.issues.splice(j, 1);
+								break;
+							}
+						}
+
+						if (newIssue) {
+							knockout_mapping.fromJS(newIssue, issue);
+						}
+					}
+
+					// Add remaining new issues
+					for (var j =0 ; j < data.issues.length; j++) {
+						issuesData.issues().push(issuesData.createIssueFromJS(data.issues[j]));
+					}
+
+					issuesData.issues.valueHasMutated();
 				}
 
 			}

@@ -31,7 +31,7 @@ class Utilities {
 	}
 }
 
-ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
+/*ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	var o = options;
 	o.indexDone = o.indexDone || function () {};
 	o.mapping = o.mapping || {};
@@ -63,7 +63,13 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	}
 
 	var getStorageKey = (operation: string, args: any) => {
-		return o.url + "/" + operation + "?" + JSON.stringify(args);
+		var publicArgs:any = {};
+		for(var i in args) {
+			if (i[0] !== "_") {
+				publicArgs[i] = args[i];
+			}
+		}
+		return o.url + "/" + operation + "?" + JSON.stringify(publicArgs);
 	}
 
 	var storeQueue: any[] = [];
@@ -119,8 +125,17 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	target.reload = (args: any = {}, callback: Function = () => {}) => {
 		logger.debug("Reloading data with args: ", JSON.stringify(args));
 		o.loadingCount(o.loadingCount() + 1);
+		var storageArgs: any = {};
 
-		$.get(options.url, args, (data:any) => {
+		for(var i in args) {
+			if (i[0] === "_") {
+				storageArgs[i.substring(1)] = args[i];
+			} else {
+				storageArgs[i] = args[i];
+			}
+		}
+
+		$.get(options.url, storageArgs, (data:any) => {
 			if (!data.err) {
 				loadData(data.err, data.result);
 
@@ -199,7 +214,7 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	}
 
 	return target;
-};
+};*/
 
 ko.bindingHandlers['class'] = {
     update: (element: any, valueAccessor: any) => {
