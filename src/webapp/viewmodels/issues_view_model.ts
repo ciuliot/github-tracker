@@ -410,17 +410,30 @@ export class IssuesViewModel {
 					var issuesData = self.issuesData();
 					knockout_mapping.fromJS(data.meta, issuesData.meta());
 
-					knockout_mapping.toJS(issuesData.issues);
+					for (var i = 0; i < issuesData.issues().length; i++) {
+						var issue = issuesData.issues()[i];
+						var number = issue.number();
+						var newIssue: any = null;
 
-					for (var i = 0; i < data.issues.length; i++) {
-						var newIssue = data.issues[i];
-						var issue = self.findIssue(newIssue.number);
-						if (issue) {
+						for (var j =0 ; j < data.issues.length; j++) {
+							if (data.issues[j].number === number) {
+								newIssue = data.issues[j];
+								data.issues.splice(j, 1);
+								break;
+							}
+						}
+
+						if (newIssue) {
 							knockout_mapping.fromJS(newIssue, issue);
-						} else {
-							issuesData.issues.push(issuesData.createIssueFromJS(newIssue));
 						}
 					}
+
+					// Add remaining new issues
+					for (var j =0 ; j < data.issues.length; j++) {
+						issuesData.issues().push(issuesData.createIssueFromJS(data.issues[j]));
+					}
+
+					issuesData.issues.valueHasMutated();
 				}
 
 			}

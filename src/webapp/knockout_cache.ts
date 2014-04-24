@@ -27,7 +27,6 @@ class KnockoutJsonCache<T> {
 	private lastIndexUrl: string;
 	private storeQueue: any[] = [];
 	private isStoring: boolean;
-	private executedRequests: string[] = [];
 	private static pointerKeyword: string = "pointer";
 
 	constructor(private target: KnockoutObservable<T>, private options: KnockoutJsonCacheOptions) {
@@ -174,7 +173,6 @@ class KnockoutJsonCache<T> {
 				sessionStorage.setItem(storageKey, rawData);
 
 				self.lastIndexUrl = self.options.url;
-				self.executedRequests.push(JSON.stringify(args));
 			}
 		}).fail((error: string) => {
 			self.options.indexDone(error);
