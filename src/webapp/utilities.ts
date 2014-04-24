@@ -31,7 +31,7 @@ class Utilities {
 	}
 }
 
-ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
+/*ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	var o = options;
 	o.indexDone = o.indexDone || function () {};
 	o.mapping = o.mapping || {};
@@ -214,7 +214,7 @@ ko.extenders.mapToJsonResource = (target: any, options: any = {}) : void => {
 	}
 
 	return target;
-};
+};*/
 
 ko.bindingHandlers['class'] = {
     update: (element: any, valueAccessor: any) => {

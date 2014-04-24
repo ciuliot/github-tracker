@@ -62,6 +62,7 @@ export class LabelsViewModel {
 			mapToJsonResource: { 
 				url: "/labels",
 				loadingCount: loadingCount,
+				keyIgnoreArgs: ["milestone"],
 				loadOnStart: false
 			}
 		});

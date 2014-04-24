@@ -15,6 +15,7 @@ import utilities = require("../utilities");
 import log4js = require("log4js");
 import async = require("async");
 import knockout_mapping = require("knockout.mapping");
+import knockout_cache = require("../knockout_cache");
 
 import repositoryModel = require("../models/repository_model");
 import phaseModel = require("../models/phase_model");
@@ -52,7 +53,7 @@ class HomeViewModel {
 
 	columnClass: KnockoutComputed<string>;
 
-	selectedMilestone: KnockoutObservable<string> = ko.observable(issuesViewModel.ProductBacklogMilestone);
+	selectedMilestone: KnockoutObservable<number> = ko.observable(issuesViewModel.ProductBacklogMilestone);
 	selectedMilestoneTitle: KnockoutComputed<string>;
 	issuesColumnWidth: KnockoutComputed<string>;
 
@@ -65,6 +66,8 @@ class HomeViewModel {
 
 	start() {
 		var self = this;
+
+		knockout_cache.init();
 
 		self.boardType = ko.observable(issuesViewModel.BoardType.developer);
 
@@ -84,6 +87,7 @@ class HomeViewModel {
 				url: "/repositories", 
 				loadingCount: self.loadingCount,
 				savingCount: self.savingCount,
+				keyIgnoreArgs: ["milestone"],
 				indexDone: () => {
 					self.url(null);
 				}
@@ -95,11 +99,26 @@ class HomeViewModel {
 		this.milestones = knockout_mapping.fromJS([]).extend({ 
 			mapToJsonResource: { 
 				url: "/milestones",
+				mapping: {
+					key: (data: milestoneModel) => {
+						return ko.utils.unwrapObservable(data.number);
+					}
+				},
 				loadingCount: self.loadingCount,
 				savingCount: self.savingCount,
+				keyIgnoreArgs: ["milestone"],
 				loadOnStart: false,
 				indexDone: () => {
-					self.milestones.push(knockout_mapping.fromJS ({ number: issuesViewModel.ProductBacklogMilestone, title: "Product backlog" }));
+					var milestone = ko.utils.arrayFirst(self.milestones(), (x: milestoneModel) => { 
+						return x.number() === issuesViewModel.ProductBacklogMilestone; 
+					});
+
+					if (null === milestone) {
+						self.milestones.unshift(knockout_mapping.fromJS({ 
+							number: issuesViewModel.ProductBacklogMilestone, 
+							title: "Product backlog"
+						}));
+					}
 				}
 			}
 		});
@@ -115,6 +134,7 @@ class HomeViewModel {
 				url: "/collaborators",
 				loadingCount: self.loadingCount,
 				savingCount: self.savingCount,
+				keyIgnoreArgs: ["milestone"],
 				loadOnStart: false
 			}
 		});
@@ -217,7 +237,7 @@ class HomeViewModel {
 					});
 
 					if (self.selectedMilestone() !== null) {
-						parts.push(self.selectedMilestone());
+						parts.push(self.selectedMilestone().toString());
 					}
 				}
 
@@ -245,7 +265,7 @@ class HomeViewModel {
 
 				var user = variables.length > 2 ? variables[2] : "";
 				var repository = variables.length > 3 ? variables[3] : null;
-				var milestone = variables.length > 4 ? variables[4] : issuesViewModel.ProductBacklogMilestone;
+				var milestone = variables.length > 4 ? variables[4] : issuesViewModel.ProductBacklogMilestone.toString();
 
 				if (user.length === 0 && self.users().length > 0) {
 					user = self.users()[0];
@@ -256,7 +276,7 @@ class HomeViewModel {
 				}
 
 				self.selectRepository(repository, false);
-				self.selectMilestone(milestone);
+				self.selectMilestone(Number(milestone));
 
 				if (pathParts[1]) { // Querystring
 					var queryString = pathParts[1].split("&");
@@ -339,7 +359,7 @@ class HomeViewModel {
 			});
 		} else {
 			this.labelsViewModel.removeAll();
-			this.milestones.removeAll();
+			this.milestones.remove((x: milestoneModel) => { return x.number() !== issuesViewModel.ProductBacklogMilestone; });
 			this.collaborators.removeAll();
 			this.issuesViewModel.issuesData().issues.removeAll();
 
@@ -347,9 +367,9 @@ class HomeViewModel {
 		}
 	}
 
-	selectMilestone(milestone: string) {
+	selectMilestone(milestone: number) {
 		var self = this;
-		this.logger.info("Selecting milestone: " + milestone);
+		this.logger.info("Selecting milestone: ", milestone);
 		this.selectedMilestone(milestone);
 
 		this.loadIssues(false);
@@ -491,7 +511,7 @@ class HomeViewModel {
 
 	issueAdd(issue: issuesViewModel.Issue): void {
 		knockout_mapping.fromJS(issuesViewModel.Issue.empty, this.issueDetail); // Cleanup fields
-		this.issueDetail().milestone(this.selectedMilestone());
+		this.issueDetail().milestone(this.selectedMilestone().toString());
 	}
 
 	changeDetailIssueType(type: labelsViewModel.Label) {

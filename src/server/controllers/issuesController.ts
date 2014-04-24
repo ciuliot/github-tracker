@@ -88,7 +88,7 @@ class IssuesController extends abstractController {
 				user: user,
 				state: "open",
 				repo: repository,
-				milestone: milestone
+				milestone: milestone == -1 ? "none" : milestone
 			};
 
 			var labels: labelsModel.IndexResult;
