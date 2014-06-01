@@ -61,10 +61,35 @@ class Server {
 
         self.logger.info("Starting Socket.IO");
         configuration.socketIO = socketio.listen(app);
-        configuration.socketIO.set('log level', 1);
+        //configuration.socketIO.set('log level', 1);
 
-        configuration.socketIO.configure(() => {
-            var authorization = (handshakeData: any, callback: Function) => {
+        configuration.socketIO.use((socket: any, next: Function) => {
+            var handshakeData = socket.request;
+
+            if (handshakeData.headers.cookie) {
+                var socketCookie = cookie.parse(handshakeData.headers.cookie);
+                var sid = socketCookie['connect.sid'];
+                var sessionId = connect.utils.parseSignedCookie(sid, configuration.sessionStore.secret);
+
+                if (sessionId) {  
+                    configuration.sessionStore.store.get(sessionId, (err: any, data: any) => {
+                        if (data && data.passport && data.passport.user) {
+                            socket.handshake.session = data.passport.user;
+                            next();
+                        } else {
+                            next(new Error("No such user found"));
+                        }
+                    });
+                } else {
+                    next(new Error ("Invalid session id"));
+                }
+            } else {
+                next(new Error ("No cookies provided"));
+            }
+        });
+
+        //configuration.socketIO.configure(() => {
+            /*var authorization = (handshakeData: any, callback: Function) => {
                 if (handshakeData.headers.cookie) {
                     handshakeData.cookie = cookie.parse(handshakeData.headers.cookie);
                     var sid = handshakeData.cookie['connect.sid'];
@@ -87,8 +112,8 @@ class Server {
                 }
             };
 
-            configuration.socketIO.set("authorization", authorization);
-        });
+            configuration.socketIO.set("authorization", authorization);*/
+        //});
 
         configuration.socketIO.sockets.on('connection', (socket: any) => {
             self.logger.debug("Socket.IO connection from %s", socket.id);
