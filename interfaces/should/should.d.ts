@@ -95,6 +95,8 @@ interface ShouldInternal {
 interface Internal extends ShouldInternal {
   (obj: any): ShouldAssertion;
 
+  use(source: string): void;
+
   // node.js's assert functions
   fail(actual: any, expected: any, message: string, operator: string): void;
   assert(value: any, message: string): void;

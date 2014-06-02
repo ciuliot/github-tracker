@@ -26,7 +26,8 @@
     "should": "*",
     "grunt-contrib-stylus": "*",
     "istanbul": "*",
-    "grunt-bump": "*"
+    "grunt-bump": "*",
+    "should-http": "0.0.2"
   },
   "dependencies": {
     "moment": "*",

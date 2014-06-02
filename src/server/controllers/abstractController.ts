@@ -78,6 +78,12 @@ class AbstractController extends locomotive.Controller {
         this.logger.debug.apply(this.logger, [format].concat(args));
     }
 
+    logWarn(params: string[], format: string, ...args: any[]) {
+        var format = this.getLogFormat(params, format);
+        this.logger.warn.apply(this.logger, [format].concat(args)); 
+    }
+
+
     logError(params: string[], format: string, ...args: any[]) {
         var format = this.getLogFormat(params, format);
         this.logger.error.apply(this.logger, [format].concat(args)); 

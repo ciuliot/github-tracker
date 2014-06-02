@@ -10,6 +10,8 @@ var request = require('request');
 
 import should = require("should");
 
+require('should-http');
+
 var serverStartupCallbacks: Function[] = [];
 var isServerStarting = false;
 
@@ -75,29 +77,38 @@ class TestApi {
     }
 
     static verifyJsonResponse(err: any, response: http.ClientResponse, textBody: string): any {
-        should.not.exist(err);
-        response.should.have.status(200);
-        should.exist(textBody);
-        var body = JSON.parse(textBody);
+        try {
+            should.not.exist(err);
+            response.should.have.status(200);
+            should.exist(textBody);
+            var body = JSON.parse(textBody);
 
-        should.not.exist(body.error);
-        should.exist(body);
-        should.exist(body.result);
+            should.not.exist(body.error);
+            should.exist(body);
+            should.exist(body.result);
 
-        return body.result;
+            return body.result;
+        } catch(ex) {
+            TestApi.logger.error("Exception occured", ex);
+        }
     }
 
     static verifyErrorJsonResponse(errorText: string): any {
         return (err: any, response: http.ClientResponse, textBody: string) => {
-            should.not.exist(err);
-            response.should.have.status(200);
-            should.exist(textBody);
+            try {
+                should.not.exist(err);
+                response.should.have.status(200);
+                should.exist(textBody);
 
-            var body = JSON.parse(textBody);
-            should.exist(body.error);
-            body.error.should.eql(errorText);
+                var body = JSON.parse(textBody);
+                should.exist(body.error);
+                body.error.should.eql(errorText);
 
-            return body;
+                return body;
+            }
+            catch(ex) {
+                TestApi.logger.error("Exception occured", ex);
+            }
         }
     }
 
@@ -120,7 +131,6 @@ class TestApi {
     static httpGet(path: string, callback: Function, auth: any = { user: "tester", pass: "123", }, args?: any) :void {
         var options = {
         	url: util.format("http://%s:%d%s", configuration.http_address, configuration.http_port, path),
-        	method: "GET",
         	auth: auth
         };
         
@@ -130,23 +140,21 @@ class TestApi {
     static httpPost(path: string, callback: Function, args?: any, auth: any = { user: "tester", pass: "123", }) :void {
         var options = {
             url: util.format("http://%s:%d%s", configuration.http_address, configuration.http_port, path),
-            method: "POST",
             auth: auth,
             form: args
         };
         
-        request.get(options, callback);
+        request.post(options, callback);
     }
 
     static httpPut(path: string, callback: Function, args?: any, auth: any = { user: "tester", pass: "123", }) :void {
         var options = {
             url: util.format("http://%s:%d%s", configuration.http_address, configuration.http_port, path),
-            method: "PUT",
             auth: auth,
             form: args
         };
         
-        request.get(options, callback);
+        request.put(options, callback);
     }
 };
 
