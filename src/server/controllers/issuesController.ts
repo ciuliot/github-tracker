@@ -305,10 +305,9 @@ class IssuesController extends abstractController {
 				self.logInfo([user, repository, number], "Updating phase to '%s'", phase);
 				tasks = [];
 				var branchInfo: any = undefined;
+				var branchName = util.format("heads/" + configuration.branchNameFormat, number);
 
 				if (phase === configuration.phaseNames.inprogress) {
-					var branchName = util.format("heads/" + configuration.branchNameFormat, number);
-
 					tasks.push((getBranchCompleted: Function) => {
 						self.getIssueBranchInfo(number, user, repository, (err: any, result: any) => {
 							if (result.name === null) {
