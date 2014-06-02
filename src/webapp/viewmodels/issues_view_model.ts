@@ -53,7 +53,8 @@ export class Issue {
 		compareUrl: null,
 		expectedBehavior: null,
 		phase: $.extend({}, labelsViewModel.Label.empty ),
-		category: $.extend({}, labelsViewModel.Label.empty )
+		category: $.extend({}, labelsViewModel.Label.empty ),
+		updated_at: null
 	};
 
 	constructor(public mainLabelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, data: any = {}) {

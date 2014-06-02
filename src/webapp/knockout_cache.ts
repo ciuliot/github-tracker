@@ -22,7 +22,7 @@ interface KnockoutJsonCacheOptions {
 };
 
 class KnockoutJsonCache<T> {
-	private lastTemporaryId: number;
+	private lastTemporaryId: number = 0;
 	private logger: log4js.Logger;
 	private lastIndexUrl: string;
 	private storeQueue: any[] = [];
