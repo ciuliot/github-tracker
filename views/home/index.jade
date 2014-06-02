@@ -82,7 +82,7 @@ block head
 					button.btn.btn-default(type="button", data-toggle="modal" data-target="#reject-implementation-modal"
 						data-bind="css: { hide: !canReject() }, click: $root.issueRejectOpen.bind($root, $data), tooltip: { title: 'Reject implementation', container: 'body' }")
 						span.glyphicon.glyphicon-thumbs-down		
-					span.description(data-bind="text: description")
+				span.description(data-bind="text: description")
 
 block body
 	#impediment-modal.modal.fade(data-bind="with: impediment")
