@@ -468,9 +468,10 @@ class IssuesController extends abstractController {
 					issue.pull_request = result;
 					try {
 						issue = self.convertIssue(user, repository, issue, labels);
-						self.logInfo([user, repository, number], "Sending update via websockets");
+						var room = util.format("%s/%s", user, repository);
+						self.logInfo([user, repository, number], "Sending update via websockets to ", room);
 
-						var sio = configuration.socketIO.sockets.in(util.format("%s/%s", user, repository));
+						var sio = configuration.socketIO.sockets.in(room);
 						sio.emit("issue-update", issue);
 
 						convertIssueCompleted(null, issue);

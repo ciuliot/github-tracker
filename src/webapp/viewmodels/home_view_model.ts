@@ -82,6 +82,11 @@ class HomeViewModel {
 			}
 		});
 
+		self.socket.on("connect", () => {
+			self.logger.info("Socket.IO connected");
+			self.subscribeToSocketIO();
+		});
+
 		this.repositories = knockout_mapping.fromJS([]).extend({ 
 			mapToJsonResource: { 
 				url: "/repositories", 
@@ -231,10 +236,7 @@ class HomeViewModel {
 				if (repository !== null) {
 					parts.push(repository);
 
-					self.socket.emit("subscribe", {
-						user: user,
-						repository: repository
-					});
+					self.subscribeToSocketIO();
 
 					if (self.selectedMilestone() !== null) {
 						parts.push(self.selectedMilestone().toString());
@@ -305,6 +307,17 @@ class HomeViewModel {
 		window.addEventListener("popstate", (e: any) => {
 		    self.url(null);
 		});
+	}
+
+	private subscribeToSocketIO(): void {
+		var user = this.selectedUser(), repository = this.selectedRepository();
+		if (user !== null && repository !== null) {
+			this.logger.debug("Subscribing for notifications to " + user + "/" + repository);
+			this.socket.emit("subscribe", {
+				user: user,
+				repository: repository
+			});
+		}
 	}
 
 	selectUser(user: string, selectRepository: boolean = true) {
