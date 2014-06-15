@@ -76,7 +76,7 @@ class Configuration {
 
     static estimateSizes: any = {
         XS: 1,
-        SM: 2,
+        S: 2,
         M: 3,
         L: 5,
         XL: 8

@@ -176,7 +176,13 @@ block body
 						li.divider
 						<!-- ko template { name: 'milestone-template', foreach: milestones } -->			
 						<!-- /ko -->
+					
 			ul.nav.navbar-nav.navbar-right
+				li
+					.progress(style="margin-top:15px; margin-right: 8px; width: 150px", data-bind="foreach: currentMilestoneOpenEffort")
+						.progress-bar(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100"
+							data-bind="text: text, css: { 'progress-bar-success' : label === null }, style: { width: percents, 'background-color': label === null ? null : label.color }")
+
 				li: p.saving-indicator.navbar-text(data-bind="css: { invisible: savingCount() == 0 }")
 				li: p.loading-indicator.navbar-text(data-bind="css: { invisible: loadingCount() == 0 }")
 				li: .btn-group

@@ -64,6 +64,10 @@ class HomeViewModel {
 	logger: log4js.Logger = utilities.getLogger("HomeViewModel");
 	socket: any = null;
 
+	currentMilestoneIssues: KnockoutComputed<issuesViewModel.Issue[]>;
+	currentMilestoneEffort: KnockoutComputed<number>;
+	currentMilestoneOpenEffort: KnockoutComputed<any>;
+
 	start() {
 		var self = this;
 
@@ -298,6 +302,68 @@ class HomeViewModel {
 			}
 		});
 
+ 		this.currentMilestoneIssues = ko.computed(() => {
+ 			return ko.utils.arrayFilter(self.issuesViewModel.issuesData().issues(), issue => {
+				return issue.isInMilestone(self.selectedMilestone);
+			});
+ 		});
+
+ 		this.currentMilestoneEffort = ko.computed(() => {
+ 			var sum = 0;
+ 			
+ 			for(var i = 0; i < self.currentMilestoneIssues().length; i++) {
+ 				sum += self.currentMilestoneIssues()[i].getNumericEstimate();
+ 			}
+
+			return sum;
+ 		});
+
+ 		this.currentMilestoneOpenEffort = ko.computed(() => {
+ 			var categories = self.labelsViewModel.labels().categories();
+ 			var currentIssues = self.currentMilestoneIssues();
+ 			var res: any[] = [];
+ 			var openedSum = 0;
+
+ 			var currentMilestoneEffort = self.currentMilestoneEffort();
+
+ 			if (currentMilestoneEffort > 0 && self.labelsViewModel.labels().declaration().phases() != null) {
+ 				var closedPhase = self.labelsViewModel.labels().declaration().phases().closed();
+
+	 			for (var i = 0; i < categories.length; i++) {
+	 				var category = categories[i];
+	 				var sum = 0;
+
+	 				var issues = ko.utils.arrayFilter(currentIssues, issue => {
+	 					return issue.category().id() === category.id() && issue.phase().id() !== closedPhase;
+	 				});
+
+	 				for(var j = 0; j < issues.length; j++) {
+	 					sum += currentIssues[j].getNumericEstimate();
+	 				}
+
+	 				openedSum += sum;
+
+	 				res.push({
+	 					label: category,
+	 					sum: sum,
+	 					percents: (100 * sum / currentMilestoneEffort).toString() + "%",
+	 					text: null
+	 				});
+	 			}
+
+	 			var closedSum = currentMilestoneEffort - openedSum;
+
+	 			res.splice(0, 0, {
+	 				label: null,
+	 				sum: closedSum,
+	 				percents: (100 * closedSum / currentMilestoneEffort).toString() + "%",
+	 				text: Math.floor(100 * closedSum / currentMilestoneEffort).toString() + "%"
+	 			});
+	 		}
+
+ 			return res;
+ 		});
+
 		this.logger.info("Started & bound");
 		ko.applyBindings(this);
 		utilities.loadMapper();
@@ -481,7 +547,7 @@ class HomeViewModel {
 		if (id === null) {
 			var phase = self.labelsViewModel.labels().phases()[0];
 
-			issue = new issuesViewModel.Issue(self.labelsViewModel, self.collaborators);
+			issue = self.issuesViewModel.issuesData().createIssueFromJS(); // new issuesViewModel.Issue(self.labelsViewModel, self.collaborators);
 
 			this.issueDetail().moveToPhase(phase.id());
 			self.issuesViewModel.issuesData().issues.push(issue);
