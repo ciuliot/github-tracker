@@ -57,7 +57,8 @@ export class Issue {
 		updated_at: null
 	};
 
-	constructor(public mainLabelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>, data: any = {}) {
+	constructor(public mainLabelsViewModel: labelsViewModel.LabelsViewModel, public collaborators: KnockoutObservableArray<collaboratorModel>,
+				public meta: KnockoutObservable<any>, data: any = {}) {
 		data = $.extend(true, {}, Issue.empty, data);
 
 		knockout_mapping.fromJS(data, {
@@ -190,6 +191,24 @@ export class Issue {
 		
 		knockout_mapping.fromJS(rawData, this.category());
 	}
+
+	isInMilestone(milestone: KnockoutObservable<number>): boolean {
+		return (milestone() === ProductBacklogMilestone && this.milestone() === null) ||
+			   (milestone() === Number(this.milestone()))
+	}
+
+	getNumericEstimate(): number {
+		var meta = this.meta();
+		var res: number = 0;
+
+		if (meta !== null && meta.estimateSizes() !== null && this.estimate() !== null) {
+			var estimateValue = meta.estimateSizes()[this.estimate()];
+
+			res = estimateValue !== undefined ? estimateValue() : res;
+		}
+
+		return res;
+	}
 }
 
 export class IssueDetail extends Issue {
@@ -270,8 +289,7 @@ export class Category extends labelsViewModel.Label  {
 
 				var isInPhase = x.category().id() === self.id(); 
 				var isTopPriorityCategory = self.isTopPriority();
-				var isInMilestone = (self.viewModel.selectedMilestone() === ProductBacklogMilestone && x.milestone() === null) ||
-								    (self.viewModel.selectedMilestone() === Number(x.milestone()));
+				var isInMilestone = x.isInMilestone(self.viewModel.selectedMilestone);
 
 				return isInMilestone && ((isTopPriorityCategory && isPriorityType) ||
 				        (!isTopPriorityCategory && !isPriorityType && x.category().id() === self.id()));
@@ -372,8 +390,8 @@ export class IssuesData {
 		}, this);
 	}
 
-	createIssueFromJS(data: any) {
-		return new Issue(this.viewModel.labelsViewModelInstance, this.viewModel.collaborators, data);
+	createIssueFromJS(data: any = {}) {
+		return new Issue(this.viewModel.labelsViewModelInstance, this.viewModel.collaborators, this.viewModel.issuesData().meta, data);
 	}
 }
 
