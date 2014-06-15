@@ -67,7 +67,7 @@ vows.describe("IssuesController").addBatch({
 
 					should.exist(result.meta);
 					result.meta.should.eql({
-							estimateSizes: { XS: 1, SM: 2, M: 3, L: 5, XL: 8 },
+							estimateSizes: { XS: 1, S: 2, M: 3, L: 5, XL: 8 },
 							branchNameFormat: 'issue/%d',
 							priorityTypes: [ 'bug' ] 
 					});
