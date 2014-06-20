@@ -3,6 +3,8 @@ module.exports = function (grunt) {
     var util = require("util");
     var revision = "";
 
+    var herokuDir = (grunt.option('heroku-dir') || 'dist/heroku') + "/";
+
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -88,6 +90,13 @@ module.exports = function (grunt) {
                 files: {
                     "docs/": ["README.md", "LICENSE"]
                 }
+            },
+            heroku: {
+                files: [
+                    { src: "dist/**", dest: herokuDir },
+                    { src: "package.json", dest: herokuDir },
+                    { src: "views/**", dest: herokuDir }
+                ]
             }
         },
         clean: ['dist', 'package', './<%= pkg.name %>.tgz'],
@@ -164,5 +173,7 @@ module.exports = function (grunt) {
     grunt.registerTask('build', ['clean', 'get-revision', 'bump-only', 'default', 'copy:build', 'compress:build']);
     grunt.registerTask('docs', ['yuidoc', 'copy:docs', 'compress:docs']);
     grunt.registerTask('tests', ['clean', 'default', 'typescript:server_tests', 'vows:server']);
+
+    grunt.registerTask('heroku', ['build', 'copy:heroku']);
 };
 
