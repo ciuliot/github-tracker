@@ -73,7 +73,8 @@ class Server {
                 var socketCookie = cookie.parse(handshakeData.headers.cookie);
 
                 var sid = socketCookie['connect.sid'];
-                var sessionId = cookieParser.signedCookie(sid, configuration.sessionStore.secret);
+                // Backward-compatibility with older version of cookieParser
+                var sessionId = (cookieParser.signedCookie || connect.utils.parseSignedCookie)(sid, configuration.sessionStore.secret);
 
                 if (sessionId) {  
                     configuration.sessionStore.store.get(sessionId, (err: any, data: any) => {
