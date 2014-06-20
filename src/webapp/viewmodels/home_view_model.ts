@@ -68,6 +68,8 @@ class HomeViewModel {
 	currentMilestoneEffort: KnockoutComputed<number>;
 	currentMilestoneOpenEffort: KnockoutComputed<any>;
 
+	haveSelectedRepository: KnockoutComputed<boolean>;
+
 	start() {
 		var self = this;
 
@@ -93,7 +95,7 @@ class HomeViewModel {
 				savingCount: self.savingCount,
 				keyIgnoreArgs: ["milestone"],
 				indexDone: () => {
-					self.url(null);
+					//self.url(null);
 				}
 			}
 		});
@@ -230,10 +232,11 @@ class HomeViewModel {
 			read: () => {
 				var origin = [window.location.protocol, "//", window.location.hostname, ":", window.location.port].join("");
 				var user = self.selectedUser(), repository = self.selectedRepository();
-				var parts = [origin, "index", user];
+				var queryString: string[] = [];
+				var parts: string[] = [origin];
 
-				if (repository !== null) {
-					parts.push(repository);
+				if (repository !== null && user !== null) {
+					parts.splice(1, 0, "index", user, repository)
 
 					self.socket.emit("subscribe", {
 						user: user,
@@ -243,14 +246,15 @@ class HomeViewModel {
 					if (self.selectedMilestone() !== null) {
 						parts.push(self.selectedMilestone().toString());
 					}
+					
+					queryString.push("board=" + issuesViewModel.BoardType[self.boardType()]);
+
+					if (self.issuesViewModel.filter().length > 0) {
+						queryString.push("q=" + self.issuesViewModel.filter());
+					}
 				}
 
 				var url = parts.join("/");
-				var queryString = ["board=" + issuesViewModel.BoardType[self.boardType()]];
-
-				if (self.issuesViewModel.filter().length > 0) {
-					queryString.push("q=" + self.issuesViewModel.filter());
-				}
 
 				if (queryString.length > 0) {
 					url += "?" + queryString.join("&");
@@ -276,7 +280,7 @@ class HomeViewModel {
 				}
 
 				if (user.length > 0) {
-					self.selectUser(user, false);
+					self.selectUser(user);
 				}
 
 				self.selectRepository(repository, false);
@@ -364,6 +368,10 @@ class HomeViewModel {
  			return res;
  		});
 
+		this.haveSelectedRepository = ko.computed(() => {
+			return self.selectedRepository() !== null && this.selectedUser() !== null;
+		});
+
 		this.logger.info("Started & bound");
 		ko.applyBindings(this);
 		utilities.loadMapper();
@@ -371,13 +379,12 @@ class HomeViewModel {
 		window.addEventListener("popstate", (e: any) => {
 		    self.url(null);
 		});
+
+		self.url(null);
 	}
 
-	selectUser(user: string, selectRepository: boolean = true) {
+	selectUser(user: string) {
 		this.logger.info("Selecting user: " + user);
-		if (selectRepository && this.selectedUser() !== user) {
-			this.selectRepository(null);
-		}
 
 		this.selectedUser(user);
 	}
