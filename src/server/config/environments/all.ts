@@ -62,6 +62,7 @@ function initialize() {
     this.use(express.static(publicDir));
 
     this.use(bodyParser.json());
+    this.use(bodyParser.urlencoded({extended: true}));
     this.use(methodOverride());
 
     /* istanbul ignore next */
