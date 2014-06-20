@@ -7,7 +7,10 @@ block head
 	script(data-main='js/config', src='js/libs/require.js')
 
 block body
-	.jumbotron
-		h1 GitHub Tracker
-		p Welcome to GitHub tracker. Please login.
-		a.btn.btn-primary.btn-lg(href="/auth", role="button") Login with GitHub
+	.row(style="margin-top: 5%")
+		.col-md-10.col-md-offset-1
+			.jumbotron
+				.container
+					h1 GitHub Tracker
+					p Welcome to GitHub tracker. Please login.
+					a.btn.btn-primary.btn-lg(href="/auth", role="button") Login with GitHub

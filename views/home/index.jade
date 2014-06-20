@@ -155,18 +155,11 @@ block body
 			a.navbar-brand Tracker
 		.collapse.navbar-collapse#home-navbar-collapse
 			ul.nav.navbar-nav				
-				li.dropdown
-					a.dropdown-toggle(href="#", data-toggle="dropdown")
-						span(data-bind="text: selectedUser() === null ? 'Users' : selectedUser()")
-						b.caret
-					ul.dropdown-menu(data-bind="template: { name: 'user-template', foreach: users }")
-				li.dropdown
-					a.dropdown-toggle(href="#", data-toggle="dropdown")
-						span(data-bind="text: selectedRepository() === null ? 'Repositories' : selectedRepository()")
-						b.caret
-					ul.dropdown-menu(data-bind="template: { name: 'user-repositories-template', foreach: userRepositories }")
+				li
+					button.btn.btn-link.navbar-btn(type="button", data-toggle="modal" data-target="#select-repository", 
+						data-bind="visible: $root.haveSelectedRepository(), text: selectedUser() + '/' + selectedRepository()")
 						
-				li.dropdown
+				li.dropdown(data-bind="visible: $root.haveSelectedRepository()")
 					a.dropdown-toggle(href="#", data-toggle="dropdown")
 						span(data-bind="text: selectedMilestoneTitle()")
 						b.caret
@@ -177,14 +170,14 @@ block body
 						<!-- /ko -->
 					
 			ul.nav.navbar-nav.navbar-right
-				li
+				li(data-bind="visible: $root.haveSelectedRepository()")
 					.progress(style="margin-top:15px; margin-right: 8px; width: 150px", data-bind="foreach: currentMilestoneOpenEffort")
 						.progress-bar(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100"
 							data-bind="text: text, css: { 'progress-bar-success' : label === null }, style: { width: percents, 'background-color': label === null ? null : label.color }")
 
 				li: p.saving-indicator.navbar-text(data-bind="css: { invisible: savingCount() == 0 }")
 				li: p.loading-indicator.navbar-text(data-bind="css: { invisible: loadingCount() == 0 }")
-				li: .btn-group
+				li(data-bind="visible: $root.haveSelectedRepository()"): .btn-group
 					button.btn.btn-default.navbar-btn(type="button", 
 						data-bind="tooltip: { title: 'View developer board', container: 'body', placement: 'bottom' }, click: $root.selectDeveloperBoard.bind($root), css: { active: $root.isInDeveloperBoard }")
 						span.glyphicon.glyphicon-list-alt
@@ -192,11 +185,11 @@ block body
 						data-bind="tooltip: { title: 'View Q/A board', container: 'body', placement: 'bottom' }, click: $root.selectQABoard.bind($root), css: { active: $root.isInQABoard }")
 						span.glyphicon.glyphicon-folder-close
 					
-				li
+				li(data-bind="visible: $root.haveSelectedRepository()")
 					form.navbar-form(role="form")
 						.form-group
 							input.form-control(type="text", placeholder="Search", data-bind="value: $root.issuesViewModel.filter, valueUpdate: 'afterkeydown'")
-				li
+				li(data-bind="visible: $root.haveSelectedRepository()")
 					.btn-group
 						button.btn.btn-default.navbar-btn(data-toggle="modal" data-target="#issue-modal"
 							data-bind="css: { disabled: selectedRepository() === null }, tooltip: { title: 'Add new issue to product backlog', container: 'body', placement: 'bottom' }, click: $root.issueAdd.bind($root)")
@@ -218,6 +211,32 @@ block body
 		button(type="button", class="close", data-dismiss="alert", aria-hidden="true") &times;
 		strong 
 			span New branch was created. Please see issue branch details.
+
+	#select-repository.modal.fade
+		.modal-dialog
+			.modal-content
+				.modal-header
+					button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+					h4.modal-title Select repository
+				.modal-body
+					.container-fluid: .row
+						.col-md-4
+							.nav.nav-pills.nav-stacked(data-bind="template: { name: 'user-template', foreach: users }")
+						.col-md-8
+							.container-fluid: .row(data-bind="foreach: userRepositories")
+								.col-md-12
+									button.btn.btn-link(type="button", data-dismiss="modal", data-bind="text: name, click: $root.selectRepository.bind($root, $data.name())")
+				.modal-footer
+					button.btn.btn-default(type="button", data-dismiss="modal") Close
+
+	.row(style="margin-top: 5%", data-bind="visible: !$root.haveSelectedRepository()")
+		.col-md-10.col-md-offset-1
+			.jumbotron
+				.container
+					h2 No repository selected
+					p To start, please select GitHub repository you wish to work with.
+					p Tip: You can save bookmark in any state and reopen it later to resume work.
+					a.btn.btn-primary.btn-lg(href="#", role="button", data-toggle="modal" data-target="#select-repository") Select repository
 
 	.container-fluid.visible-lg
 		.row.phases(data-bind="template: { name: 'issue-phase-header-template', foreach: issuesViewModel.headers }")
