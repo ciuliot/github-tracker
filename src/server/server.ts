@@ -25,6 +25,7 @@ var bootable_enviromnent = require('bootable-environment');
 var cookie = require("cookie");
 var connect = require("connect");
 var GitHubApi = require("github");
+var cookieParser = require('cookie-parser');
 
 class Server {
     private logger: log4js.Logger;
@@ -63,13 +64,16 @@ class Server {
         configuration.socketIO = socketio.listen(app);
         //configuration.socketIO.set('log level', 1);
 
+        //var sioCookieParser = express.cookieParser(configuration.sessionStore.secret);
+
         configuration.socketIO.use((socket: any, next: Function) => {
             var handshakeData = socket.request;
 
             if (handshakeData.headers.cookie) {
                 var socketCookie = cookie.parse(handshakeData.headers.cookie);
+
                 var sid = socketCookie['connect.sid'];
-                var sessionId = connect.utils.parseSignedCookie(sid, configuration.sessionStore.secret);
+                var sessionId = cookieParser.signedCookie(sid, configuration.sessionStore.secret);
 
                 if (sessionId) {  
                     configuration.sessionStore.store.get(sessionId, (err: any, data: any) => {

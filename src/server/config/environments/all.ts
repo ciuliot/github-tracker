@@ -61,7 +61,7 @@ function initialize() {
     this.use("/src", express.static(path.resolve(config.startupDirectory, "./src")));
     this.use(express.static(publicDir));
 
-    this.use(bodyParser());
+    this.use(bodyParser.json());
     this.use(methodOverride());
 
     /* istanbul ignore next */
