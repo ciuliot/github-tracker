@@ -1,6 +1,6 @@
 {
   "name": "github-tracker",
-  "version": "0.1.321",
+  "version": "0.1.322",
   "description": "Issue tracking",
   "main": "dist/app.js",
   "scripts": {
