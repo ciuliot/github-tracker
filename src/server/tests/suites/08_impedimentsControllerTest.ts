@@ -16,15 +16,15 @@ vows.describe("ImpedimentsController").addBatch({
 	"Server": {
 		topic: testApi.startServerTopic(),
 		"Index without user and repository": {
-			topic: testApi.httpGetTopic("/impediments/0"),
+			topic: testApi.httpGetTopic("/impediments/"),
 			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Index without user": {
-			topic: testApi.httpGetTopic("/impediments/0?repository=repo"),
+			topic: testApi.httpGetTopic("/impediments/?repository=repo"),
 			"returns error": testApi.verifyNoUserProvidedError()
 		},
 		"Index without repository": {
-			topic: testApi.httpGetTopic("/impediments/0?user=test"),
+			topic: testApi.httpGetTopic("/impediments/?user=test"),
 
 			"returns error": testApi.verifyNoRepositoryProvidedError()
 		},
@@ -39,13 +39,22 @@ vows.describe("ImpedimentsController").addBatch({
 			}
 		},*/
 		"Valid user and repository": {
-			topic: testApi.httpGetTopic("/impediments/0?user=utester&repository=tracker"),
+			topic: testApi.httpGetTopic("/impediments/?user=utester&repository=tracker"),
 		
 			"returns impediments": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyJsonResponse(err, response, textBody);
 
-				// ToDo
+				should.exist(result.issues);
+				result.issues.length.should.eql(4);
 
+				should.exist(result.issues[0]);
+				result.issues[0].number.should.eql(28);
+
+				should.exist(result.issues[0].impediments);
+				result.issues[0].impediments.length.should.eql(3);
+				result.issues[0].impediments[0].isClosed.should.eql(false);
+				result.issues[0].impediments[0].date.should.eql("2014-02-13");
+				result.issues[0].impediments[0].comment.should.eql("21313123");
 			}
 
 		},

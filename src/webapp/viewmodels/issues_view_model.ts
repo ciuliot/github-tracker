@@ -7,7 +7,7 @@ import collaboratorModel = require("../models/collaborator_model");
 import ko = require("knockout");
 import $ = require("jquery");
 
-export enum BoardType { developer, qa };
+export enum BoardType { developer, qa, impediments };
 
 export var ProductBacklogMilestone: number = -1;
 

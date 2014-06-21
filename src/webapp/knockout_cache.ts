@@ -140,7 +140,7 @@ class KnockoutJsonCache<T> {
 		}
 
 		if (data) {
-			this.logger.debug("Loading from storage", (requestData === KnockoutJsonCache.pointerKeyword ? requestKey : storageKey));
+			this.logger.debug("Loading from storage" + (requestData === KnockoutJsonCache.pointerKeyword ? requestKey : storageKey));
 			var parsedData = JSON.parse(data);
 			this.loadData(parsedData.err, parsedData);
 
@@ -153,7 +153,7 @@ class KnockoutJsonCache<T> {
 	}
 
 	reload(args: any, callback: Function = () => {}): void {
-		this.logger.debug("Reloading data with args: ", JSON.stringify(args));
+		this.logger.debug("Reloading data with args: " + JSON.stringify(args));
 		this.options.loadingCount(this.options.loadingCount() + 1);
 		var self = this;
 

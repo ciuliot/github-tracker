@@ -155,9 +155,13 @@ block body
 			a.navbar-brand Tracker
 		.collapse.navbar-collapse#home-navbar-collapse
 			ul.nav.navbar-nav				
-				li
-					button.btn.btn-link.navbar-btn(type="button", data-toggle="modal" data-target="#select-repository", 
-						data-bind="visible: $root.haveSelectedRepository(), text: selectedUser() + '/' + selectedRepository()")
+				li.dropdown(data-bind="visible: $root.haveSelectedRepository()")
+					a.dropdown-toggle(href="javascript:void(0)", data-toggle="dropdown")
+						span(data-bind="text: selectedUser() + '/' + selectedRepository()")
+						b.caret
+					ul.dropdown-menu
+						li: a(href="#", data-toggle="modal" data-target="#select-repository") Change repository
+						li: a(href="#", data-toggle="modal" data-target="#show-impediments", data-bind="click: $root.showImpediments.bind($root)") Show impediments
 						
 				li.dropdown(data-bind="visible: $root.haveSelectedRepository()")
 					a.dropdown-toggle(href="#", data-toggle="dropdown")
@@ -226,6 +230,27 @@ block body
 							.container-fluid: .row(data-bind="foreach: userRepositories")
 								.col-md-12
 									button.btn.btn-link(type="button", data-dismiss="modal", data-bind="text: name, click: $root.selectRepository.bind($root, $data.name())")
+				.modal-footer
+					button.btn.btn-default(type="button", data-dismiss="modal") Close
+
+	#show-impediments.modal.fade(data-bind="with: impedimentsViewModel.impedimentsData")
+		.modal-dialog
+			.modal-content
+				.modal-header
+					button.close(type="button", data-dismiss="modal", aria-hidden="true") &times;
+					h4.modal-title Current impediments
+				.modal-body
+					.container-fluid
+						<!-- ko foreach: issues -->
+						.row
+							.col-md-1: strong(data-bind="text: number")
+							.col-md-11: strong(data-bind="text: title")
+						<!-- ko foreach: impediments -->
+						.row
+							.col-md-3(data-bind="text: date")
+							.col-md-9(data-bind="text: comment")
+						<!-- /ko -->
+						<!-- /ko -->
 				.modal-footer
 					button.btn.btn-default(type="button", data-dismiss="modal") Close
 
