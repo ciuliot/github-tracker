@@ -19,7 +19,7 @@ class ImpedimentsController extends abstractController {
 		this.ensureLogin("*");
 	}
 
-	show() {
+	index() {
 		var self = this;
 		var user = self.param("user"), repository = self.param("repository");
 		var requestBody = {
@@ -44,7 +44,11 @@ class ImpedimentsController extends abstractController {
 				if (err) {
 					self.logError([user, repository], "Error occured during impediments retrieval", err);	
 				} else {
-					result = new Buffer(result.content, "base64").toString("utf8");
+					var input = new Buffer(result.content, "base64").toString("utf8");
+					self.logDebug([user, repository], "Contents: %s", input);
+					result = this.parseImpediments(input);
+
+					self.logDebug([user, repository], "Results: %j", result);
 				}
 
 				self.jsonResponse(err, result);
@@ -97,41 +101,17 @@ class ImpedimentsController extends abstractController {
 					self.getGitHubClient().issues.getRepoIssue(requestBody, getIssueCompleted);
 				},
 				(issue: any, updateImpedimentsFileComplete: Function) => {
-					var fields: RegExpExecArray = null;
 					var input = new Buffer(impediments.content, "base64").toString("utf8");
-					var definition: any = {
-						issues: []
-					};
+					var definition= this.parseImpediments(input);
 
-					while ( (fields = configuration.impedimentsFieldsRegEx.exec(input)) !== null) {
-						if (fields[4] !== undefined) { // Impediment
-							definition.issues[definition.issues.length - 1].impediments.push({
-								isClosed: fields[4] === "~~",
-								date: fields[5],
-								comment: fields[6]
-							});
-						} else if (fields[1] !== undefined) { // Issue
-							definition.issues.push({
-								issueData: {
-									number: fields[1],
-									title: fields[2],
-									html_url: fields[3]
-								},
-								impediments: []
-							});
-						}
-					};
-
-					var data: any = definition.issues.filter((x: any) => { return x.issueData.number == requestBody.number });
+					var data: any = definition.issues.filter((x: any) => { return x.number == requestBody.number });
 
 					if (data.length > 0) {
 						data = data[0];
 					} else {
-						data = {
-							issueData: issue,
-							impediments: []
-						};
-						definition.issues.push(data);
+						data = issue;
+						issue.impediments = [];
+						definition.issues.push(issue);
 					}
 
 					data.impediments.push({
@@ -162,7 +142,32 @@ class ImpedimentsController extends abstractController {
 				self.jsonResponse(err, "OK");
 			});	
 		}
+	}
 
+	private parseImpediments(input: string): any {
+		var fields: RegExpExecArray = null;
+		var definition: any = {
+			issues: []
+		};
+
+		while ( (fields = configuration.impedimentsFieldsRegEx.exec(input)) !== null) {
+			if (fields[4] !== undefined) { // Impediment
+				definition.issues[definition.issues.length - 1].impediments.push({
+					isClosed: fields[4] === configuration.impedimentsClosedIndicator,
+					date: fields[5],
+					comment: fields[6]
+				});
+			} else if (fields[1] !== undefined) { // Issue
+				definition.issues.push({
+					number: fields[1],
+					title: fields[2],
+					html_url: fields[3],
+					impediments: []
+				});
+			}
+		};
+
+		return definition;
 	}
 }
 

@@ -18,7 +18,7 @@
     this.resources("milestones", { only: "index" });
     this.resources("collaborators", { only: "index" });
     this.resources("issues", { only: ["index", "update", /*"show",*/ "create"] });
-    this.resources("impediments", { only: ["update", "show"] });
+    this.resources("impediments", { only: ["update", "index"] });
     this.resources("comments", { only: ["update"] });
 }
 

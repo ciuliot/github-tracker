@@ -24,6 +24,7 @@ import collaboratorModel = require("../models/collaborator_model");
 import issuesViewModel = require("./issues_view_model");
 import labelsViewModel = require("./labels_view_model");
 import impedimentModel = require("../models/impediment_model");
+import impedimentsViewModel = require("./impediments_view_model");
 
 var socketio: any;
 
@@ -38,6 +39,7 @@ class HomeViewModel {
 
 	user: KnockoutObservable<collaboratorModel>;
 	impediment: KnockoutObservable<impedimentModel>;
+	impedimentsViewModel: impedimentsViewModel.ImpedimentsViewModel;
 	rejectImplementation: KnockoutObservable<impedimentModel>;
 
 	users: KnockoutComputed<string[]>;
@@ -101,6 +103,7 @@ class HomeViewModel {
 		});
 
 		this.labelsViewModel = new labelsViewModel.LabelsViewModel(null, this.loadingCount);
+		this.impedimentsViewModel = new impedimentsViewModel.ImpedimentsViewModel(this.loadingCount);
 
 		this.milestones = knockout_mapping.fromJS([]).extend({ 
 			mapToJsonResource: { 
@@ -392,7 +395,7 @@ class HomeViewModel {
 	selectRepository(repository: string, loadIssues: boolean = true) {
 		var self = this;
 		this.selectedRepository(repository);
-		this.logger.info("Selecting repository: ", repository);
+		this.logger.info("Selecting repository: " + repository);
 
 		if (loadIssues) {
 			this.loadIssues(false, () => {
@@ -426,8 +429,15 @@ class HomeViewModel {
 				(issuesLoadCompleted: Function) => {
 					var issuesCall: Function = forceReload ? self.issuesViewModel.issuesData.reload : self.issuesViewModel.issuesData.load;
 					issuesCall(callData, issuesLoadCompleted);
+				},
+				(impedimentsLoadCompleted: Function) => {
+					var impedimentsCall: Function = forceReload ? self.impedimentsViewModel.impedimentsData.reload : self.impedimentsViewModel.impedimentsData.load;
+					impedimentsCall(callData, impedimentsLoadCompleted);
 				}
 			], (err: any) => {
+				if (err) {
+					self.logger.error(err.toString());
+				}
 				callback(err);
 			});
 		} else {
@@ -597,6 +607,10 @@ class HomeViewModel {
 
 	selectQABoard(): void {
 		this.boardType(issuesViewModel.BoardType.qa);
+	}
+
+	showImpediments(): void {
+
 	}
 }
 
