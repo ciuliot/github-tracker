@@ -45,10 +45,7 @@ class ImpedimentsController extends abstractController {
 					self.logError([user, repository], "Error occured during impediments retrieval", err);	
 				} else {
 					var input = new Buffer(result.content, "base64").toString("utf8");
-					self.logDebug([user, repository], "Contents: %s", input);
 					result = this.parseImpediments(input);
-
-					self.logDebug([user, repository], "Results: %j", result);
 				}
 
 				self.jsonResponse(err, result);

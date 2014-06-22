@@ -48,6 +48,9 @@ class HomeViewModel {
 	selectedUser: KnockoutObservable<string> = ko.observable(null);
 	selectedRepository: KnockoutObservable<string> = ko.observable(null);
 
+	selectRepositoryModalUser: KnockoutObservable<string> = ko.observable(null);
+	selectRepositoryModalRepository: KnockoutObservable<string> = ko.observable(null);
+
 	url: KnockoutComputed<string>;
 	boardType: KnockoutObservable<issuesViewModel.BoardType>;
 	isInDeveloperBoard: KnockoutComputed<boolean>;
@@ -214,7 +217,7 @@ class HomeViewModel {
 
 		this.userRepositories = ko.computed(() => {
 			var filter = ko.utils.arrayFilter(self.repositories(), (x: repositoryModel) => {
-				return x.name().indexOf(self.selectedUser() + "/") === 0;
+				return x.name().indexOf(self.selectRepositoryModalUser() + "/") === 0;
 			});
 
 			return ko.utils.arrayMap(filter, (x: repositoryModel) => {
@@ -611,6 +614,18 @@ class HomeViewModel {
 
 	showImpediments(): void {
 
+	}
+
+	openSelectRepositoryModal(): void {
+		this.selectRepositoryModalRepository(this.selectedRepository());
+		this.selectRepositoryModalUser(this.selectedUser());
+
+		$("#select-repository").modal("show");
+	}
+
+	selectUserAndRepository(repository: string): void {
+		this.selectUser(this.selectRepositoryModalUser());
+		this.selectRepository(repository);
 	}
 }
 

@@ -12,12 +12,8 @@ block head
 		p Test 
 
 	script#user-template(type="text/html")
-		li(data-bind="css: { active: $root.selectedUser() === $data }")
-			a(href="#", role="menuitem", data-bind="text: $data, click: $root.selectUser.bind($root, $data)") 
-
-	script#user-repositories-template(type="text/html")
-		li(data-bind="css: { active: $root.selectedRepository() === $data.name() }")
-			a(href="#" data-bind="text: name, click: $root.selectRepository.bind($root, $data.name())") 
+		li(data-bind="css: { active: $root.selectRepositoryModalUser() === $data }")
+			a(href="#", role="menuitem", data-bind="text: $data, click: $root.selectRepositoryModalUser.bind($root, $data)") 
 
 	script#milestone-template(type="text/html")
 		li(data-bind="css: { active: $root.selectedMilestone() === $data.number() }")
@@ -160,7 +156,7 @@ block body
 						span(data-bind="text: selectedUser() + '/' + selectedRepository()")
 						b.caret
 					ul.dropdown-menu
-						li: a(href="#", data-toggle="modal" data-target="#select-repository") Change repository
+						li: a(href="#", data-bind="click: $root.openSelectRepositoryModal.bind($root)") Change repository
 						li: a(href="#", data-toggle="modal" data-target="#show-impediments", data-bind="click: $root.showImpediments.bind($root)") Show impediments
 						
 				li.dropdown(data-bind="visible: $root.haveSelectedRepository()")
@@ -229,7 +225,7 @@ block body
 						.col-md-8
 							.container-fluid: .row(data-bind="foreach: userRepositories")
 								.col-md-12
-									button.btn.btn-link(type="button", data-dismiss="modal", data-bind="text: name, click: $root.selectRepository.bind($root, $data.name())")
+									button.btn.btn-link(type="button", data-dismiss="modal", data-bind="text: name, click: $root.selectUserAndRepository.bind($root, $data.name())")
 				.modal-footer
 					button.btn.btn-default(type="button", data-dismiss="modal") Close
 
@@ -261,7 +257,7 @@ block body
 					h2 No repository selected
 					p To start, please select GitHub repository you wish to work with.
 					p Tip: You can save bookmark in any state and reopen it later to resume work.
-					a.btn.btn-primary.btn-lg(href="#", role="button", data-toggle="modal" data-target="#select-repository") Select repository
+					a.btn.btn-primary.btn-lg(href="#", role="button", data-bind="click: $root.openSelectRepositoryModal.bind($root)") Select repository
 
 	.container-fluid.visible-lg
 		.row.phases(data-bind="template: { name: 'issue-phase-header-template', foreach: issuesViewModel.headers }")
