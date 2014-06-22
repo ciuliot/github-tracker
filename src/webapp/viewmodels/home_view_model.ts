@@ -549,7 +549,8 @@ class HomeViewModel {
 		var rawData = knockout_mapping.toJSON(issue);
 		knockout_mapping.fromJS(issuesViewModel.Issue.empty, this.issueDetail()); // Cleanup fields
 		knockout_mapping.fromJSON(rawData, this.issueDetail());
-		//this.issueDetail().milestone(this.selectedMilestone());
+		
+		$("#issue-comments-modal").modal("show");
 	}
 
 	issueSave():void {

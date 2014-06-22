@@ -15,6 +15,57 @@ var vows = require('vows');
 vows.describe("CommentsController").addBatch({
 	"Server": {
 		topic: testApi.startServerTopic(),
+		"Get without parameters": {
+			topic: testApi.httpGetTopic("/comments/5"),
+
+			"returns error": testApi.verifyNoUserProvidedError()
+		},
+		"Get without user": {
+			topic: testApi.httpGetTopic("/comments/5?repository=repo"),
+
+			"returns error": testApi.verifyNoUserProvidedError()
+		},
+		"Get without repository": {
+			topic: testApi.httpGetTopic("/comments/5?user=test"),
+
+			"returns error": testApi.verifyNoRepositoryProvidedError()
+		},
+		"Valid Get": {
+			topic: testApi.httpGetTopic("/comments/1347?user=utester&repository=tracker"),
+
+			"returns comment": (err: any, response: http.ClientResponse, textBody: string) => {
+				var result = testApi.verifyJsonResponse(err, response, textBody);
+
+				result.length.should.eql(1);
+				result[0].should.eql({
+					"id": 1347,
+				    "url": "https://api.github.com/repos/octocat/Hello-World/issues/comments/1347",
+				    "html_url": "https://github.com/octocat/Hello-World/issues/1347#issuecomment-1347",
+				    "body": "Me too",
+				    "user": {
+				      "login": "octocat",
+				      "id": 1,
+				      "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+				      "gravatar_id": "somehexcode",
+				      "url": "https://api.github.com/users/octocat",
+				      "html_url": "https://github.com/octocat",
+				      "followers_url": "https://api.github.com/users/octocat/followers",
+				      "following_url": "https://api.github.com/users/octocat/following{/other_user}",
+				      "gists_url": "https://api.github.com/users/octocat/gists{/gist_id}",
+				      "starred_url": "https://api.github.com/users/octocat/starred{/owner}{/repo}",
+				      "subscriptions_url": "https://api.github.com/users/octocat/subscriptions",
+				      "organizations_url": "https://api.github.com/users/octocat/orgs",
+				      "repos_url": "https://api.github.com/users/octocat/repos",
+				      "events_url": "https://api.github.com/users/octocat/events{/privacy}",
+				      "received_events_url": "https://api.github.com/users/octocat/received_events",
+				      "type": "User",
+				      "site_admin": false
+				    },
+				    "created_at": "2011-04-14T16:00:49Z",
+				    "updated_at": "2011-04-14T16:00:49Z"
+				});
+			}
+		},
 		"Update without parameters": {
 			topic: testApi.httpPutTopic("/comments/0"),
 
