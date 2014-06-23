@@ -89,6 +89,7 @@ class TestDataFactory {
 		getRepoIssue(data: any, callback: Function) { 
 			TestDataFactory.getOne(testModels.IssuesModel, { user: data.user, repo: data.repo, number: Number(data.number) }, callback); 
 		},
+		getComments(data: any, callback: Function) { TestDataFactory.get(testModels.IssueCommentModel, data, callback); },
 		createComment(data: any, callback: Function) {
 			var payload = {
 				user: data.user,

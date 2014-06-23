@@ -201,6 +201,38 @@ class KnockoutJsonCache<T> {
 		this.executeNextInStoreQueue();
 	}
 
+	reloadItem(id: any, args: any = {}, callback: Function = () => {}): void {
+		this.logger.debug("Getting item with id " + id);
+		var data = args;
+
+		this.options.loadingCount(this.options.loadingCount() + 1);
+		var self = this;
+
+		$.get(self.options.url + "/" + id, args, (data:any) => {
+			if (!data.err) {
+				var item = self.options.findById(self.target, id);
+
+				if (item !== null) {
+					knockout_mapping.fromJS(data.result, item);
+					var storageKey = this.getStorageKey("index", args);
+
+					var newSet = knockout_mapping.toJSON(self.target);
+					sessionStorage.setItem(storageKey, newSet);
+				} else {
+					self.logger.debug("Item with id " + id + " not found, adding to collection");
+
+					self.options.loadMerge(data.err, data.result);
+				}
+			}
+		}).fail((error: string) => {
+			self.options.indexDone(error);
+			self.logger.error(error);
+		}).always(() => {
+			self.options.loadingCount(self.options.loadingCount() - 1);
+			callback();
+		});
+	}
+
 	createItem(obj: any, args: any = {}): void {
 		this.lastTemporaryId--;
 
@@ -242,6 +274,10 @@ export function init(): void {
 
 		target.createItem = (obj: any, args: any) => {
 			cache.createItem(obj, args);
+		};
+
+		target.reloadItem = (obj: any, args: any) => {
+			cache.reloadItem(obj, args);
 		};
 
 		return target;

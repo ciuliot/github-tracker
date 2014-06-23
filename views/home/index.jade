@@ -140,6 +140,19 @@ block body
 				.modal-footer
 					button.btn.btn-default(type="button", data-dismiss="modal") Close
 					button.btn.btn-primary(type="button", data-dismiss="modal", data-bind="click: $root.issueSave.bind($root, $data)") Save changes
+		.comments.modal-dialog(data-bind="visible: comments().length > 0")
+			.modal-content
+				.modal-header
+					h4.modal-title Comments
+				.modal-body(data-bind="foreach: sortedComments")
+					.panel.panel-default
+						.panel-heading
+							strong(data-bind="text: user().login")
+							span &nbsp;commented&nbsp;
+							span(data-bind="text: calendarTime")
+						.panel-body
+							img.avatar(data-bind="attr: { src: user().avatar_url() }")
+							span(data-bind="html: body_html")
 
 	nav.navbar.navbar-default(role="navigation")
 		.navbar-header
@@ -251,7 +264,7 @@ block body
 					button.btn.btn-default(type="button", data-dismiss="modal") Close
 
 	.row(style="margin-top: 5%", data-bind="visible: !$root.haveSelectedRepository()")
-		.col-md-10.col-md-offset-1
+		.container-fluid: .col-md-10.col-md-offset-1
 			.jumbotron
 				.container
 					h2 No repository selected
