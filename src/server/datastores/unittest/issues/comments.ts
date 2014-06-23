@@ -9,7 +9,7 @@ var model = [
 		    "id": 1347,
 		    "url": "https://api.github.com/repos/octocat/Hello-World/issues/comments/1347",
 		    "html_url": "https://github.com/octocat/Hello-World/issues/1347#issuecomment-1347",
-		    "body": "Me too",
+		    "body": "I am using __markdown__.",
 		    "user": {
 		      "login": "octocat",
 		      "id": 1,

@@ -196,7 +196,7 @@ class HomeViewModel {
 
 		this.issueDetail = knockout_mapping.fromJS(issuesViewModel.Issue.empty, {
 			create: (options: any) => {
-				return ko.observable(new issuesViewModel.Issue(self.labelsViewModel, self.collaborators, options.data));
+				return ko.observable(new issuesViewModel.IssueDetail(self.labelsViewModel, self.collaborators, options.data));
 			}
 		})
 
@@ -550,7 +550,8 @@ class HomeViewModel {
 		knockout_mapping.fromJS(issuesViewModel.Issue.empty, this.issueDetail()); // Cleanup fields
 		knockout_mapping.fromJSON(rawData, this.issueDetail());
 		
-		$("#issue-comments-modal").modal("show");
+		this.issueDetail().comments.removeAll();
+		this.issueDetail().comments.reloadItem(issue.number(), { repository: this.selectedRepository(), user: this.selectedUser() });
 	}
 
 	issueSave():void {
@@ -598,6 +599,7 @@ class HomeViewModel {
 
 	issueAdd(issue: issuesViewModel.Issue): void {
 		knockout_mapping.fromJS(issuesViewModel.Issue.empty, this.issueDetail); // Cleanup fields
+		this.issueDetail().comments.removeAll();
 		this.issueDetail().milestone(this.selectedMilestone().toString());
 	}
 
@@ -631,7 +633,7 @@ class HomeViewModel {
 }
 
 $(() => {
-	require(["bootstrap", "knockout.bootstrap", "socket.io"], (bootstrap: any, ko_bootstrap: any, io: any) => {
+	require(["bootstrap", "knockout.bootstrap", "socket.io", "moment"], (bootstrap: any, ko_bootstrap: any, io: any) => {
 		socketio = io;
 		new HomeViewModel().start();
 	});

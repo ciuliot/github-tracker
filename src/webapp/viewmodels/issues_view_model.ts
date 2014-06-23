@@ -1,5 +1,6 @@
 /// <reference path='../../../interfaces/knockout/knockout.d.ts'/>
 /// <reference path='../../../interfaces/knockout.mapping/knockout.mapping.d.ts'/>
+/// <reference path='../../../interfaces/moment/moment.d.ts'/>
 
 import knockout_mapping = require("knockout.mapping");
 import labelsViewModel = require("./labels_view_model");
@@ -10,6 +11,41 @@ import $ = require("jquery");
 export enum BoardType { developer, qa, impediments };
 
 export var ProductBacklogMilestone: number = -1;
+
+export class User {
+	static empty: any = { login: null, avatar_url: null, estimate: null };
+}
+
+export class IssueComment {
+	calendarTime: KnockoutComputed<string>;
+	updated_at: KnockoutObservable<string>;
+
+	static empty: any = {
+		number: null,
+		body: null,
+		body_html: null,
+		created_at: null,
+		updated_at: null,
+		user: $.extend({}, User.empty )
+	};
+
+	constructor(data: any = {}) {
+		data = $.extend(true, {}, IssueComment.empty, data);
+		var self = this;
+
+		knockout_mapping.fromJS(data, {
+			'user': {
+				create: (options: any) => {
+					return ko.observable(knockout_mapping.fromJS(options.data));
+				}
+			}
+		}, this);
+
+		this.calendarTime = ko.computed(() => {
+			return moment(self.updated_at()).fromNow();
+		});
+	}
+}
 
 export class Issue {
 	canStart: KnockoutComputed<boolean>;
@@ -45,7 +81,7 @@ export class Issue {
 		title: null,
 		milestone: null,
 		estimate: null,
-		assignee: { login: null, avatar_url: null, estimate: null },
+		assignee: $.extend({}, User.empty ),
 		branch: { name: null },
 		pull_request: { html_url: null, state: null },
 		type: $.extend({}, labelsViewModel.Label.empty ),
@@ -213,6 +249,37 @@ export class Issue {
 
 export class IssueDetail extends Issue {
 	milestone: KnockoutObservable<string>;
+	comments: KnockoutObservableArray<IssueComment>;
+	sortedComments: KnockoutComputed<IssueComment[]>;
+
+	static empty: any = { comments: [] }; 
+
+	constructor(mainLabelsViewModel: labelsViewModel.LabelsViewModel, collaborators: KnockoutObservableArray<collaboratorModel>,
+				meta: KnockoutObservable<any>, data: any = {}) {
+		super(mainLabelsViewModel, collaborators, meta, data);
+
+		var self = this;
+		data = $.extend(true, {}, IssueDetail.empty, data);
+
+		this.comments = knockout_mapping.fromJS(data.comments, {
+			create: (options: any) => {
+				return new IssueComment(options.data);
+			}
+		}).extend({
+			mapToJsonResource: { 
+				url: "/comments",
+				refreshAfterUpdate: false,
+				loadOnStart: false
+			}
+		});
+
+		this.sortedComments = ko.computed(() => {
+			return self.comments().sort((x:IssueComment, y: IssueComment) => {
+				return x.updated_at() < y.updated_at() ? 1 : -1;
+			});
+		});
+
+	}
 }
 
 function isIssueMatchingFilter(x: Issue, category: labelsViewModel.Label, phase: labelsViewModel.Label, filter: KnockoutObservable<string>): boolean {

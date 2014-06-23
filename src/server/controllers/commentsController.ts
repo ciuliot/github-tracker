@@ -6,6 +6,8 @@ import util = require("util");
 
 import configuration = require('../config/configuration');
 
+var marked = require('marked');
+
 class CommentsController extends abstractController {
 	constructor() {
 		super("comments");
@@ -30,14 +32,17 @@ class CommentsController extends abstractController {
 
 			async.waterfall([
 				(getCommentsCompleted: Function) => {
-					self.logger.debug("Adding comment to issue #%d", requestBody.number);
 					self.getGitHubClient().issues.getComments(requestBody, getCommentsCompleted);
 				}
 			], (err: any, result: any) => {
 				/* istanbul ignore next */ 
 				if (err) {
 					self.logger.error("Error occured during comments retrieval", err);	
-				} 
+				} else {
+					for(var i = 0; i < result.length; i++) {
+						result[i].body_html = marked(result[i].body);
+					}
+				}
 
 				self.jsonResponse(err, result);
 			});	
