@@ -31,16 +31,16 @@ vows.describe("CommentsController").addBatch({
 			"returns error": testApi.verifyNoRepositoryProvidedError()
 		},
 		"Valid Get": {
-			topic: testApi.httpGetTopic("/comments/1347?user=utester&repository=tracker"),
+			topic: testApi.httpGetTopic("/comments/1348?user=utester&repository=tracker"),
 
 			"returns comment": (err: any, response: http.ClientResponse, textBody: string) => {
 				var result = testApi.verifyJsonResponse(err, response, textBody);
 
 				result.length.should.eql(1);
 				result[0].should.eql({
-					"id": 1347,
-				    "url": "https://api.github.com/repos/octocat/Hello-World/issues/comments/1347",
-				    "html_url": "https://github.com/octocat/Hello-World/issues/1347#issuecomment-1347",
+					"id": 1348,
+				    "url": "https://api.github.com/repos/octocat/Hello-World/issues/comments/1348",
+				    "html_url": "https://github.com/octocat/Hello-World/issues/1348#issuecomment-1348",
 				    "body": "I am using __markdown__.",
 				    body_html: "<p>I am using <strong>markdown</strong>.</p>\n",
 				    "user": {

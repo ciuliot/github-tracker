@@ -4,11 +4,11 @@ var model = [
 	new testModels.IssueCommentModel({
 		user: "utester",
 		repo: "tracker",
-		number: 1347,
+		number: 1348,
 		result: {
-		    "id": 1347,
-		    "url": "https://api.github.com/repos/octocat/Hello-World/issues/comments/1347",
-		    "html_url": "https://github.com/octocat/Hello-World/issues/1347#issuecomment-1347",
+		    "id": 1348,
+		    "url": "https://api.github.com/repos/octocat/Hello-World/issues/comments/1348",
+		    "html_url": "https://github.com/octocat/Hello-World/issues/1348#issuecomment-1348",
 		    "body": "I am using __markdown__.",
 		    "user": {
 		      "login": "octocat",
