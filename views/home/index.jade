@@ -4,7 +4,8 @@ block head
 	title GitHub tracker
 	script(type='text/javascript').
 		var MainModule = "viewmodels/home_view_model";
-	script(data-main='/js/config', src='/js/libs/require.js')
+	
+	script(src='./js/requirejs/require.js', data-main="js/config")
 
 	<!-- Templates -->
 

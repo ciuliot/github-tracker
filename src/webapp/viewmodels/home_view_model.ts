@@ -66,7 +66,7 @@ class HomeViewModel {
 	
 	loadingCount: KnockoutObservable<number> = ko.observable(0);
 	savingCount: KnockoutObservable<number> = ko.observable(0);
-	logger: log4js.Logger = utilities.getLogger("HomeViewModel");
+	logger: JSNLogLogger = utilities.getLogger("HomeViewModel");
 	socket: any = null;
 
 	currentMilestoneIssues: KnockoutComputed<issuesViewModel.Issue[]>;
@@ -455,7 +455,7 @@ class HomeViewModel {
 
 	selectMilestone(milestone: number) {
 		var self = this;
-		this.logger.info("Selecting milestone: ", milestone);
+		this.logger.info("Selecting milestone: " + milestone);
 		this.selectedMilestone(milestone);
 
 		this.loadIssues(false);

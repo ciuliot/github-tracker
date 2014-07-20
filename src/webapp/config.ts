@@ -2,16 +2,16 @@
 
 requirejs.config({
   paths:{
-    "sprintf": "libs/sprintf.min",
-    "log4js": "libs/log4js-lib",
-    "jquery": "libs/jquery",
-    "underscore": "libs/underscore",
-    "async": "libs/asyncjs",
-    "knockout": "libs/knockout",
-    "knockout.mapping": "libs/knockout.mapping",
-    "knockout.bootstrap": "libs/knockout-bootstrap",
-    "moment": "libs/moment.min",
-    "bootstrap": "libs/bootstrap",
+    "sprintf": "/js/sprintf/sprintf.min",
+    "jsnlog": "/js/jsnlog/jsnlog.min",
+    "crossroads": "/js/crossroads/crossroads.min",
+    "jquery": "/js/jquery/jquery.min",
+    "async": "/js/async/async",
+    "knockout": "/js/knockout/knockout",
+    "knockout.mapping": "/js/knockout-mapping/knockout.mapping",
+    "knockout.bootstrap": "/js/knockout-bootstrap/knockout-bootstrap.min",
+    "moment": "/js/moment/moment.min",
+    "bootstrap": "/js/bootstrap/bootstrap.min",
     "socket.io": "/socket.io/socket.io"
   },
   shim: {
@@ -39,6 +39,6 @@ requirejs.config({
 declare var MainModule: string;
 
 //the "main" function to bootstrap your code
-require(["./utilities", MainModule], function (utilities:any, mainModule: any) {
+require(["./utilities", "jsnlog", MainModule], function (utilities:any, jsnlog: any, mainModule: any) {
   utilities.getLogger("config").info("Initialization completed");
 });

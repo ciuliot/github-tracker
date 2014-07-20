@@ -74,10 +74,8 @@ module.exports = function (grunt) {
         copy: {
             dist: {
                 files: [
-                    { src: "libs/**", dest: "dist/public/js/",  },
                     { src: "images/**", dest: "dist/public/",  },
                     { src: "templates/**", dest: "dist/",  },
-                    { src: "fonts/**", dest: "dist/public/",  },
                     { src: "**/*.css", dest: "dist/public/css/", cwd: "styles/", expand: true }
                 ]
             },
@@ -128,6 +126,19 @@ module.exports = function (grunt) {
         },
         reloadTasks : {
             rootPath : 'dist/instrument/dist'
+        },
+        bower: {
+            install: {
+                options: {
+                    targetDir: './dist/public',
+                    layout: 'byType',
+                    install: true,
+                    verbose: false,
+                    cleanTargetDir: true,
+                    cleanBowerDir: false,
+                    bowerOptions: {}
+                }
+            }
         }
     });
 
@@ -140,6 +151,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-yuidoc');
     grunt.loadNpmTasks('grunt-contrib-stylus');
     grunt.loadNpmTasks('grunt-vows-runner');
+    grunt.loadNpmTasks('grunt-bower-task');
 
     grunt.registerTask('get-revision', 'Get revision.', function () {
         var done = this.async();
@@ -169,7 +181,7 @@ module.exports = function (grunt) {
     });
 
     // Default task(s).
-    grunt.registerTask('default', ['typescript:server', 'typescript:webapp' , 'copy:dist', 'stylus']);
+    grunt.registerTask('default', ['bower', 'typescript:server', 'typescript:webapp' , 'copy:dist', 'stylus']);
     grunt.registerTask('build', ['clean', 'get-revision', 'bump-only', 'default', 'copy:build', 'compress:build']);
     grunt.registerTask('docs', ['yuidoc', 'copy:docs', 'compress:docs']);
     grunt.registerTask('tests', ['clean', 'default', 'typescript:server_tests', 'vows:server']);

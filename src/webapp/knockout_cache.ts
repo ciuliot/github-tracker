@@ -23,7 +23,7 @@ interface KnockoutJsonCacheOptions {
 
 class KnockoutJsonCache<T> {
 	private lastTemporaryId: number = 0;
-	private logger: log4js.Logger;
+	private logger: JSNLogLogger;
 	private lastIndexUrl: string;
 	private storeQueue: any[] = [];
 	private isStoring: boolean;
@@ -53,7 +53,7 @@ class KnockoutJsonCache<T> {
 		var initialData = knockout_mapping.toJSON(target);
 		knockout_mapping.fromJSON(initialData, options.mapping, target);
 
-		this.logger = utilities.getLogger(options.url + " mapper");
+		this.logger = utilities.getLogger("mapper." + options.url);
 
 		if (options.loadOnStart) {
 			utilities._deferredExtenderLoads.push(() => { self.load(); });
