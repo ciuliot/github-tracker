@@ -24,7 +24,8 @@
     "knockout-mapping": "~2.4.1",
     "knockout-bootstrap": "~0.2.1",
     "requirejs": "~2.1.14",
-    "jsnlog": "~2.7.1"
+    "jsnlog": "~2.7.1",
+    "hasher": "~1.2.0"
   },
   "exportsOverride": {
     "bootstrap": {

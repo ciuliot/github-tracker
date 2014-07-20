@@ -88,7 +88,7 @@ class KnockoutJsonCache<T> {
 
 			var nextItem = this.storeQueue[0];
 
-			$.ajax(nextItem.url, { type: nextItem.type, data: nextItem.data })
+			$.ajax(nextItem.url, { type: nextItem.type, data: JSON.stringify(nextItem.data) })
 				.done((data: any) => {
 					if (self.lastIndexUrl !== null) {
 						self.logger.debug("Updating data as: " + self.lastIndexUrl);

@@ -1,9 +1,8 @@
  function initialize() {
     this.root('home#index');
 
-    this.match("index/:user", "home#index");
-    this.match("index/:user/:repository", "home#index");
-    this.match("index/:user/:repository/:milestone", "home#index");
+    this.match("developer_board/:user/:repository/:milestone", "home#index");
+    this.match("qa_board/:user/:repository/:milestone", "home#index");
 
     this.match("login", "authentication#login");
     this.match("logout", "authentication#logout");

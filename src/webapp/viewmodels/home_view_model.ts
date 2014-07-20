@@ -4,6 +4,7 @@
 /// <reference path='../../../interfaces/bootstrap/bootstrap.d.ts'/>
 /// <reference path='../../../interfaces/log4js/log4js.d.ts'/>
 /// <reference path='../../../interfaces/require/require.d.ts'/>
+/// <reference path='../../../interfaces/crossroads/crossroads.d.ts'/>
 /// <reference path='../../../interfaces/knockout.mapping/knockout.mapping.d.ts'/>
 /// <reference path='../../../interfaces/mapper.d.ts'/>
 
@@ -27,6 +28,8 @@ import impedimentModel = require("../models/impediment_model");
 import impedimentsViewModel = require("./impediments_view_model");
 
 var socketio: any;
+var hasher: any;
+var crossroads: CrossroadsJs.CrossRoadsStatic;
 
 class HomeViewModel {
 	repositories: KnockoutObservableArray<repositoryModel>;
@@ -79,7 +82,16 @@ class HomeViewModel {
 		var self = this;
 
 		knockout_cache.init();
-
+		
+		crossroads.addRoute("/{board}_board/{user}/{repository}/{milestone}", (board: string, user: string, repository: string, milestone: string) => {
+			var boardType: issuesViewModel.BoardType = (<any>issuesViewModel.BoardType)[board];
+			
+			self.boardType(boardType);
+			self.selectUser(user);
+			self.selectRepository(repository, false);
+			self.selectMilestone(Number(milestone), true);
+		});
+		
 		self.boardType = ko.observable(issuesViewModel.BoardType.developer);
 
 		self.isInDeveloperBoard = ko.computed(() => { return self.boardType() === issuesViewModel.BoardType.developer });
@@ -233,86 +245,23 @@ class HomeViewModel {
 			var phases = self.labelsViewModel.labels().phases();
 			return (phases.length > 0 ? (100 / phases.length) : 100) + "%"; 
 		});
-
-		this.url = ko.computed({
-			read: () => {
-				var origin = [window.location.protocol, "//", window.location.hostname, ":", window.location.port].join("");
-				var user = self.selectedUser(), repository = self.selectedRepository();
-				var queryString: string[] = [];
-				var parts: string[] = [origin];
-
-				if (repository !== null && user !== null) {
-					parts.splice(1, 0, "index", user, repository)
-
-					self.socket.emit("subscribe", {
-						user: user,
-						repository: repository
-					});
-
-					if (self.selectedMilestone() !== null) {
-						parts.push(self.selectedMilestone().toString());
-					}
-					
-					queryString.push("board=" + issuesViewModel.BoardType[self.boardType()]);
-
-					if (self.issuesViewModel.filter().length > 0) {
-						queryString.push("q=" + self.issuesViewModel.filter());
-					}
-				}
-
-				var url = parts.join("/");
-
-				if (queryString.length > 0) {
-					url += "?" + queryString.join("&");
-				}
-
-				if (self.url) {
-					history.pushState(null, null, url);
-				}
-
-				return url;
-			},
-			write: (newValue: string) => {
-				var href = newValue || window.location.href;
-				var pathParts = href.split("//")[1].split("?");
-				var variables = pathParts[0].split("/") || [];				
-
-				var user = variables.length > 2 ? variables[2] : "";
-				var repository = variables.length > 3 ? variables[3] : null;
-				var milestone = variables.length > 4 ? variables[4] : issuesViewModel.ProductBacklogMilestone.toString();
-
-				if (user.length === 0 && self.users().length > 0) {
-					user = self.users()[0];
-				}
-
-				if (user.length > 0) {
-					self.selectUser(user);
-				}
-
-				self.selectRepository(repository, false);
-				self.selectMilestone(Number(milestone));
-
-				if (pathParts[1]) { // Querystring
-					var queryString = pathParts[1].split("&");
-
-					for (var i = 0; i < queryString.length; i++) {
-						var parts = queryString[i].split("=");
-							if (parts.length === 2) {
-							var key = parts[0], value: string = parts[1];
-							if (key === "q") {
-								self.issuesViewModel.filter(value);
-							}
-							else if (key === "board") {
-								var boardType: issuesViewModel.BoardType = (<any>issuesViewModel.BoardType)[value];
-								self.boardType(boardType);
-							}
-						}
-					}
-				}
+		
+		this.url = ko.computed(() => {
+			var user = self.selectedUser(), repository = self.selectedRepository();
+			var path = "";
+			
+			if (repository !== null && user !== null) {
+				var board = issuesViewModel.BoardType[self.boardType()];
+				path += [board + "_board", user, repository, self.selectedMilestone()].join("/");
 			}
+			
+			if (hasher.isActive()) {
+				hasher.setHash(path);
+			}
+			return path;
 		});
 
- 		this.currentMilestoneIssues = ko.computed(() => {
+		this.currentMilestoneIssues = ko.computed(() => {
  			return ko.utils.arrayFilter(self.issuesViewModel.issuesData().issues(), issue => {
 				return issue.isInMilestone(self.selectedMilestone);
 			});
@@ -381,12 +330,15 @@ class HomeViewModel {
 		this.logger.info("Started & bound");
 		ko.applyBindings(this);
 		utilities.loadMapper();
-
-		window.addEventListener("popstate", (e: any) => {
-		    self.url(null);
-		});
-
-		self.url(null);
+		
+		var parseHash = (newHash: string, oldHash: string) => {
+			self.logger.debug("Updating from URL to: " + newHash);
+		  	crossroads.parse(newHash);
+		};
+		
+		hasher.initialized.add(parseHash); //parse initial hash
+		hasher.changed.add(parseHash); //parse hash changes
+		hasher.init(); //start listening for history change
 	}
 
 	selectUser(user: string) {
@@ -453,12 +405,12 @@ class HomeViewModel {
 		}
 	}
 
-	selectMilestone(milestone: number) {
+	selectMilestone(milestone: number, loadIssues: boolean = false) {
 		var self = this;
 		this.logger.info("Selecting milestone: " + milestone);
 		this.selectedMilestone(milestone);
 
-		this.loadIssues(false);
+		this.loadIssues(loadIssues);
 	}
 
 	reloadRepositories() {
@@ -633,8 +585,11 @@ class HomeViewModel {
 }
 
 $(() => {
-	require(["bootstrap", "knockout.bootstrap", "socket.io", "moment"], (bootstrap: any, ko_bootstrap: any, io: any) => {
+	require(["bootstrap", "knockout.bootstrap", "socket.io", "moment", "crossroads", "hasher"], 
+	(bootstrap: any, ko_bootstrap: any, io: any, moment: any, _crossroads: CrossroadsJs.CrossRoadsStatic, _hasher: any) => {
 		socketio = io;
+		crossroads = _crossroads;
+		hasher = _hasher;
 		new HomeViewModel().start();
 	});
 });

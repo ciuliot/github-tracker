@@ -5,6 +5,8 @@ requirejs.config({
     "sprintf": "/js/sprintf/sprintf.min",
     "jsnlog": "/js/jsnlog/jsnlog.min",
     "crossroads": "/js/crossroads/crossroads.min",
+    "hasher": "/js/hasher/hasher.min",
+    "signals": "/js/crossroads/signals",
     "jquery": "/js/jquery/jquery.min",
     "async": "/js/async/async",
     "knockout": "/js/knockout/knockout",
@@ -32,6 +34,9 @@ requirejs.config({
     },
     "socket.io": {
       exports: "io"
+    },
+    crossroads: {
+      exports: "crossroads"
     }
   }
 });
