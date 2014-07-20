@@ -21,7 +21,7 @@ vows.describe("AuthenticationController").addBatch({
 		"Verify GET authentication": {
 			topic: function() {
 				var self = this;
-				var getEndpoints = ["/", "/index/test" ,"/user", "/labels", "/milestones", "/collaborators", "/issues"];
+				var getEndpoints = ["/", "/developer_board/test/test/1", "/qa_board/test/test/1" ,"/user", "/labels", "/milestones", "/collaborators", "/issues"];
 
 				async.forEachSeries(getEndpoints, (endpoint, callback) => {
 					testApi.httpGet(endpoint, (err: any, response: http.ClientResponse) => {
