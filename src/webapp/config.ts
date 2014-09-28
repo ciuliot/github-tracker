@@ -14,7 +14,8 @@ requirejs.config({
     "knockout.bootstrap": "/js/knockout-bootstrap/knockout-bootstrap.min",
     "moment": "/js/moment/moment.min",
     "bootstrap": "/js/bootstrap/bootstrap.min",
-    "socket.io": "/socket.io/socket.io"
+    "socket.io": "/socket.io/socket.io",
+    "query-string": "/query-string/query-string"
   },
   shim: {
     jquery: {

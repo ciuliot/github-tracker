@@ -64,8 +64,8 @@
     "passport-http": "*",
     "passport-local": "*",
     "request": "*",
+    "serve-favicon": "*",
     "socket.io": "*",
-    "static-favicon": "*",
     "stylus": "*",
     "underscore": "*"
   }

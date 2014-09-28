@@ -123,6 +123,8 @@ class Configuration {
 
     static sessionStore: any = {
         secret: 'github-tracker-123',
+        resave: true,
+        saveUninitialized: true,
         store: null
     };
 }

@@ -253,6 +253,10 @@ class HomeViewModel {
 			if (repository !== null && user !== null) {
 				var board = issuesViewModel.BoardType[self.boardType()];
 				path += [board + "_board", user, repository, self.selectedMilestone()].join("/");
+				
+				var filter = self.issuesViewModel.filter();
+				
+				if (filter.length > 0) path += "?" + filter;
 			}
 			
 			if (hasher.isActive()) {

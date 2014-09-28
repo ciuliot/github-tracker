@@ -14,18 +14,18 @@
     "tests"
   ],
   "dependencies": {
-    "jquery": "~2.1.1",
-    "bootstrap": "~3.2.0",
-    "async": "~0.9.0",
-    "knockout": "~3.1.0",
-    "moment": "~2.7.0",
-    "sprintf": "~1.0.0",
-    "crossroads": "~0.12.0",
-    "knockout-mapping": "~2.4.1",
-    "knockout-bootstrap": "~0.2.1",
-    "requirejs": "~2.1.14",
-    "jsnlog": "~2.7.1",
-    "hasher": "~1.2.0"
+    "jquery": "*",
+    "bootstrap": "*",
+    "async": "*",
+    "knockout": "*",
+    "moment": "*",
+    "sprintf": "*",
+    "crossroads": "*",
+    "knockout-mapping": "*",
+    "knockout-bootstrap": "*",
+    "requirejs": "*",
+    "jsnlog": "*",
+    "hasher": "*"
   },
   "exportsOverride": {
     "bootstrap": {

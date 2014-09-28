@@ -46,6 +46,10 @@ class AbstractController extends locomotive.Controller {
      * @param [result] {Object} Return value from controller.
      */
     jsonResponse(err: any, result?: any): void {
+        if (err) {
+            this.logger.error("Responding with error: " + err);
+        } 
+        
         this.res.json({ error: err, result: result });
     }
 

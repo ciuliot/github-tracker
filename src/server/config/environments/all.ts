@@ -10,10 +10,10 @@ var poweredBy = require('connect-powered-by')
     , stylus = require('stylus')    
     , GitHubApi = require("github")
     , morgan = require("morgan")
-    , favicon = require("static-favicon")
     , cookieParser = require('cookie-parser')
     , bodyParser = require('body-parser')
-    , methodOverride = require('method-override');
+    , methodOverride = require('method-override')
+    , favicon = require('serve-favicon');
 
 function initialize() {
     var config = configuration;
@@ -55,14 +55,14 @@ function initialize() {
 
     this.use(poweredBy('Locomotive'));
     this.use(morgan());
-    this.use(favicon());
+    //this.use(favicon(path.resolve(publicDir, 'favicon.ico')));
     this.use(cookieParser());
 
     this.use("/src", express.static(path.resolve(config.startupDirectory, "./src")));
     this.use(express.static(publicDir));
 
     this.use(bodyParser.json());
-    this.use(bodyParser.urlencoded({extended: true}));
+    this.use(bodyParser.urlencoded({ extended: true }));
     this.use(methodOverride());
 
     /* istanbul ignore next */

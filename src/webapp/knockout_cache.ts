@@ -87,42 +87,49 @@ class KnockoutJsonCache<T> {
 			this.isStoring = true;
 
 			var nextItem = this.storeQueue[0];
-
-			$.ajax(nextItem.url, { type: nextItem.type, data: JSON.stringify(nextItem.data) })
-				.done((data: any) => {
-					if (self.lastIndexUrl !== null) {
-						self.logger.debug("Updating data as: " + self.lastIndexUrl);
-						sessionStorage.setItem(self.lastIndexUrl, nextItem.updatedData);
-
-						var item = self.options.findById(self.target, nextItem.id);
-
-						if (item !== null) {
-							knockout_mapping.fromJS(data.result, item);
-
-							// And finally merge and store updated object
-							var wholeSet = knockout_mapping.fromJSON(nextItem.updatedData, self.options.mapping);
-							var oldItem = self.options.findById(wholeSet, nextItem.id);
-
-							knockout_mapping.fromJS(data.result, oldItem);
-
-							var newSet = knockout_mapping.toJSON(wholeSet);
-							sessionStorage.setItem(self.lastIndexUrl, newSet);
-						} else {
-							self.logger.warn("Item with id " + nextItem.id + " not found, skipping update");
-						}
-					}
-
-					self.options.savingCount(self.storeQueue.length);
-
-					self.storeQueue.splice(0, 1);
-					self.isStoring = false;
+			
+			var failCallback = (xhr: any, status: string, error: string) => {
+				self.logger.error("Failed to update:" + error.toString());
+				self.isStoring = false;
+				window.setTimeout(() => {
 					self.executeNextInStoreQueue();
-				}).fail(() => {
-					self.isStoring = false;
-					window.setTimeout(() => {
+				}, 5000);
+			};
+
+			$.ajax(nextItem.url, { type: nextItem.type, data: JSON.stringify(nextItem.data), contentType: "application/json" })
+				.done((data: any) => {
+					if (data.error) {
+						failCallback(null, null, data.error);
+					} else {
+						if (self.lastIndexUrl !== null) {
+							self.logger.debug("Updating data as: " + self.lastIndexUrl);
+							sessionStorage.setItem(self.lastIndexUrl, nextItem.updatedData);
+	
+							var item = self.options.findById(self.target, nextItem.id);
+	
+							if (item !== null) {
+								knockout_mapping.fromJS(data.result, item);
+	
+								// And finally merge and store updated object
+								var wholeSet = knockout_mapping.fromJSON(nextItem.updatedData, self.options.mapping);
+								var oldItem = self.options.findById(wholeSet, nextItem.id);
+	
+								knockout_mapping.fromJS(data.result, oldItem);
+	
+								var newSet = knockout_mapping.toJSON(wholeSet);
+								sessionStorage.setItem(self.lastIndexUrl, newSet);
+							} else {
+								self.logger.warn("Item with id " + nextItem.id + " not found, skipping update");
+							}
+						}
+						
+						self.options.savingCount(self.storeQueue.length);
+
+						self.storeQueue.splice(0, 1);
+						self.isStoring = false;
 						self.executeNextInStoreQueue();
-					}, 5000);
-				});
+					}
+				}).fail(failCallback);
 		}
 	}
 
