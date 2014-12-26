@@ -48,7 +48,7 @@ vows.describe("ImpedimentsController").addBatch({
 				result.issues.length.should.eql(4);
 
 				should.exist(result.issues[0]);
-				result.issues[0].number.should.eql(28);
+				result.issues[0].number.should.eql("28");
 
 				should.exist(result.issues[0].impediments);
 				result.issues[0].impediments.length.should.eql(3);

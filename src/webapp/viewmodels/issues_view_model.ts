@@ -388,7 +388,7 @@ export class Category extends labelsViewModel.Label  {
 				return x.phase().id() === phases().closed();
 			});
 
-			var columns = [], result = [];
+			var columns: any[] = [], result: any[] = [];
 			for (var i=0; i < 4; i++) {
 				columns.push([]);
 			}

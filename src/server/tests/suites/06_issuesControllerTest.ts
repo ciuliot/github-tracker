@@ -234,7 +234,7 @@ vows.describe("IssuesController").addBatch({
 					result.should.eql({
 						title: "new issue",
 						category: { color: null, id: '@other', name: 'other' },
-						milestone: "1",
+						milestone: 1,
 						phase: { color: null, id: '#backlog', name: 'backlog' },
 						type: { name: null, id: null, color: null }, 
 						pull_request: { html_url: null, state: null }, 
@@ -266,7 +266,7 @@ vows.describe("IssuesController").addBatch({
 					should.exist(result.number);
 					result.should.eql({
 						title: "new bug",
-						milestone: "1",
+						milestone: 1,
 						category: { color: '#00ff00', id: '@backend', name: 'backend' },
 						phase: { color: null, id: '#backlog', name: 'backlog' },
 						type: { name: 'bug', id: 'bug', color: '#f29513' }, 
@@ -424,7 +424,7 @@ vows.describe("IssuesController").addBatch({
 							phase: { color: null, id: '#backlog', name: 'backlog' },
 							type: { color: '#f29513', name: 'bug', id: 'bug' }, 
 							branch: { name: null, url: null },
-							milestone: "1",
+							milestone: 1,
 							number: result.number,
 							updated_at: "2011-04-22T13:33:48Z",
 							compareUrl: null,

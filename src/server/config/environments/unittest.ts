@@ -284,7 +284,7 @@ class TestDataFactory {
 		//TestDataFactory.logger.info("Authenticating with %s: %s", data.type, data.token);
 	}
 
-	static save(model: mongoose.IMongooseSearchable, payload: any, callback: Function) {
+	static save(model: any, payload: any, callback: Function) {
 		model(payload).save((err: any, data: any) => {
 			callback(err, TestDataFactory.convertResult(err, data));
 		});

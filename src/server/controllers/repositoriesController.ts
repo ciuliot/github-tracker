@@ -15,12 +15,12 @@ class RepositoriesController extends abstractController {
 		var repositories: any[];
 
 		async.waterfall([
-			getOwnReposCallback => { self.getGitHubClient().repos.getAll({}, getOwnReposCallback); },
+			(getOwnReposCallback: Function) => { self.getGitHubClient().repos.getAll({}, getOwnReposCallback); },
 			(repos: any[], convertOwnReposCallback: Function) => {
 				repositories = repos.map(x => { return { id: x.id, name: x.full_name }; });
 				convertOwnReposCallback();
 			}, 
-			getOrgsCallback => { self.getGitHubClient().user.getOrgs({}, getOrgsCallback); },
+			(getOrgsCallback: Function) => { self.getGitHubClient().user.getOrgs({}, getOrgsCallback); },
 			(orgs: any[], getOrgsRepositories: any) => {
 				async.concat(orgs, (x: any, cb: Function) => {
 					self.getGitHubClient().repos.getFromOrg( { org: x.login }, cb);
