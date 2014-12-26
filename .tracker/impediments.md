@@ -18,3 +18,7 @@ __#8 - [yrdy](https://github.com/ciuliot/github-tracker/issues/8)__
 
 * 2014-02-26 - Lala
 
+__#45 - [Implement planning board](https://github.com/ciuliot/github-tracker/issues/45)__
+
+* 2014-12-26 - Will implement later
+
